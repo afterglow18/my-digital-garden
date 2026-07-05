@@ -32,6 +32,16 @@ export interface ClothingItem {
   /** @nullable */
   brand?: string | null;
   /** @nullable */
+  size?: string | null;
+  /** @nullable */
+  season?: string | null;
+  /** @nullable */
+  occasion?: string | null;
+  /** @nullable */
+  purchasePrice?: string | null;
+  /** @nullable */
+  purchaseDate?: string | null;
+  /** @nullable */
   notes?: string | null;
   isFavorite?: boolean;
   timesWorn?: number;
@@ -57,6 +67,11 @@ export interface ClothingItemInput {
   imageObjectPath?: string;
   color?: string;
   brand?: string;
+  size?: string;
+  season?: string;
+  occasion?: string;
+  purchasePrice?: string;
+  purchaseDate?: string;
   notes?: string;
   isFavorite?: boolean;
 }
@@ -80,6 +95,11 @@ export interface ClothingItemUpdate {
   imageObjectPath?: string;
   color?: string;
   brand?: string;
+  size?: string;
+  season?: string;
+  occasion?: string;
+  purchasePrice?: string;
+  purchaseDate?: string;
   notes?: string;
   isFavorite?: boolean;
   timesWorn?: number;

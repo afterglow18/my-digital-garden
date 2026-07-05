@@ -18,6 +18,16 @@ export interface ClothingItem {
   /** @nullable */
   brand?: string | null;
   /** @nullable */
+  size?: string | null;
+  /** @nullable */
+  season?: string | null;
+  /** @nullable */
+  occasion?: string | null;
+  /** @nullable */
+  purchasePrice?: string | null;
+  /** @nullable */
+  purchaseDate?: string | null;
+  /** @nullable */
   notes?: string | null;
   isFavorite?: boolean;
   timesWorn?: number;

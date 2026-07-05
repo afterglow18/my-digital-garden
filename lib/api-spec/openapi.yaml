@@ -357,6 +357,16 @@ components:
           type: ["string", "null"]
         brand:
           type: ["string", "null"]
+        size:
+          type: ["string", "null"]
+        season:
+          type: ["string", "null"]
+        occasion:
+          type: ["string", "null"]
+        purchasePrice:
+          type: ["string", "null"]
+        purchaseDate:
+          type: ["string", "null"]
         notes:
           type: ["string", "null"]
         isFavorite:
@@ -383,6 +393,16 @@ components:
           type: string
         brand:
           type: string
+        size:
+          type: string
+        season:
+          type: string
+        occasion:
+          type: string
+        purchasePrice:
+          type: string
+        purchaseDate:
+          type: string
         notes:
           type: string
         isFavorite:
@@ -402,6 +422,16 @@ components:
         color:
           type: string
         brand:
+          type: string
+        size:
+          type: string
+        season:
+          type: string
+        occasion:
+          type: string
+        purchasePrice:
+          type: string
+        purchaseDate:
           type: string
         notes:
           type: string

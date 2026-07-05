@@ -6,16 +6,17 @@ import {
   getListOutfitsQueryKey,
   ClothingItem,
 } from "@workspace/api-client-react";
-import { Shuffle, BookmarkPlus, PersonStanding, Plus, X } from "lucide-react";
+import { Shuffle, BookmarkPlus, PersonStanding, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SwipeRow, SwipeRowHandle } from "@/components/SwipeRow";
-import { AddClothingSheet } from "@/components/clothing/AddClothingSheet";
-import { EditClothingSheet } from "@/components/clothing/EditClothingSheet";
+import { QuickAddSheet } from "@/components/clothing/QuickAddSheet";
+import { ItemDetailsSheet } from "@/components/clothing/ItemDetailsSheet";
 import { MannequinView } from "@/components/MannequinView";
 import { getImageUrl } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 
 type RowKey = "tops" | "bottoms" | "shoes";
+type Category = "tops" | "bottoms" | "shoes" | "accessories" | "outerwear" | "dresses";
 
 const ROWS: { key: RowKey; label: string; addLabel: string }[] = [
   { key: "tops",    label: "Tops",    addLabel: "+ Add Top"    },
@@ -23,22 +24,23 @@ const ROWS: { key: RowKey; label: string; addLabel: string }[] = [
   { key: "shoes",   label: "Shoes",   addLabel: "+ Add Shoes"  },
 ];
 
-// ── Page ──────────────────────────────────────────────────────────────────────
-
 export default function WardrobePage() {
-  // Refs to each row's imperative handle
   const rowRefs = {
     tops:    useRef<SwipeRowHandle>(null),
     bottoms: useRef<SwipeRowHandle>(null),
     shoes:   useRef<SwipeRowHandle>(null),
   };
 
-  // Which item is currently centred in each row (the "selected" items)
+  // Currently centred item in each row (auto-selected)
   const [centred, setCentred] = useState<Partial<Record<RowKey, ClothingItem>>>({});
 
-  // Sheet state
-  const [addCategory,   setAddCategory]   = useState<RowKey | null>(null);
-  const [editingItemId, setEditingItemId] = useState<number | null>(null);
+  // Quick-add sheet state
+  const [addCategory, setAddCategory] = useState<Category | null>(null);
+
+  // Item details sheet state
+  const [detailsItem, setDetailsItem] = useState<ClothingItem | null>(null);
+
+  // Mannequin overlay
   const [showMannequin, setShowMannequin] = useState(false);
 
   // Save flow
@@ -49,37 +51,39 @@ export default function WardrobePage() {
   const { data: tops    = [] } = useListClothing({ category: "tops"    }, { query: { queryKey: getListClothingQueryKey({ category: "tops"    }) } });
   const { data: bottoms = [] } = useListClothing({ category: "bottoms" }, { query: { queryKey: getListClothingQueryKey({ category: "bottoms" }) } });
   const { data: shoes   = [] } = useListClothing({ category: "shoes"   }, { query: { queryKey: getListClothingQueryKey({ category: "shoes"   }) } });
+
   const rowData: Record<RowKey, ClothingItem[]> = { tops, bottoms, shoes };
 
   const saveOutfit  = useSaveOutfit();
   const queryClient = useQueryClient();
 
-  // ── Centred item callbacks ──────────────────────────────────────────────
-  const handleCentred = useCallback((key: RowKey) => (item: ClothingItem | null) => {
-    setCentred((prev) => ({ ...prev, [key]: item ?? undefined }));
+  // ── Callbacks ─────────────────────────────────────────────────────────────
+  const handleCentred = useCallback(
+    (key: RowKey) => (item: ClothingItem | null) =>
+      setCentred((prev) => ({ ...prev, [key]: item ?? undefined })),
+    []
+  );
+
+  const handleItemTap = useCallback((item: ClothingItem) => {
+    setDetailsItem(item);
   }, []);
 
-  // ── Shuffle ────────────────────────────────────────────────────────────
-  // Staggered: rewind each row to the start instantly, then animate to a
-  // random target — creates a satisfying slot-machine spin.
+  // ── Shuffle ───────────────────────────────────────────────────────────────
   const handleShuffle = useCallback(() => {
     ROWS.forEach(({ key }, rowIndex) => {
       const data = rowData[key];
       if (data.length < 2) return;
       const ref = rowRefs[key].current;
       if (!ref) return;
-
       const targetIdx = Math.floor(Math.random() * data.length);
-
       setTimeout(() => {
-        // Snap to end (instant) then glide to random target
         ref.scrollToIndex(data.length - 1, false);
         setTimeout(() => ref.scrollToIndex(targetIdx, true), 60);
-      }, rowIndex * 80); // stagger rows by 80 ms
+      }, rowIndex * 80);
     });
   }, [rowData]);
 
-  // ── Save ───────────────────────────────────────────────────────────────
+  // ── Save outfit ───────────────────────────────────────────────────────────
   const handleSave = () => {
     if (!saveName.trim()) return;
     const itemIds = (Object.values(centred) as ClothingItem[]).map((i) => i.id);
@@ -97,31 +101,21 @@ export default function WardrobePage() {
 
   const canSave = ROWS.every(({ key }) => !!centred[key]);
 
-  // ── Render ─────────────────────────────────────────────────────────────
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-full flex flex-col pt-6 pb-8 bg-background">
 
       {/* ── Header ── */}
-      <header className="px-4 mb-4 flex items-start justify-between">
-        <div>
-          <h1 className="text-4xl font-display font-bold uppercase tracking-tighter leading-none">
-            My Closet
-          </h1>
-          <p className="text-muted-foreground font-medium text-sm mt-0.5">
-            Swipe each row to build your look.
-          </p>
-        </div>
-        {/* Quick add */}
-        <button
-          onClick={() => setAddCategory("tops")}
-          className="mt-1 w-9 h-9 border-2 border-black bg-primary rounded-full
-                     flex items-center justify-center
-                     shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
-                     active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all"
-          data-testid="header-add-item"
-        >
-          <Plus className="w-5 h-5" />
-        </button>
+      <header className="px-4 mb-4">
+        <h1 className="text-[2.5rem] font-display font-bold uppercase tracking-tighter leading-none">
+          My Digital
+        </h1>
+        <h1 className="text-[2.5rem] font-display font-bold uppercase tracking-tighter leading-none -mt-1">
+          Closet
+        </h1>
+        <p className="text-muted-foreground font-medium text-sm mt-1">
+          Swipe each row · tap centred item for details.
+        </p>
       </header>
 
       {/* ── Three slot-machine rows ── */}
@@ -130,19 +124,16 @@ export default function WardrobePage() {
           const items = rowData[key];
           return (
             <div key={key} data-testid={`row-${key}`}>
-              {/* Row label */}
               <div className="flex items-center justify-between px-4 mb-1">
                 <span className="font-display font-bold text-[10px] uppercase tracking-[0.2em] text-black/50">
                   {label}
                   {items.length > 0 && (
-                    <span className="ml-1.5 font-bold text-black/25">
-                      {items.length}
-                    </span>
+                    <span className="ml-1.5 font-bold text-black/25">{items.length}</span>
                   )}
                 </span>
                 {items.length > 0 && (
                   <button
-                    onClick={() => setAddCategory(key)}
+                    onClick={() => setAddCategory(key as Category)}
                     className="text-[10px] font-bold uppercase tracking-wide text-black/30 hover:text-black transition-colors"
                   >
                     + Add
@@ -155,10 +146,10 @@ export default function WardrobePage() {
                 items={items}
                 addLabel={addLabel}
                 onCenteredItem={handleCentred(key)}
-                onAddClick={() => setAddCategory(key)}
+                onAddClick={() => setAddCategory(key as Category)}
+                onItemTap={handleItemTap}
               />
 
-              {/* Divider between rows (not after last) */}
               {rowIdx < ROWS.length - 1 && (
                 <div className="mx-4 mt-2 mb-4 border-t border-black/8" />
               )}
@@ -167,7 +158,7 @@ export default function WardrobePage() {
         })}
       </div>
 
-      {/* ── Mini outfit preview strip ── always visible when anything is centred ── */}
+      {/* ── Mini outfit preview strip ── */}
       {Object.keys(centred).length > 0 && (
         <div className="flex justify-center gap-2 mt-4 px-4">
           {ROWS.map(({ key, label }) => {
@@ -178,12 +169,21 @@ export default function WardrobePage() {
                   className={`w-12 h-14 border-2 rounded-lg overflow-hidden ${
                     item ? "border-black" : "border-dashed border-black/20"
                   }`}
+                  style={
+                    item?.imageObjectPath
+                      ? {
+                          backgroundImage:
+                            "repeating-conic-gradient(#e5e7eb 0% 25%, white 0% 50%)",
+                          backgroundSize: "8px 8px",
+                        }
+                      : {}
+                  }
                 >
                   {item?.imageObjectPath ? (
                     <img
                       src={getImageUrl(item.imageObjectPath)!}
                       alt={item.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain"
                     />
                   ) : item ? (
                     <div className="w-full h-full bg-primary flex items-center justify-center p-0.5">
@@ -208,8 +208,6 @@ export default function WardrobePage() {
 
       {/* ── Action buttons ── */}
       <div className="px-4 mt-5 flex flex-col gap-2">
-
-        {/* Save Outfit — name input or button */}
         <AnimatePresence mode="wait">
           {isSaveOpen ? (
             <motion.div
@@ -222,7 +220,7 @@ export default function WardrobePage() {
               <input
                 autoFocus
                 type="text"
-                placeholder="Name this outfit..."
+                placeholder="Name this outfit…"
                 value={saveName}
                 onChange={(e) => setSaveName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSave()}
@@ -266,7 +264,6 @@ export default function WardrobePage() {
           )}
         </AnimatePresence>
 
-        {/* Secondary buttons: Shuffle + Mannequin */}
         <div className="grid grid-cols-2 gap-2">
           <button
             onClick={handleShuffle}
@@ -299,7 +296,7 @@ export default function WardrobePage() {
         </div>
       </div>
 
-      {/* ── Mannequin overlay ── */}
+      {/* ── Overlays ── */}
       <AnimatePresence>
         {showMannequin && (
           <MannequinView
@@ -311,17 +308,29 @@ export default function WardrobePage() {
         )}
       </AnimatePresence>
 
-      {/* ── Sheets ── */}
-      <AddClothingSheet
-        open={addCategory !== null}
-        onOpenChange={(open) => !open && setAddCategory(null)}
-        defaultCategory={addCategory ?? undefined}
-      />
-      <EditClothingSheet
-        itemId={editingItemId}
-        open={editingItemId !== null}
-        onOpenChange={(open) => !open && setEditingItemId(null)}
-      />
+      {/* Quick-add sheet */}
+      <AnimatePresence>
+        {addCategory && (
+          <QuickAddSheet
+            key={addCategory}
+            open={!!addCategory}
+            onOpenChange={(open) => !open && setAddCategory(null)}
+            category={addCategory}
+            existingCount={rowData[addCategory as RowKey]?.length ?? 0}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Item details sheet */}
+      <AnimatePresence>
+        {detailsItem && (
+          <ItemDetailsSheet
+            key={detailsItem.id}
+            item={detailsItem}
+            onClose={() => setDetailsItem(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

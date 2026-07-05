@@ -14,6 +14,11 @@ export interface ClothingItemInput {
   imageObjectPath?: string;
   color?: string;
   brand?: string;
+  size?: string;
+  season?: string;
+  occasion?: string;
+  purchasePrice?: string;
+  purchaseDate?: string;
   notes?: string;
   isFavorite?: boolean;
 }

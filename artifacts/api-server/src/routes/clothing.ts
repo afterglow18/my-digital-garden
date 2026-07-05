@@ -52,6 +52,11 @@ router.post("/clothing", async (req, res): Promise<void> => {
       imageObjectPath: parsed.data.imageObjectPath ?? null,
       color: parsed.data.color ?? null,
       brand: parsed.data.brand ?? null,
+      size: parsed.data.size ?? null,
+      season: parsed.data.season ?? null,
+      occasion: parsed.data.occasion ?? null,
+      purchasePrice: parsed.data.purchasePrice ?? null,
+      purchaseDate: parsed.data.purchaseDate ?? null,
       notes: parsed.data.notes ?? null,
       isFavorite: parsed.data.isFavorite ?? false,
     })
@@ -161,14 +166,23 @@ router.patch("/clothing/:id", async (req, res): Promise<void> => {
   }
 
   const updateData: Record<string, unknown> = {};
+  // Helper: treat empty string as null so the UI can clear optional text fields.
+  const nullIfEmpty = (v: string | undefined) =>
+    v === undefined ? undefined : v.trim() === "" ? null : v.trim();
+
   if (parsed.data.name !== undefined) updateData.name = parsed.data.name;
   if (parsed.data.category !== undefined) updateData.category = parsed.data.category;
   if (parsed.data.imageObjectPath !== undefined) updateData.imageObjectPath = parsed.data.imageObjectPath;
-  if (parsed.data.color !== undefined) updateData.color = parsed.data.color;
-  if (parsed.data.brand !== undefined) updateData.brand = parsed.data.brand;
-  if (parsed.data.notes !== undefined) updateData.notes = parsed.data.notes;
-  if (parsed.data.isFavorite !== undefined) updateData.isFavorite = parsed.data.isFavorite;
-  if (parsed.data.timesWorn !== undefined) updateData.timesWorn = parsed.data.timesWorn;
+  if (parsed.data.color         !== undefined) updateData.color         = nullIfEmpty(parsed.data.color);
+  if (parsed.data.brand         !== undefined) updateData.brand         = nullIfEmpty(parsed.data.brand);
+  if (parsed.data.size          !== undefined) updateData.size          = nullIfEmpty(parsed.data.size);
+  if (parsed.data.season        !== undefined) updateData.season        = nullIfEmpty(parsed.data.season);
+  if (parsed.data.occasion      !== undefined) updateData.occasion      = nullIfEmpty(parsed.data.occasion);
+  if (parsed.data.purchasePrice !== undefined) updateData.purchasePrice = nullIfEmpty(parsed.data.purchasePrice);
+  if (parsed.data.purchaseDate  !== undefined) updateData.purchaseDate  = nullIfEmpty(parsed.data.purchaseDate);
+  if (parsed.data.notes         !== undefined) updateData.notes         = nullIfEmpty(parsed.data.notes);
+  if (parsed.data.isFavorite    !== undefined) updateData.isFavorite    = parsed.data.isFavorite;
+  if (parsed.data.timesWorn     !== undefined) updateData.timesWorn     = parsed.data.timesWorn;
 
   const [item] = await db
     .update(clothingItemsTable)
