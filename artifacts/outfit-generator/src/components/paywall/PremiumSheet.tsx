@@ -1,45 +1,46 @@
 /**
  * PremiumSheet
  *
- * Full-screen "Premium" paywall, shown when the user taps the Mannequin
- * button without a premium entitlement.
- *
- * When a payment provider is wired into useEntitlements, the "Upgrade"
- * button triggers the real checkout flow.  Until then it shows a polite
- * "coming soon" note.
+ * Full-screen paywall shown when the user taps the Mannequin button without a
+ * premium entitlement. Pitches the Pro Stylist upgrade specifically, while
+ * noting that the $4.99 Unlock Forever plan is available if they only want
+ * unlimited items/outfits.
  */
 import React, { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { X } from "lucide-react";
+import { X, Check } from "lucide-react";
 import { useEntitlements, PurchaseResult } from "@/hooks/useEntitlements";
+import type { PurchaseProduct } from "@/lib/entitlements";
 
 interface Props {
   onClose: () => void;
 }
 
-const PREMIUM_FEATURES = [
-  { emoji: "🧍", text: "Interactive 3D mannequin" },
-  { emoji: "🔄", text: "360° outfit viewing" },
-  { emoji: "📸", text: "Front and back photos for clothing items" },
-  { emoji: "✨", text: "Display clothing correctly as the mannequin rotates" },
-  { emoji: "🚀", text: "Future premium visualization features" },
+const PRO_FEATURES = [
+  { emoji: "✅", text: "Everything in Unlock Forever" },
+  { emoji: "🧍", text: "360° Mannequin Outfit View" },
+  { emoji: "👗", text: "Dress a realistic mannequin with your saved outfits" },
+  { emoji: "🔄", text: "Rotate 360° — front, side, and back" },
+  { emoji: "🚀", text: "Future Pro features included" },
 ] as const;
 
 export function PremiumSheet({ onClose }: Props) {
   const { purchase } = useEntitlements();
-  const [status, setStatus] = useState<"idle" | "pending" | "unavailable">("idle");
+  const [pending, setPending] = useState<PurchaseProduct | null>(null);
 
-  const handlePurchase = useCallback(async () => {
-    setStatus("pending");
-    const result: PurchaseResult = await purchase("premium");
-    if (result === "success") {
-      onClose();
-    } else if (result === "unavailable") {
-      setStatus("unavailable");
-    } else {
-      setStatus("idle");
-    }
-  }, [purchase, onClose]);
+  const handlePurchase = useCallback(
+    async (product: PurchaseProduct) => {
+      if (pending) return;
+      setPending(product);
+      const result: PurchaseResult = await purchase(product);
+      if (result === "success") {
+        onClose();
+      } else {
+        setPending(null);
+      }
+    },
+    [pending, purchase, onClose],
+  );
 
   return (
     <motion.div
@@ -52,7 +53,7 @@ export function PremiumSheet({ onClose }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-white border-b-2 border-black flex-shrink-0">
         <h2 className="font-display font-bold text-xl uppercase tracking-tight">
-          Premium Feature
+          Pro Stylist
         </h2>
         <button
           onClick={onClose}
@@ -70,13 +71,13 @@ export function PremiumSheet({ onClose }: Props) {
         {/* Hero */}
         <div className="border-4 border-black rounded-2xl bg-black text-white
                         shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
-          <div className="px-5 pt-6 pb-5 flex flex-col items-start gap-2">
-            <span className="text-5xl leading-none">🧍</span>
+          <div className="px-5 pt-6 pb-5 flex flex-col gap-2">
+            <span className="text-5xl leading-none">👗</span>
             <p className="font-display font-bold text-3xl uppercase tracking-tight leading-tight mt-1">
-              3D Mannequin
+              360° Mannequin
             </p>
             <p className="text-sm text-white/60 font-medium leading-snug">
-              See your outfit come to life in 360°.
+              Dress a realistic mannequin with your saved outfits and see them from every angle.
             </p>
           </div>
         </div>
@@ -85,47 +86,47 @@ export function PremiumSheet({ onClose }: Props) {
         <div className="border-2 border-black rounded-2xl bg-white p-4
                         shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
           <p className="font-display font-bold text-sm uppercase tracking-tight mb-3">
-            Premium includes
+            Pro Stylist includes
           </p>
           <ul className="flex flex-col gap-3">
-            {PREMIUM_FEATURES.map(({ emoji, text }) => (
+            {PRO_FEATURES.map(({ emoji, text }) => (
               <li key={text} className="flex items-start gap-3 text-sm leading-snug">
-                <span className="text-lg leading-none mt-0.5 flex-shrink-0">{emoji}</span>
+                <span className="text-base leading-none mt-0.5 flex-shrink-0">{emoji}</span>
                 <span className="text-black/80">{text}</span>
               </li>
             ))}
           </ul>
         </div>
 
-        {/* Note */}
-        <p className="text-xs text-center text-black/40 font-medium px-2">
-          The core app — wardrobe, outfit builder, and lookbook — is fully
-          functional with the $4.99 Unlock Forever purchase.
-          Premium adds the 3D mannequin on top.
-        </p>
-
       </div>
 
       {/* CTA footer */}
       <div className="px-5 pb-6 pt-4 bg-white border-t-2 border-black flex flex-col gap-3 flex-shrink-0">
+        {/* Primary: Pro Stylist */}
         <button
-          onClick={handlePurchase}
-          disabled={status === "pending"}
+          onClick={() => handlePurchase("premium")}
+          disabled={!!pending}
           className="w-full py-4 rounded-xl flex items-center justify-center gap-2
                      font-display font-bold text-lg uppercase tracking-tight border-4 border-black
                      bg-black text-white shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]
                      active:translate-x-1 active:translate-y-1 active:shadow-none
                      disabled:opacity-60 disabled:cursor-not-allowed transition-all"
         >
-          {status === "pending" ? "Opening checkout…" : "Upgrade to Premium"}
+          {pending === "premium" ? "Opening checkout…" : "Get Pro Stylist – $9.99"}
         </button>
 
-        {status === "unavailable" && (
-          <p className="text-xs text-center text-amber-700 bg-amber-50 border border-amber-200
-                        rounded-lg px-3 py-2">
-            Payments are not yet set up. Check back soon!
-          </p>
-        )}
+        {/* Secondary: Unlock Forever (if they just want unlimited without mannequin) */}
+        <button
+          onClick={() => handlePurchase("unlock")}
+          disabled={!!pending}
+          className="w-full py-3 rounded-xl flex items-center justify-center gap-1.5
+                     font-display font-bold text-sm uppercase tracking-tight border-4 border-black
+                     bg-primary shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
+                     active:translate-x-0.5 active:translate-y-0.5 active:shadow-none
+                     disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+        >
+          {pending === "unlock" ? "Opening checkout…" : "Or get Unlock Forever – $4.99 (no mannequin)"}
+        </button>
 
         <button
           onClick={onClose}

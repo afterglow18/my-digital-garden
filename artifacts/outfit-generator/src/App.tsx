@@ -91,9 +91,8 @@ function App() {
     fetch(`/api/stripe/verify?session_id=${encodeURIComponent(sessionId)}`)
       .then((r) => r.json())
       .then(({ verified, product }: { verified: boolean; product: string | null }) => {
-        if (verified && product === "unlock") {
-          setGlobalTier("unlock");
-        }
+        if (verified && product === "unlock") setGlobalTier("unlock");
+        if (verified && product === "premium") setGlobalTier("premium");
       })
       .catch(() => {
         // Silently ignore — user can contact support if payment isn't reflected.

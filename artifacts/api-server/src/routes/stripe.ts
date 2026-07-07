@@ -68,8 +68,8 @@ router.post("/stripe/checkout", async (req, res): Promise<void> => {
       returnPath?: unknown;
     };
 
-    if (product !== "unlock") {
-      res.status(400).json({ error: "Unknown product. Only 'unlock' is supported." });
+    if (product !== "unlock" && product !== "premium") {
+      res.status(400).json({ error: "Unknown product. Valid products: 'unlock', 'premium'." });
       return;
     }
 
@@ -83,16 +83,16 @@ router.post("/stripe/checkout", async (req, res): Promise<void> => {
 
     const stripe = await getUncachableStripeClient();
 
-    // Look up the unlock product by metadata tag — no env var for price_id needed.
+    // Look up the product by metadata tag — no env var for price_id needed.
     const products = await stripe.products.search({
-      query: "metadata['product_key']:'unlock' AND active:'true'",
+      query: `metadata['product_key']:'${product}' AND active:'true'`,
       limit: 1,
     });
 
     if (!products.data.length) {
       res.status(503).json({
         error:
-          "Unlock product not configured in Stripe. " +
+          `Product '${product}' not configured in Stripe. ` +
           "Run: pnpm --filter @workspace/scripts run seed-products",
       });
       return;
@@ -115,7 +115,7 @@ router.post("/stripe/checkout", async (req, res): Promise<void> => {
       mode: "payment",
       success_url: successUrl,
       cancel_url:  cancelUrl,
-      metadata: { product_key: "unlock" },
+      metadata: { product_key: product },
     });
 
     res.json({ url: session.url });

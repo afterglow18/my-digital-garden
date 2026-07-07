@@ -33,5 +33,5 @@ export type PurchaseProduct = "unlock" | "premium";
 
 export const PRODUCT_PRICES: Record<PurchaseProduct, string> = {
   unlock:  "$4.99",
-  premium: "$2.99",   // per month or one-time — set when provider is configured
+  premium: "$9.99",
 };

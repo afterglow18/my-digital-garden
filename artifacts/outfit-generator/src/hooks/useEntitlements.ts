@@ -76,7 +76,6 @@ export type PurchaseResult = "success" | "cancelled" | "unavailable";
  * is used — App.tsx handles the return trip via the success_url params.
  */
 async function runCheckout(product: PurchaseProduct): Promise<PurchaseResult> {
-  if (product !== "unlock") return "unavailable";
 
   try {
     // BASE_URL includes trailing slash, e.g. "/outfit-generator/".
