@@ -71,7 +71,7 @@ export function UpgradeSheet({ reason, onClose }: Props) {
         {/* Headline */}
         <div className="flex flex-col gap-0.5">
           <h1 className="font-display font-bold text-4xl uppercase tracking-tight leading-none">
-            Unlock<br />Unlimited<br />Forever
+            Unlock Your<br />Unlimited<br />Closet Forever
           </h1>
           <p className="text-sm font-bold text-black/55 mt-2">
             Your free closet is full!
