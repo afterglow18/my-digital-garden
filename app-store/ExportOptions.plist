@@ -6,7 +6,7 @@
   <key>method</key>
   <string>app-store</string>
   <key>teamID</key>
-  <string>YOUR_TEAM_ID</string>      <!-- replace with your 10-char Apple Team ID -->
+  <string>2A78MFVCJS</string>
   <key>uploadBitcode</key>
   <false/>
   <key>uploadSymbols</key>
