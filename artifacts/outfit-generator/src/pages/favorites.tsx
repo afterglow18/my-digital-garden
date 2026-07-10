@@ -128,18 +128,10 @@ function SortableTile({
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function FavoritesPage() {
-  const { data: tops        = [], isLoading: l1 } = useListClothing({ category: "tops"        });
-  const { data: bottoms     = [], isLoading: l2 } = useListClothing({ category: "bottoms"     });
-  const { data: shoes       = [], isLoading: l3 } = useListClothing({ category: "shoes"       });
-  const { data: accessories = [], isLoading: l4 } = useListClothing({ category: "accessories" });
-  const { data: outerwear   = [], isLoading: l5 } = useListClothing({ category: "outerwear"   });
-  const { data: dresses     = [], isLoading: l6 } = useListClothing({ category: "dresses"     });
+  // Fetch all items in one query (no category filter) so nothing is missed
+  const { data: allItems = [], isLoading } = useListClothing({});
 
-  const isLoading = l1 || l2 || l3 || l4 || l5 || l6;
-
-  const rawFavorites = [
-    ...tops, ...bottoms, ...shoes, ...accessories, ...outerwear, ...dresses,
-  ].filter((item) => item.isFavorite);
+  const rawFavorites = allItems.filter((item) => item.isFavorite);
 
   const [orderedIds, setOrderedIds] = useState<number[]>([]);
   const [detailsItem, setDetailsItem] = useState<ClothingItem | null>(null);
