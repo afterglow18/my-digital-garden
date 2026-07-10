@@ -1,0 +1,48 @@
+[ERR_PNPM_IGNORED_BUILDS] Ignored build scripts: @google/genai@2.10.0, esbuild@0.27.3, protobufjs@7.6.5
+
+Run "pnpm approve-builds" to pick which dependencies should be allowed to run scripts.
+
+
+Build failed :|
+Step 3 script `Install pnpm and dependencies` exited with status code 1
+/usr/local/bin/pnpm
+! Corepack is about to download https://registry.npmjs.org/pnpm/-/pnpm-11.11.0.tgz
+[WARN] The "pnpm" field in package.json is no longer read by pnpm. The following keys were ignored: "pnpm.overrides". See https://pnpm.io/settings for the new home of each setting.
+Scope: all 10 workspace projects
+? Verifying lockfile against supply-chain policies (839 entries)...
+Progress: resolved 1, reused 0, downloaded 0, added 0
+artifacts/api-server                     | [WARN] deprecated @types/bcryptjs@3.0.0
+artifacts/mockup-sandbox                 | [WARN] deprecated recharts@2.15.4
+Progress: resolved 68, reused 0, downloaded 58, added 0
+Progress: resolved 90, reused 0, downloaded 86, added 0
+Progress: resolved 96, reused 0, downloaded 94, added 0
+Progress: resolved 105, reused 0, downloaded 104, added 0
+✓ Lockfile passes supply-chain policies (839 entries in 4.3s)
+Progress: resolved 208, reused 0, downloaded 144, added 0
+Progress: resolved 334, reused 0, downloaded 293, added 0
+Progress: resolved 559, reused 0, downloaded 507, added 0
+[WARN] 2 deprecated subdependencies found: node-domexception@1.0.0, uuid@9.0.1
+Packages: +683
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 688, reused 0, downloaded 683, added 105
+Progress: resolved 688, reused 0, downloaded 683, added 388
+Progress: resolved 688, reused 0, downloaded 683, added 540
+Progress: resolved 688, reused 0, downloaded 683, added 683, done
+. preinstall$ sh -c 'rm -f package-lock.json yarn.lock; case "$npm_config_user_agent" in pnpm/*) ;; *) echo "Use pnpm instead" >&2; exit 1 ;; esac'
+. preinstall: Done
+
+dependencies:
++ stripe 22.3.0 (22.3.1 is available)
++ stripe-replit-sync 1.0.0
+
+devDependencies:
++ prettier 3.8.4 (3.9.5 is available)
++ typescript 5.9.3 (7.0.2 is available)
+
+[ERR_PNPM_IGNORED_BUILDS] Ignored build scripts: @google/genai@2.10.0, esbuild@0.27.3, protobufjs@7.6.5
+
+Run "pnpm approve-builds" to pick which dependencies should be allowed to run scripts.
+
+
+Build failed :|
+Step 3 script `Install pnpm and dependencies` exited with status code 1
