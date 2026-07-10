@@ -31,6 +31,7 @@ import {
 } from "@workspace/api-client-react";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { getImageUrl } from "@/lib/utils";
 import { ClosetRow, ClosetRowHandle } from "@/components/ClosetRow";
 import { QuickAddSheet } from "@/components/clothing/QuickAddSheet";
 import { ItemDetailsSheet } from "@/components/clothing/ItemDetailsSheet";
@@ -171,13 +172,14 @@ export default function WardrobePage() {
   const [isSaveOpen,    setIsSaveOpen]    = useState(false);
   const [saveName,      setSaveName]      = useState("");
 
-  const { data: tops    = [] } = useListClothing({ category: "tops"    }, { query: { queryKey: getListClothingQueryKey({ category: "tops"    }) } });
-  const { data: bottoms = [] } = useListClothing({ category: "bottoms" }, { query: { queryKey: getListClothingQueryKey({ category: "bottoms" }) } });
-  const { data: shoes   = [] } = useListClothing({ category: "shoes"   }, { query: { queryKey: getListClothingQueryKey({ category: "shoes"   }) } });
+  const { data: tops        = [] } = useListClothing({ category: "tops"        }, { query: { queryKey: getListClothingQueryKey({ category: "tops"        }) } });
+  const { data: bottoms     = [] } = useListClothing({ category: "bottoms"     }, { query: { queryKey: getListClothingQueryKey({ category: "bottoms"     }) } });
+  const { data: shoes       = [] } = useListClothing({ category: "shoes"       }, { query: { queryKey: getListClothingQueryKey({ category: "shoes"       }) } });
+  const { data: accessories = [] } = useListClothing({ category: "accessories" }, { query: { queryKey: getListClothingQueryKey({ category: "accessories" }) } });
   const { data: outfits = [] } = useListOutfits();
 
   const rowData: Record<RowKey, ClothingItem[]> = { tops, bottoms, shoes };
-  const totalItems = tops.length + bottoms.length + shoes.length;
+  const totalItems = tops.length + bottoms.length + shoes.length + accessories.length;
 
   const saveOutfit  = useSaveOutfit();
   const queryClient = useQueryClient();
@@ -251,6 +253,7 @@ export default function WardrobePage() {
   const ready     = ir.width > 0;
 
   return (
+    <div style={{ overflowY: "auto", height: `calc(100dvh - ${NAV_H}px)` }}>
     <div
       ref={containerRef}
       style={{
@@ -260,6 +263,7 @@ export default function WardrobePage() {
         // letterbox gap below — because the save-bar is baked into the rug at the
         // bottom of the image.  min() prevents overflow on very short screens.
         height: `min(calc(100dvh - ${NAV_H}px), calc(100vw * ${(IMG_H / IMG_W).toFixed(6)}))`,
+        flexShrink: 0,
         overflow: "hidden",
         // Door-yellow background blends with yellow doors visible at sides/bottom
         background: "#F0C030",
@@ -592,6 +596,60 @@ export default function WardrobePage() {
           />
         )}
       </AnimatePresence>
+    </div>
+
+    {/* ── Accessories section ── */}
+    {accessories.length > 0 && (
+      <div style={{ background: "#FDFAF4", borderTop: "2px solid black", padding: "14px 12px 20px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <h3 style={{ fontFamily: "var(--font-display, sans-serif)", fontWeight: 800, fontSize: 15, textTransform: "uppercase", letterSpacing: "-0.01em", margin: 0 }}>
+            Accessories
+          </h3>
+          <button
+            onClick={() => handleAddClick("accessories")}
+            style={{
+              fontFamily: "var(--font-display, sans-serif)", fontWeight: 800, fontSize: 11,
+              letterSpacing: "0.08em", textTransform: "uppercase",
+              background: "#F0C030", border: "2px solid black", borderRadius: 20,
+              padding: "4px 12px", cursor: "pointer",
+              boxShadow: "2px 2px 0px 0px rgba(0,0,0,1)",
+            }}
+          >
+            + ADD
+          </button>
+        </div>
+        <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
+          {accessories.map(item => (
+            <button
+              key={item.id}
+              onClick={() => setDetailsItem(item)}
+              style={{
+                position: "relative", flexShrink: 0,
+                width: 80, height: 80,
+                border: "2px solid black", borderRadius: 12,
+                background: "#fff", overflow: "hidden",
+                cursor: "pointer", padding: 0,
+                boxShadow: "2px 2px 0px 0px rgba(0,0,0,1)",
+              }}
+            >
+              {item.imageObjectPath ? (
+                <img
+                  src={getImageUrl(item.imageObjectPath)!}
+                  alt={item.name}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              ) : (
+                <span style={{ fontSize: 28, display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>👜</span>
+              )}
+              {item.isFavorite && (
+                <span style={{ position: "absolute", top: 3, right: 3, fontSize: 12 }}>⭐</span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+    )}
+
     </div>
   );
 }

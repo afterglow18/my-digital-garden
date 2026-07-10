@@ -287,8 +287,10 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
           <Field label="Color"  value={form.color} onChange={patch("color") as (v: string) => void} placeholder="Navy Blue" />
         </div>
 
-        {/* Size */}
-        <Field label="Size" value={form.size} onChange={patch("size") as (v: string) => void} placeholder="S, M, L, 32, 8…" />
+        {/* Size — hidden for accessories */}
+        {item.category !== "accessories" && (
+          <Field label="Size" value={form.size} onChange={patch("size") as (v: string) => void} placeholder="S, M, L, 32, 8…" />
+        )}
 
         {/* Season + Occasion */}
         <div className="grid grid-cols-2 gap-3">
