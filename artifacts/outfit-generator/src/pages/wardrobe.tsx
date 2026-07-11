@@ -54,22 +54,23 @@ const IMG_H = 1536;
 const NAV_H = 90;
 
 // ── Landmark fractions (measured from the 1024×1536 vanity PNG) ──────────────
-// doorL/doorR: inner mirror area edges (inside the bulb frame)
-// rows[i]: sectionTop = y where section starts, shelfY = shelf surface y
-// btnCY: y-centre of the baked-in pink ADD pill in the background
+// Pixel-scanned from the new no-shelf background (6AC7C7ED…png).
+// doorL/doorR: inner mirror glass edges at mid-height (x=212, x=820 / 1024)
+// rows[i].btnCY:     y-centre of the baked-in pink ADD pill
+// rows[i].sectionTop: one pixel below the pill bottom — where items begin
+// rows[i].shelfY:     top of the NEXT pill — where items end
 const LM = {
-  doorL: 0.185,  // x≈190/1024 — left inner edge of white shelf area
-  doorR: 0.815,  // x≈835/1024 — right inner edge
+  doorL: 0.207,  // x≈212/1024 — left inner mirror glass edge
+  doorR: 0.801,  // x≈820/1024 — right inner mirror glass edge
 
   rows: [
-    { sectionTop: 0.185, shelfY: 0.395, btnCY: 0.305 },  // TOPS
-    { sectionTop: 0.395, shelfY: 0.555, btnCY: 0.478 },  // BOTTOMS
-    { sectionTop: 0.555, shelfY: 0.715, btnCY: 0.635 },  // SHOES
-    { sectionTop: 0.715, shelfY: 0.855, btnCY: 0.785 },  // ACCESSORIES
+    { sectionTop: 0.281, shelfY: 0.384, btnCY: 0.260 },  // MAKEUP     y=432–590
+    { sectionTop: 0.430, shelfY: 0.542, btnCY: 0.407 },  // SKINCARE   y=660–832
+    { sectionTop: 0.587, shelfY: 0.703, btnCY: 0.565 },  // HAIR       y=902–1080
+    { sectionTop: 0.742, shelfY: 0.820, btnCY: 0.723 },  // FRAGRANCES y=1140–1260
   ],
 
-  // Floating save area — just above the baked-in bottom shelf items
-  saveAreaY: 0.86,
+  saveAreaY: 0.84,
 } as const;
 
 // ── useImageRect ─────────────────────────────────────────────────────────────
@@ -260,7 +261,7 @@ export default function WardrobePage() {
             return (
               <React.Fragment key={key}>
 
-                {/* ── Item carousel — fills the entire shelf section ── */}
+                {/* ── Item carousel — fills the section between buttons ── */}
                 {items.length > 0 && (
                   <div
                     data-testid={`row-${key}`}
@@ -271,7 +272,7 @@ export default function WardrobePage() {
                       width:  carW,
                       height: secH,
                       zIndex: 10,
-                      overflow: "hidden",
+                      overflow: "visible",
                     }}
                   >
                     <ClosetRow
@@ -312,12 +313,12 @@ export default function WardrobePage() {
                     style={{
                       position: "absolute",
                       top:    secTop + 6,
-                      right:  ir.width - (carLeft + carW) + 6,
+                      left:   carLeft + carW - 34,
                       width:  28,
                       height: 28,
                       zIndex: 30,
                       background: "rgba(255,145,176,0.92)",
-                      border: "2px solid #000",
+                      border: "2px solid rgba(0,0,0,0.55)",
                       borderRadius: "50%",
                       cursor: "pointer",
                       display: "flex",
@@ -327,7 +328,7 @@ export default function WardrobePage() {
                       lineHeight: 1,
                       color: "#000",
                       fontWeight: 700,
-                      boxShadow: "2px 2px 0 #000",
+                      boxShadow: "1px 1px 4px rgba(0,0,0,0.25)",
                       padding: 0,
                     }}
                   >
@@ -340,15 +341,15 @@ export default function WardrobePage() {
           })}
 
 
-          {/* ── Saved shortcut — sits over the vanity chair bottom-left ── */}
+          {/* ── Saved shortcut — bottom-left of mirror glass, below FRAGRANCES ── */}
           <button
             onClick={() => navigate("/favorites")}
             data-testid="button-saved"
             aria-label="View saved looks"
             style={{
               position: "absolute",
-              top:    pY(ir, 0.895),
-              left:   ir.left + pW(ir, 0.04),
+              top:    pY(ir, 0.832),
+              left:   pX(ir, LM.doorL + 0.01),
               width:  44,
               height: 44,
               borderRadius: "50%",
