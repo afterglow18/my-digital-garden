@@ -6,8 +6,8 @@ import { useState, useRef, useEffect, useCallback, FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuthContext } from "@/context/AuthContext";
 
-const IMG_W = 941;
-const IMG_H = 1672;
+const IMG_W = 1024;
+const IMG_H = 1536;
 
 interface Rect { top: number; left: number; width: number; height: number; }
 

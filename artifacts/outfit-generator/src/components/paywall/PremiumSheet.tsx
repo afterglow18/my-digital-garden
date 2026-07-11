@@ -18,8 +18,8 @@ interface Props {
 
 const PRO_FEATURES = [
   { emoji: "✅", text: "Everything in Unlock Forever" },
-  { emoji: "🧍", text: "360° Mannequin Outfit View" },
-  { emoji: "👗", text: "Dress a realistic mannequin with your saved outfits" },
+  { emoji: "🧍", text: "360° Mannequin Look View" },
+  { emoji: "💄", text: "Dress a realistic mannequin with your saved looks" },
   { emoji: "🔄", text: "Rotate 360° — front, side, and back" },
   { emoji: "🚀", text: "Future Pro features included" },
 ] as const;
@@ -77,7 +77,7 @@ export function PremiumSheet({ onClose }: Props) {
               360° Mannequin
             </p>
             <p className="text-sm text-white/60 font-medium leading-snug">
-              Dress a realistic mannequin with your saved outfits and see them from every angle.
+              Dress a realistic mannequin with your saved looks and see them from every angle.
             </p>
           </div>
         </div>

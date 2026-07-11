@@ -22,7 +22,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   const navItems = [
     { href: "/", label: "Vanity", icon: Shirt, badge: wardrobeCount },
-    { href: "/generate", label: "Generate", icon: Sparkles },
+    { href: "/generate", label: "Beauty", icon: Sparkles },
     { href: "/saved", label: "Saved", icon: Bookmark },
     { href: "/account", label: "Account", icon: UserCircle },
   ];

@@ -374,7 +374,7 @@ export default function WardrobePage() {
                 <input
                   autoFocus
                   type="text"
-                  placeholder="Name this outfit…"
+                  placeholder="Name this look…"
                   value={saveName}
                   onChange={e => setSaveName(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && handleSave()}

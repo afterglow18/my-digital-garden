@@ -20,8 +20,8 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 
-const IMG_W = 941;
-const IMG_H = 1672;
+const IMG_W = 1024;
+const IMG_H = 1536;
 
 // Fractional y of the button within the closet image.
 const RUG_CENTRE_F = 0.56;
@@ -174,7 +174,7 @@ export default function WelcomePage({ onEnter }: Props) {
         {/* Background image */}
         {ir && (
           <img
-            src="/closet-bg.png"
+            src="/vanity-bg.png"
             alt=""
             draggable={false}
             style={{
@@ -239,7 +239,7 @@ export default function WelcomePage({ onEnter }: Props) {
                 boxShadow: "0 4px 20px rgba(0,0,0,0.28)",
               }}
             >
-              Enter Closet ✨
+              Enter Vanity ✨
             </button>
           </motion.div>
         )}
