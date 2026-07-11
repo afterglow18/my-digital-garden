@@ -29,16 +29,16 @@ const NAV_H = 90;
 const PINK  = "#e08090";
 
 const LM = {
-  doorL: 0.185,
-  doorR: 0.815,
+  doorL: 0.207,
+  doorR: 0.801,
   rows: [
-    { sectionTop: 0.185, shelfY: 0.395 },
-    { sectionTop: 0.395, shelfY: 0.555 },
-    { sectionTop: 0.555, shelfY: 0.715 },
-    { sectionTop: 0.715, shelfY: 0.855 },
+    { sectionTop: 0.281, shelfY: 0.384, btnCY: 0.260 },  // MAKEUP
+    { sectionTop: 0.430, shelfY: 0.542, btnCY: 0.407 },  // SKINCARE
+    { sectionTop: 0.587, shelfY: 0.703, btnCY: 0.565 },  // HAIR
+    { sectionTop: 0.742, shelfY: 0.845, btnCY: 0.723 },  // FRAGRANCES
   ],
-  // Action bar sits below the 4th shelf, covering the decorative bottom items area
-  barY:   0.858,
+  // Action bar sits just below FRAGRANCES section
+  barY:   0.855,
   barBot: 0.960,
 } as const;
 
@@ -229,12 +229,10 @@ export default function GeneratePage() {
 
   const canSave = Object.keys(centred).length > 0;
 
-  // ── Section layout helpers ────────────────────────────────────────────────
+  // ── Section layout helpers — per-row, same as wardrobe.tsx ──────────────
   const sectionHeights = ready
     ? LM.rows.map(lm => pH(ir, lm.shelfY - lm.sectionTop))
     : LM.rows.map(() => 0);
-  const minSectionH = ready ? Math.min(...sectionHeights) : 0;
-  const maxPhotoH   = Math.max(0, minSectionH - 4);
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -271,28 +269,40 @@ export default function GeneratePage() {
 
         return (
           <>
-            {/* ── 4 shelf carousels ── */}
+            {/* ── 4 shelf carousels + ADD-button covers ── */}
             {ROWS.map(({ key }, rowIdx) => {
               const lm    = LM.rows[rowIdx];
               const items = { makeup, skincare, hair, fragrances }[key];
               const secTop = pY(ir, lm.sectionTop);
               const secH   = pH(ir, lm.shelfY - lm.sectionTop);
+              const btnCY  = pY(ir, lm.btnCY);
+              const btnH   = Math.max(32, pH(ir, 0.045));
 
               return (
                 <React.Fragment key={key}>
+                  {/* Cover the baked-in pink ADD pill so it's hidden on this page */}
+                  <div style={{
+                    position: "absolute",
+                    top: btnCY - btnH / 2, left: carLeft,
+                    width: carW, height: btnH,
+                    zIndex: 15,
+                    background: "rgba(255,252,254,0.72)",
+                    pointerEvents: "none",
+                  }} />
+
                   {items.length > 0 ? (
                     <div
                       style={{
                         position: "absolute",
                         top: secTop, left: carLeft, width: carW, height: secH,
-                        zIndex: 10, overflow: "hidden",
+                        zIndex: 10, overflow: "visible",
                       }}
                     >
                       <ClosetRow
                         ref={rowRefs[key]}
                         items={items}
                         onCenteredItem={setCentredHandlers[key]}
-                        maxPhotoH={maxPhotoH}
+                        maxPhotoH={Math.max(0, sectionHeights[rowIdx] - 4)}
                         disableSwipe
                       />
                     </div>
@@ -429,19 +439,19 @@ export default function GeneratePage() {
                     onClick={handleSpin}
                     disabled={!hasItems}
                     style={{
-                      padding: "0 28px", height: 44, borderRadius: 24,
+                      width: "100%", height: 52, borderRadius: 28,
                       border: "2.5px solid #000",
                       background: hasItems
                         ? "linear-gradient(to bottom, #f7c6d8, #e08090)"
                         : "rgba(220,180,190,0.32)",
                       color: hasItems ? "#fff" : "#9a6070",
-                      fontWeight: 800, fontSize: 14,
+                      fontWeight: 800, fontSize: 16,
                       letterSpacing: "-0.01em", textTransform: "uppercase",
                       whiteSpace: "nowrap",
                       boxShadow: hasItems ? "3px 3px 0 rgba(0,0,0,0.85)" : "none",
                       cursor: hasItems ? "pointer" : "default",
                       fontFamily: "var(--font-display)",
-                      display: "flex", alignItems: "center", gap: 7,
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
                     }}
                   >
                     ✨ Spin It!
