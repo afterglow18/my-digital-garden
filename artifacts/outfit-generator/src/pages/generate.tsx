@@ -1,7 +1,7 @@
 /**
  * GeneratePage — "Spin It" screen for My Digital Vanity.
  *
- * Uses the same vanity-bg.png (1024×1536) and 4-shelf layout as WardrobePage.
+ * Uses generate-bg.png (same 1024×1536 dimensions) with the 4-shelf layout.
  * Phase machine:
  *   idle     → shelves display items; "✨ Spin It!" button at bottom
  *   spinning → carousels cycle randomly while API is in flight
@@ -248,7 +248,7 @@ export default function GeneratePage() {
     >
       {/* ── Background image ── */}
       <img
-        src="/vanity-bg.png?v=5"
+        src="/generate-bg.png?v=1"
         alt="My Digital Vanity"
         style={{
           position: "absolute",
