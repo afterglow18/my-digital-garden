@@ -393,14 +393,13 @@ export default function GeneratePage() {
               style={{
                 position: "absolute",
                 top:    pY(ir, LM.barY),
-                left:   pX(ir, LM.doorL),
-                width:  pW(ir, LM.doorR - LM.doorL),
+                left:   0,
+                width:  "100%",
                 height: pH(ir, LM.barBot - LM.barY),
                 zIndex: 18,
                 pointerEvents: "none",
                 background: "rgba(255,248,250,0.96)",
                 borderTop: "1px solid rgba(220,150,160,0.25)",
-                borderRadius: "0 0 4px 4px",
               }}
             />
 
