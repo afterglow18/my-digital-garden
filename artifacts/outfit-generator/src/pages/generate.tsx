@@ -387,6 +387,23 @@ export default function GeneratePage() {
             )}
 
 
+            {/* ── Action bar — white panel behind buttons ── */}
+            <div
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                top:    pY(ir, LM.barY),
+                left:   pX(ir, LM.doorL),
+                width:  pW(ir, LM.doorR - LM.doorL),
+                height: pH(ir, LM.barBot - LM.barY),
+                zIndex: 18,
+                pointerEvents: "none",
+                background: "rgba(255,248,250,0.96)",
+                borderTop: "1px solid rgba(220,150,160,0.25)",
+                borderRadius: "0 0 4px 4px",
+              }}
+            />
+
             {/* ── CTA buttons ── */}
             <div
               style={{
