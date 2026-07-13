@@ -1,9 +1,9 @@
 /**
- * WelcomePage — Hollywood vanity mirror splash screen.
+ * WelcomePage — Hollywood suitcase splash screen.
  *
  * OFF  : deep-rose/charcoal mirror face, unlit glass bulbs around perimeter.
  * ON   : bulbs glow warm from top-centre outward (35 ms stagger), then the
- *        vanity background fades in, then the screen dissolves → onEnter().
+ *        suitcase background fades in, then the screen dissolves → onEnter().
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -180,7 +180,7 @@ export default function WelcomePage({ onEnter }: Props) {
           transition={{ duration: 0.9, ease: "easeInOut" }}
         />
 
-        {/* Vanity background — fades in after bulbs light up */}
+        {/* Suitcase background — fades in after bulbs light up */}
         <motion.img
           src="/briefcase-bg.png"
           alt=""
@@ -268,7 +268,7 @@ export default function WelcomePage({ onEnter }: Props) {
           >
             MY DIGITAL
             <br />
-            VANITY
+            SUITCASE
           </div>
           <div
             style={{
@@ -285,7 +285,7 @@ export default function WelcomePage({ onEnter }: Props) {
           </div>
         </motion.div>
 
-        {/* ── "Enter Vanity" button ── */}
+        {/* ── "Enter Suitcase" button ── */}
         <motion.div
           style={{
             position: "absolute",
@@ -322,7 +322,7 @@ export default function WelcomePage({ onEnter }: Props) {
               boxShadow: "0 4px 28px rgba(160,0,60,0.45), inset 0 1px 0 rgba(255,255,255,0.12)",
             }}
           >
-            Enter Vanity ✨
+            Enter Suitcase ✨
           </button>
         </motion.div>
       </div>

@@ -1,5 +1,5 @@
 /**
- * WardrobePage — vanity-bg.png (1024×1536 PNG)
+ * WardrobePage — briefcase-bg.png (1024×1536 PNG)
  *
  * Layout: 4 shelf sections inside a Hollywood-mirror frame.
  * Items sit ON TOP of each shelf surface (bottom-anchored within each section).
@@ -54,7 +54,7 @@ const IMG_W = 1024;
 const IMG_H = 1536;
 const NAV_H = 90;
 
-// ── Landmark fractions (measured from the 1024×1536 vanity PNG) ──────────────
+// ── Landmark fractions (measured from the 1024×1536 suitcase PNG) ──────────────
 // Pixel-scanned from the new no-shelf background (6AC7C7ED…png).
 // doorL/doorR: inner mirror glass edges at mid-height (x=212, x=820 / 1024)
 // rows[i].btnCY:     y-centre of the baked-in pink ADD pill
@@ -215,14 +215,14 @@ export default function WardrobePage() {
         width: "100%",
         height: `min(calc(100dvh - ${NAV_H}px), calc(100vw * ${(IMG_H / IMG_W).toFixed(6)}))`,
         overflow: "hidden",
-        // Dusty rose background matches the outer wall colour in the vanity image
+        // Dusty rose background matches the outer wall colour in the suitcase image
         background: "#e8b8b0",
       }}
     >
       {/* ── Background image ── */}
       <img
         src="/briefcase-bg.png?v=12"
-        alt="My Digital Vanity"
+        alt="My Digital Suitcase"
         style={{
           position: "absolute",
           top:    ready ? ir.top    : 0,

@@ -416,7 +416,7 @@ export default function SavedPage() {
           </div>
           <h3 className="font-display font-bold text-xl mb-2">No looks saved yet.</h3>
           <p className="text-sm font-medium text-muted-foreground">
-            Head to your Vanity, spin the slots, and save looks you love.
+            Head to your Suitcase, spin the slots, and save looks you love.
           </p>
         </div>
       )}
@@ -428,7 +428,7 @@ export default function SavedPage() {
         )}
       </AnimatePresence>
 
-      {/* Vanity picker for replacing a slot */}
+      {/* Suitcase picker for replacing a slot */}
       <AnimatePresence>
         {replacingSlot !== null && (
           <WardrobePickerSheet

@@ -368,7 +368,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
               </div>
               <div className="text-center">
                 <p className="font-display font-bold text-2xl uppercase tracking-tight">Saving…</p>
-                <p className="text-sm text-muted-foreground mt-1">Adding to your vanity.</p>
+                <p className="text-sm text-muted-foreground mt-1">Adding to your suitcase.</p>
               </div>
             </motion.div>
           )}

@@ -1,5 +1,5 @@
 /**
- * GeneratePage — "Spin It" screen for My Digital Vanity.
+ * GeneratePage — "Spin It" screen for My Digital Suitcase.
  *
  * Uses generate-bg.png (same 1024×1536 dimensions) with the 4-shelf layout.
  * Phase machine:
@@ -248,7 +248,7 @@ export default function GeneratePage() {
       {/* ── Background image ── */}
       <img
         src="/briefcase-bg.png?v=2"
-        alt="My Digital Vanity"
+        alt="My Digital Suitcase"
         style={{
           position: "absolute",
           top:    ready ? ir.top    : 0,
@@ -380,7 +380,7 @@ export default function GeneratePage() {
               )}
             </AnimatePresence>
 
-            {/* ── Empty vanity prompt ── */}
+            {/* ── Empty suitcase prompt ── */}
             {!hasItems && (
               <div style={{
                 position: "absolute",
@@ -400,13 +400,13 @@ export default function GeneratePage() {
                   letterSpacing: "0.07em", textTransform: "uppercase",
                   color: "#7a3040", fontFamily: "var(--font-display)", margin: 0,
                 }}>
-                  Your vanity is empty
+                  Your suitcase is empty
                 </p>
                 <p style={{
                   fontSize: 11, color: "#9a5060",
                   marginTop: 5, lineHeight: 1.5,
                 }}>
-                  Add makeup, skincare, hair or fragrances in the Vanity tab first.
+                  Add makeup, skincare, hair or fragrances in the Suitcase tab first.
                 </p>
               </div>
             )}

@@ -177,7 +177,7 @@ export default function AuthPage({ onAuthenticated }: { onAuthenticated: () => v
 
   const titles: Record<Mode, string> = {
     signin: "Welcome ✨",
-    signup: "Create your vanity ✨",
+    signup: "Create your suitcase ✨",
     forgot: "Reset password 🔑",
     "forgot-sent": "Check your email 📬",
     reset: "New password 🔑",
@@ -220,7 +220,7 @@ export default function AuthPage({ onAuthenticated }: { onAuthenticated: () => v
           >
             {/* App name */}
             <p style={{ fontFamily: "var(--font-display,sans-serif)", fontWeight: 900, fontSize: 11, letterSpacing: "0.16em", color: "rgba(74,58,58,0.5)", textTransform: "uppercase", textAlign: "center", marginBottom: 4 }}>
-              My Digital Vanity
+              My Digital Suitcase
             </p>
 
             {/* Title */}

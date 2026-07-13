@@ -24,13 +24,13 @@ interface Props {
 const FEATURES = [
   { emoji: "♾️",  text: "Unlimited beauty products"  },
   { emoji: "💄",  text: "Unlimited saved looks"       },
-  { emoji: "☁️",  text: "Save your entire vanity"     },
+  { emoji: "☁️",  text: "Save your entire suitcase"     },
   { emoji: "💳",  text: "One-time purchase"            },
   { emoji: "🚫",  text: "No monthly subscription"     },
 ] as const;
 
 const SUBTITLES: Record<UpgradeReason, string> = {
-  items:     "You've reached your 20-item limit. Unlock your entire digital vanity with a one-time purchase of $4.99.",
+  items:     "You've reached your 20-item limit. Unlock your entire digital suitcase with a one-time purchase of $4.99.",
   outfits:   "You've hit the free look limit.",
   mannequin: "A premium feature — unlock it once.",
 };
@@ -77,7 +77,7 @@ export function UpgradeSheet({ reason, onClose }: Props) {
         {/* Headline */}
         <div className="flex flex-col gap-0.5">
           <h1 className="font-display font-bold text-4xl uppercase tracking-tight leading-none">
-            Unlock Your<br />Unlimited<br />Digital Vanity
+            Unlock Your<br />Unlimited<br />Digital Suitcase
           </h1>
           <p className="text-sm font-bold text-black/55 mt-2">
             {SUBTITLES[reason]}
