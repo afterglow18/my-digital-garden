@@ -281,7 +281,7 @@ export default function GeneratePage() {
               <div style={{
                 fontFamily: "var(--font-display, serif)",
                 fontWeight: 900,
-                fontSize: Math.max(8, pW(ir, 0.024)),
+                fontSize: Math.max(8, pW(ir, 0.030)),
                 letterSpacing: "0.08em",
                 whiteSpace: "nowrap",
                 textTransform: "uppercase",
