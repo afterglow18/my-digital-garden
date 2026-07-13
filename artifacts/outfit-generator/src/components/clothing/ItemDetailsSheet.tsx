@@ -23,7 +23,7 @@ import { getImageUrl } from "@/lib/utils";
 
 const SEASON_OPTIONS    = ["", "Spring", "Summer", "Fall", "Winter", "All Season"];
 const OCCASION_OPTIONS  = ["", "Casual", "Work", "Formal", "Sport", "Special Event"];
-const CATEGORY_OPTIONS  = ["makeup", "skincare", "hair", "fragrances"];
+const CATEGORY_OPTIONS  = ["outfits", "beauty", "toiletries", "essentials"];
 
 function Field({
   label,

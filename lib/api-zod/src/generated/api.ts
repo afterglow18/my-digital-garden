@@ -21,13 +21,13 @@ export const HealthCheckResponse = zod.object({
  * @summary List all clothing items
  */
 export const ListClothingQueryParams = zod.object({
-  "category": zod.enum(['makeup', 'skincare', 'hair', 'fragrances']).optional().describe('Filter by category')
+  "category": zod.enum(['outfits', 'beauty', 'toiletries', 'essentials']).optional().describe('Filter by category')
 })
 
 export const ListClothingResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "category": zod.enum(['makeup', 'skincare', 'hair', 'fragrances']),
+  "category": zod.enum(['outfits', 'beauty', 'toiletries', 'essentials']),
   "imageObjectPath": zod.string().nullable(),
   "color": zod.string().nullish(),
   "brand": zod.string().nullish(),
@@ -52,7 +52,7 @@ export const ListClothingResponse = zod.array(ListClothingResponseItem)
 
 export const CreateClothingItemBody = zod.object({
   "name": zod.string().min(1),
-  "category": zod.enum(['makeup', 'skincare', 'hair', 'fragrances']),
+  "category": zod.enum(['outfits', 'beauty', 'toiletries', 'essentials']),
   "imageObjectPath": zod.string().optional(),
   "color": zod.string().optional(),
   "brand": zod.string().optional(),
@@ -68,7 +68,7 @@ export const CreateClothingItemBody = zod.object({
 export const CreateClothingItemResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "category": zod.enum(['makeup', 'skincare', 'hair', 'fragrances']),
+  "category": zod.enum(['outfits', 'beauty', 'toiletries', 'essentials']),
   "imageObjectPath": zod.string().nullable(),
   "color": zod.string().nullish(),
   "brand": zod.string().nullish(),
@@ -109,7 +109,7 @@ export const GenerateOutfitResponse = zod.object({
   "items": zod.array(zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "category": zod.enum(['makeup', 'skincare', 'hair', 'fragrances']),
+  "category": zod.enum(['outfits', 'beauty', 'toiletries', 'essentials']),
   "imageObjectPath": zod.string().nullable(),
   "color": zod.string().nullish(),
   "brand": zod.string().nullish(),
@@ -136,7 +136,7 @@ export const GetClothingItemParams = zod.object({
 export const GetClothingItemResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "category": zod.enum(['makeup', 'skincare', 'hair', 'fragrances']),
+  "category": zod.enum(['outfits', 'beauty', 'toiletries', 'essentials']),
   "imageObjectPath": zod.string().nullable(),
   "color": zod.string().nullish(),
   "brand": zod.string().nullish(),
@@ -164,7 +164,7 @@ export const UpdateClothingItemParams = zod.object({
 
 export const UpdateClothingItemBody = zod.object({
   "name": zod.string().min(1).optional(),
-  "category": zod.enum(['makeup', 'skincare', 'hair', 'fragrances']).optional(),
+  "category": zod.enum(['outfits', 'beauty', 'toiletries', 'essentials']).optional(),
   "imageObjectPath": zod.string().optional(),
   "color": zod.string().optional(),
   "brand": zod.string().optional(),
@@ -181,7 +181,7 @@ export const UpdateClothingItemBody = zod.object({
 export const UpdateClothingItemResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "category": zod.enum(['makeup', 'skincare', 'hair', 'fragrances']),
+  "category": zod.enum(['outfits', 'beauty', 'toiletries', 'essentials']),
   "imageObjectPath": zod.string().nullable(),
   "color": zod.string().nullish(),
   "brand": zod.string().nullish(),
@@ -218,7 +218,7 @@ export const ListOutfitsResponseItem = zod.object({
   "items": zod.array(zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "category": zod.enum(['makeup', 'skincare', 'hair', 'fragrances']),
+  "category": zod.enum(['outfits', 'beauty', 'toiletries', 'essentials']),
   "imageObjectPath": zod.string().nullable(),
   "color": zod.string().nullish(),
   "brand": zod.string().nullish(),
@@ -258,7 +258,7 @@ export const SaveOutfitResponse = zod.object({
   "items": zod.array(zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "category": zod.enum(['makeup', 'skincare', 'hair', 'fragrances']),
+  "category": zod.enum(['outfits', 'beauty', 'toiletries', 'essentials']),
   "imageObjectPath": zod.string().nullable(),
   "color": zod.string().nullish(),
   "brand": zod.string().nullish(),
@@ -295,7 +295,7 @@ export const AddItemToOutfitResponse = zod.object({
   "items": zod.array(zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "category": zod.enum(['makeup', 'skincare', 'hair', 'fragrances']),
+  "category": zod.enum(['outfits', 'beauty', 'toiletries', 'essentials']),
   "imageObjectPath": zod.string().nullable(),
   "color": zod.string().nullish(),
   "brand": zod.string().nullish(),
@@ -329,7 +329,7 @@ export const RemoveItemFromOutfitResponse = zod.object({
   "items": zod.array(zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "category": zod.enum(['makeup', 'skincare', 'hair', 'fragrances']),
+  "category": zod.enum(['outfits', 'beauty', 'toiletries', 'essentials']),
   "imageObjectPath": zod.string().nullable(),
   "color": zod.string().nullish(),
   "brand": zod.string().nullish(),
@@ -369,7 +369,7 @@ export const RenameOutfitResponse = zod.object({
   "items": zod.array(zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "category": zod.enum(['makeup', 'skincare', 'hair', 'fragrances']),
+  "category": zod.enum(['outfits', 'beauty', 'toiletries', 'essentials']),
   "imageObjectPath": zod.string().nullable(),
   "color": zod.string().nullish(),
   "brand": zod.string().nullish(),

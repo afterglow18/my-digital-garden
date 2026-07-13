@@ -73,14 +73,14 @@ const pX = (ir: ImgRect, f: number) => ir.left   + ir.width  * f;
 const pY = (ir: ImgRect, f: number) => ir.top    + ir.height * f;
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-type RowKey = "makeup" | "skincare" | "hair" | "fragrances";
+type RowKey = "outfits" | "beauty" | "toiletries" | "essentials";
 type Phase  = "idle" | "spinning" | "result";
 
 const ROWS: { key: RowKey }[] = [
-  { key: "makeup"     },
-  { key: "skincare"   },
-  { key: "hair"       },
-  { key: "fragrances" },
+  { key: "outfits"    },
+  { key: "beauty"     },
+  { key: "toiletries" },
+  { key: "essentials" },
 ];
 
 const MIN_SPIN_MS = 1600;
@@ -92,10 +92,10 @@ export default function GeneratePage() {
   const ready = ir.width > 0;
 
   const rowRefs: Record<RowKey, RefObject<ClosetRowHandle | null>> = {
-    makeup:     useRef<ClosetRowHandle | null>(null),
-    skincare:   useRef<ClosetRowHandle | null>(null),
-    hair:       useRef<ClosetRowHandle | null>(null),
-    fragrances: useRef<ClosetRowHandle | null>(null),
+    outfits:    useRef<ClosetRowHandle | null>(null),
+    beauty:     useRef<ClosetRowHandle | null>(null),
+    toiletries: useRef<ClosetRowHandle | null>(null),
+    essentials: useRef<ClosetRowHandle | null>(null),
   };
 
   const [phase,      setPhase]      = useState<Phase>("idle");
@@ -104,23 +104,23 @@ export default function GeneratePage() {
   const [saveName,   setSaveName]   = useState("");
 
   const rowDataRef = useRef<Record<RowKey, ClothingItem[]>>({
-    makeup: [], skincare: [], hair: [], fragrances: [],
+    outfits: [], beauty: [], toiletries: [], essentials: [],
   });
 
-  const { data: makeup     = [] } = useListClothing({ category: "makeup"     }, { query: { queryKey: getListClothingQueryKey({ category: "makeup"     }) } });
-  const { data: skincare   = [] } = useListClothing({ category: "skincare"   }, { query: { queryKey: getListClothingQueryKey({ category: "skincare"   }) } });
-  const { data: hair       = [] } = useListClothing({ category: "hair"       }, { query: { queryKey: getListClothingQueryKey({ category: "hair"       }) } });
-  const { data: fragrances = [] } = useListClothing({ category: "fragrances" }, { query: { queryKey: getListClothingQueryKey({ category: "fragrances" }) } });
+  const { data: outfits    = [] } = useListClothing({ category: "outfits"    }, { query: { queryKey: getListClothingQueryKey({ category: "outfits"    }) } });
+  const { data: beauty     = [] } = useListClothing({ category: "beauty"     }, { query: { queryKey: getListClothingQueryKey({ category: "beauty"     }) } });
+  const { data: toiletries = [] } = useListClothing({ category: "toiletries" }, { query: { queryKey: getListClothingQueryKey({ category: "toiletries" }) } });
+  const { data: essentials = [] } = useListClothing({ category: "essentials" }, { query: { queryKey: getListClothingQueryKey({ category: "essentials" }) } });
 
-  useEffect(() => { rowDataRef.current = { makeup, skincare, hair, fragrances }; }, [makeup, skincare, hair, fragrances]);
+  useEffect(() => { rowDataRef.current = { outfits, beauty, toiletries, essentials }; }, [outfits, beauty, toiletries, essentials]);
 
-  const hasItems = makeup.length > 0 || skincare.length > 0 || hair.length > 0 || fragrances.length > 0;
+  const hasItems = outfits.length > 0 || beauty.length > 0 || toiletries.length > 0 || essentials.length > 0;
 
   const setCentredHandlers: Record<RowKey, (item: ClothingItem | null) => void> = {
-    makeup:     useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, makeup:     item ?? undefined })), []),
-    skincare:   useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, skincare:   item ?? undefined })), []),
-    hair:       useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, hair:       item ?? undefined })), []),
-    fragrances: useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, fragrances: item ?? undefined })), []),
+    outfits:    useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, outfits:    item ?? undefined })), []),
+    beauty:     useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, beauty:     item ?? undefined })), []),
+    toiletries: useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, toiletries: item ?? undefined })), []),
+    essentials: useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, essentials: item ?? undefined })), []),
   };
 
   const generateOutfit = useGenerateOutfit();
@@ -139,7 +139,7 @@ export default function GeneratePage() {
     setSaveName("");
 
     const spinStart = Date.now();
-    const stop: Record<RowKey, boolean> = { makeup: false, skincare: false, hair: false, fragrances: false };
+    const stop: Record<RowKey, boolean> = { outfits: false, beauty: false, toiletries: false, essentials: false };
 
     ROWS.forEach(({ key }, ri) => {
       const INTERVAL = 65 + ri * 18;
@@ -164,7 +164,7 @@ export default function GeneratePage() {
           const landMap: Partial<Record<RowKey, { item: ClothingItem; idx: number }>> = {};
           data.items.forEach(apiItem => {
             const key = apiItem.category as RowKey;
-            if (!["makeup", "skincare", "hair", "fragrances"].includes(key)) return;
+            if (!["outfits", "beauty", "toiletries", "essentials"].includes(key)) return;
             const arr = rowDataRef.current[key];
             const localIdx = arr.findIndex(i => i.id === apiItem.id);
             landMap[key] = { item: apiItem, idx: localIdx >= 0 ? localIdx : 0 };
@@ -271,13 +271,13 @@ export default function GeneratePage() {
             {/* ── 4 shelf carousels + ADD-button covers ── */}
             {ROWS.map(({ key }, rowIdx) => {
               const lm    = LM.rows[rowIdx];
-              const items = { makeup, skincare, hair, fragrances }[key];
+              const items = { outfits, beauty, toiletries, essentials }[key];
               const secTop = pY(ir, lm.sectionTop);
               const secH   = pH(ir, lm.shelfY - lm.sectionTop);
               const btnCY  = pY(ir, lm.btnCY);
               const btnH   = Math.max(32, pH(ir, 0.045));
 
-              const label = key === "fragrances" ? "FRAGRANCES" : key === "hair" ? "HAIRCARE" : key.toUpperCase();
+              const label = key.toUpperCase();
               const labelY = pY(ir, lm.btnCY + (lm.sectionTop - lm.btnCY) * 0.08);
 
               return (
@@ -406,7 +406,7 @@ export default function GeneratePage() {
                   fontSize: 11, color: "#9a5060",
                   marginTop: 5, lineHeight: 1.5,
                 }}>
-                  Add makeup, skincare, hair or fragrances in the Suitcase tab first.
+                  Add outfits, beauty, toiletries or essentials in the Suitcase tab first.
                 </p>
               </div>
             )}

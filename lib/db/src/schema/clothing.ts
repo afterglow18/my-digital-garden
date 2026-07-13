@@ -4,10 +4,10 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
 export const CLOTHING_CATEGORIES = [
-  "makeup",
-  "skincare",
-  "hair",
-  "fragrances",
+  "outfits",
+  "beauty",
+  "toiletries",
+  "essentials",
 ] as const;
 
 export type ClothingCategory = (typeof CLOTHING_CATEGORIES)[number];

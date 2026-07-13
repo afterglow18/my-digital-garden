@@ -31,7 +31,7 @@ export function ClothingForm({ initialData, onSubmit, isSubmitting, submitLabel 
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: initialData?.name || "",
-      category: initialData?.category || "makeup",
+      category: initialData?.category || "outfits",
       color: initialData?.color || "",
       brand: initialData?.brand || "",
       notes: initialData?.notes || "",

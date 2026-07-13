@@ -18,13 +18,13 @@ import { getImageUrl } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { QuickAddSheet } from "./QuickAddSheet";
 
-type Category = "makeup" | "skincare" | "hair" | "fragrances";
+type Category = "outfits" | "beauty" | "toiletries" | "essentials";
 
 const CATEGORY_LABELS: Record<Category, string> = {
-  makeup:     "Makeup",
-  skincare:   "Skincare",
-  hair:       "Haircare",
-  fragrances: "Fragrance",
+  outfits:    "Outfits",
+  beauty:     "Beauty",
+  toiletries: "Toiletries",
+  essentials: "Essentials",
 };
 
 interface Props {
@@ -41,7 +41,7 @@ interface Props {
 export function WardrobePickerSheet({ open, onOpenChange, category, onPick, existingItemIds = [] }: Props) {
   const [showQuickAdd, setShowQuickAdd]         = useState(false);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
-  const [quickAddCategory, setQuickAddCategory] = useState<Category>("makeup");
+  const [quickAddCategory, setQuickAddCategory] = useState<Category>("outfits");
   const queryClient = useQueryClient();
 
   // When category is provided fetch that category; otherwise fetch all
@@ -170,7 +170,7 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
                 Choose a category
               </p>
               <div className="grid grid-cols-2 gap-2">
-                {(["makeup", "skincare", "hair", "fragrances"] as Category[]).map((cat) => (
+                {(["outfits", "beauty", "toiletries", "essentials"] as Category[]).map((cat) => (
                   <button
                     key={cat}
                     onClick={() => {

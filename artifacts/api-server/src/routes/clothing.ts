@@ -49,11 +49,11 @@ router.post("/clothing/validate-image", express.json({ limit: "4mb" }), async (r
               },
             },
             {
-              text: `Does this image show a beauty, skincare, hair care, or fragrance product?
-Beauty and vanity products include: lipstick, foundation, mascara, eyeshadow, blush, concealer, moisturizer, serum, sunscreen, toner, cleanser, face mask, shampoo, conditioner, hair oil, hair spray, hair tools, perfume, cologne, body spray, deodorant, nail polish, and similar personal care or beauty items.
+              text: `Does this image show a clothing item, outfit, beauty product, toiletry, or travel essential?
+Acceptable items include: clothing, shoes, accessories, outfits, makeup, skincare, hair care, fragrances, toiletries, hygiene products, travel-size items, gadgets, books, snacks, or any item you might pack in a suitcase.
 
 Reply with a JSON object (no markdown, no code fences) with exactly two keys:
-  "isClothing": boolean  — true if the image clearly shows a beauty, hair care, skincare, or fragrance product
+  "isClothing": boolean  — true if the image clearly shows any item you might pack when travelling
   "reason": string       — one sentence explanation`,
             },
           ],
@@ -181,11 +181,11 @@ router.post("/clothing/generate-outfit", requireAuth, async (req, res): Promise<
   }
 
   if (Object.keys(byCategory).length === 0) {
-    res.status(422).json({ error: "Your vanity is empty. Add some beauty products first!" });
+    res.status(422).json({ error: "Your suitcase is empty. Add some items first!" });
     return;
   }
 
-  const preferredOrder = ["makeup", "skincare", "hair", "fragrances"];
+  const preferredOrder = ["outfits", "beauty", "toiletries", "essentials"];
   const outfitItems: typeof allItems = [];
 
   for (const cat of preferredOrder) {

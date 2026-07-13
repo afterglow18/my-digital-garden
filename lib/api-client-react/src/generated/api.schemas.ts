@@ -13,10 +13,10 @@ export type ClothingItemCategory = typeof ClothingItemCategory[keyof typeof Clot
 
 
 export const ClothingItemCategory = {
-  makeup: 'makeup',
-  skincare: 'skincare',
-  hair: 'hair',
-  fragrances: 'fragrances',
+  outfits: 'outfits',
+  beauty: 'beauty',
+  toiletries: 'toiletries',
+  essentials: 'essentials',
 } as const;
 
 export interface ClothingItem {
@@ -50,10 +50,10 @@ export type ClothingItemInputCategory = typeof ClothingItemInputCategory[keyof t
 
 
 export const ClothingItemInputCategory = {
-  makeup: 'makeup',
-  skincare: 'skincare',
-  hair: 'hair',
-  fragrances: 'fragrances',
+  outfits: 'outfits',
+  beauty: 'beauty',
+  toiletries: 'toiletries',
+  essentials: 'essentials',
 } as const;
 
 export interface ClothingItemInput {
@@ -76,10 +76,10 @@ export type ClothingItemUpdateCategory = typeof ClothingItemUpdateCategory[keyof
 
 
 export const ClothingItemUpdateCategory = {
-  makeup: 'makeup',
-  skincare: 'skincare',
-  hair: 'hair',
-  fragrances: 'fragrances',
+  outfits: 'outfits',
+  beauty: 'beauty',
+  toiletries: 'toiletries',
+  essentials: 'essentials',
 } as const;
 
 export interface ClothingItemUpdate {
@@ -172,10 +172,10 @@ export type ListClothingCategory = typeof ListClothingCategory[keyof typeof List
 
 
 export const ListClothingCategory = {
-  makeup: 'makeup',
-  skincare: 'skincare',
-  hair: 'hair',
-  fragrances: 'fragrances',
+  outfits: 'outfits',
+  beauty: 'beauty',
+  toiletries: 'toiletries',
+  essentials: 'essentials',
 } as const;
 
 export type AddItemToOutfitBody = {

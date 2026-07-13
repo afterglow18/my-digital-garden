@@ -42,7 +42,7 @@ paths:
           required: false
           schema:
             type: string
-            enum: [makeup, skincare, hair, fragrances]
+            enum: [outfits, beauty, toiletries, essentials]
           description: Filter by category
       responses:
         "200":
@@ -444,7 +444,7 @@ components:
           type: string
         category:
           type: string
-          enum: [makeup, skincare, hair, fragrances]
+          enum: [outfits, beauty, toiletries, essentials]
         imageObjectPath:
           type: ["string", "null"]
         color:
@@ -480,7 +480,7 @@ components:
           minLength: 1
         category:
           type: string
-          enum: [makeup, skincare, hair, fragrances]
+          enum: [outfits, beauty, toiletries, essentials]
         imageObjectPath:
           type: string
         color:
@@ -510,7 +510,7 @@ components:
           minLength: 1
         category:
           type: string
-          enum: [makeup, skincare, hair, fragrances]
+          enum: [outfits, beauty, toiletries, essentials]
         imageObjectPath:
           type: string
         color:

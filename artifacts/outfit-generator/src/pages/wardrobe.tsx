@@ -39,14 +39,14 @@ import { useEntitlements } from "@/hooks/useEntitlements";
 import { FREE_ITEM_LIMIT } from "@/lib/entitlements";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-type RowKey   = "makeup" | "skincare" | "hair" | "fragrances";
-type Category = "makeup" | "skincare" | "hair" | "fragrances";
+type RowKey   = "outfits" | "beauty" | "toiletries" | "essentials";
+type Category = "outfits" | "beauty" | "toiletries" | "essentials";
 
 const ROWS: { key: RowKey; btnLabel: string }[] = [
-  { key: "makeup",     btnLabel: "+ ADD MAKEUP"     },
-  { key: "skincare",   btnLabel: "+ ADD SKINCARE"   },
-  { key: "hair",       btnLabel: "+ ADD HAIRCARE"   },
-  { key: "fragrances", btnLabel: "+ ADD FRAGRANCES" },
+  { key: "outfits",    btnLabel: "+ ADD OUTFITS"    },
+  { key: "beauty",     btnLabel: "+ ADD BEAUTY"     },
+  { key: "toiletries", btnLabel: "+ ADD TOILETRIES" },
+  { key: "essentials", btnLabel: "+ ADD ESSENTIALS" },
 ];
 
 // ── Image constants ───────────────────────────────────────────────────────────
@@ -116,10 +116,10 @@ export default function WardrobePage() {
   const ir = useImageRect(containerRef);
 
   const rowRefs: Record<RowKey, RefObject<ClosetRowHandle | null>> = {
-    makeup:     useRef<ClosetRowHandle | null>(null),
-    skincare:   useRef<ClosetRowHandle | null>(null),
-    hair:       useRef<ClosetRowHandle | null>(null),
-    fragrances: useRef<ClosetRowHandle | null>(null),
+    outfits:    useRef<ClosetRowHandle | null>(null),
+    beauty:     useRef<ClosetRowHandle | null>(null),
+    toiletries: useRef<ClosetRowHandle | null>(null),
+    essentials: useRef<ClosetRowHandle | null>(null),
   };
 
   const [centred,       setCentred]       = useState<Partial<Record<RowKey, ClothingItem>>>({});
@@ -132,14 +132,14 @@ export default function WardrobePage() {
 
   const saveOutfit = useSaveOutfit();
 
-  const { data: makeup     = [] } = useListClothing({ category: "makeup"     }, { query: { queryKey: getListClothingQueryKey({ category: "makeup"     }) } });
-  const { data: skincare   = [] } = useListClothing({ category: "skincare"   }, { query: { queryKey: getListClothingQueryKey({ category: "skincare"   }) } });
-  const { data: hair       = [] } = useListClothing({ category: "hair"       }, { query: { queryKey: getListClothingQueryKey({ category: "hair"       }) } });
-  const { data: fragrances = [] } = useListClothing({ category: "fragrances" }, { query: { queryKey: getListClothingQueryKey({ category: "fragrances" }) } });
-  const { data: outfits = [] } = useListOutfits();
+  const { data: outfitsItems  = [] } = useListClothing({ category: "outfits"    }, { query: { queryKey: getListClothingQueryKey({ category: "outfits"    }) } });
+  const { data: beautyItems   = [] } = useListClothing({ category: "beauty"     }, { query: { queryKey: getListClothingQueryKey({ category: "beauty"     }) } });
+  const { data: toiletriesItems = [] } = useListClothing({ category: "toiletries" }, { query: { queryKey: getListClothingQueryKey({ category: "toiletries" }) } });
+  const { data: essentialsItems = [] } = useListClothing({ category: "essentials" }, { query: { queryKey: getListClothingQueryKey({ category: "essentials" }) } });
+  const { data: savedOutfitsList = [] } = useListOutfits();
 
-  const rowData: Record<RowKey, ClothingItem[]> = { makeup, skincare, hair, fragrances };
-  const totalItems = makeup.length + skincare.length + hair.length + fragrances.length;
+  const rowData: Record<RowKey, ClothingItem[]> = { outfits: outfitsItems, beauty: beautyItems, toiletries: toiletriesItems, essentials: essentialsItems };
+  const totalItems = outfitsItems.length + beautyItems.length + toiletriesItems.length + essentialsItems.length;
 
 
   const queryClient = useQueryClient();
@@ -149,20 +149,20 @@ export default function WardrobePage() {
     setCentred(prev => {
       const next = { ...prev };
       let changed = false;
-      (["makeup", "skincare", "hair", "fragrances"] as RowKey[]).forEach(key => {
+      (["outfits", "beauty", "toiletries", "essentials"] as RowKey[]).forEach(key => {
         if (rowData[key].length === 0 && next[key] !== undefined) {
           delete next[key]; changed = true;
         }
       });
       return changed ? next : prev;
     });
-  }, [makeup.length, skincare.length, hair.length, fragrances.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [outfitsItems.length, beautyItems.length, toiletriesItems.length, essentialsItems.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const setCentredHandlers: Record<RowKey, (item: ClothingItem | null) => void> = {
-    makeup:     useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, makeup:     item ?? undefined })), []),
-    skincare:   useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, skincare:   item ?? undefined })), []),
-    hair:       useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, hair:       item ?? undefined })), []),
-    fragrances: useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, fragrances: item ?? undefined })), []),
+    outfits:    useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, outfits:    item ?? undefined })), []),
+    beauty:     useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, beauty:     item ?? undefined })), []),
+    toiletries: useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, toiletries: item ?? undefined })), []),
+    essentials: useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, essentials: item ?? undefined })), []),
   };
 
   const handleAddClick = useCallback((cat: Category) => {
@@ -170,10 +170,10 @@ export default function WardrobePage() {
   }, [canAddItem, totalItems]);
 
   const addHandlers: Record<RowKey, () => void> = {
-    makeup:     useCallback(() => handleAddClick("makeup"),     [handleAddClick]),
-    skincare:   useCallback(() => handleAddClick("skincare"),   [handleAddClick]),
-    hair:       useCallback(() => handleAddClick("hair"),       [handleAddClick]),
-    fragrances: useCallback(() => handleAddClick("fragrances"), [handleAddClick]),
+    outfits:    useCallback(() => handleAddClick("outfits"),    [handleAddClick]),
+    beauty:     useCallback(() => handleAddClick("beauty"),     [handleAddClick]),
+    toiletries: useCallback(() => handleAddClick("toiletries"), [handleAddClick]),
+    essentials: useCallback(() => handleAddClick("essentials"), [handleAddClick]),
   };
 
   const handleItemTap = useCallback((item: ClothingItem) => setDetailsItem(item), []);
