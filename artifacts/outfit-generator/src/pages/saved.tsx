@@ -358,7 +358,7 @@ export default function SavedPage() {
                   <div className="mt-3 pt-3 border-t border-black/10">
                     <p className="text-[8px] font-bold uppercase tracking-widest text-black/30 mb-2">Extras</p>
                     <div className="grid grid-cols-5 gap-1.5">
-                      {Array.from({ length: 5 }).map((_, i) => {
+                      {Array.from({ length: 10 }).map((_, i) => {
                         const item = extras[i];
                         return item ? (
                           <div key={item.id} className="relative flex flex-col gap-0.5">
