@@ -35,3 +35,9 @@ expertMode = true
 [postMerge]
 path = "scripts/post-merge.sh"
 timeoutMs = 20000
+
+[userenv]
+
+[userenv.shared]
+VITE_REVENUECAT_IOS_KEY = "appl_HTDsqIvbJDetiTofAyBoDwXOSuu"
+VITE_REVENUECAT_TEST_KEY = "test_EBhomWNbVwcCblrgTAkzVhrPeZC"
