@@ -99,8 +99,16 @@ workflows:
 
       - name: Re-apply provisioning profiles after cap sync
         script: |
+          echo "=== Provisioning profiles on machine ==="
+          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ 2>/dev/null || echo "No profiles directory found"
+          echo "=== Certificates in keychain ==="
+          security find-identity -v -p codesigning 2>/dev/null || echo "No signing identities found"
+          echo "=== Running xcode-project use-profiles ==="
           xcode-project use-profiles \
-            --project artifacts/outfit-generator/ios/App/App.xcodeproj
+            --project artifacts/outfit-generator/ios/App/App.xcodeproj \
+            --verbose 2>&1 || true
+          echo "=== Profiles after use-profiles ==="
+          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ 2>/dev/null || echo "Still no profiles"
 
       - name: Resolve Swift Package dependencies
         script: |
