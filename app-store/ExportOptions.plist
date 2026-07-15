@@ -8,14 +8,7 @@
   <key>teamID</key>
   <string>2A78MFVCJS</string>
   <key>signingStyle</key>
-  <string>manual</string>
-  <key>signingCertificate</key>
-  <string>Apple Distribution</string>
-  <key>provisioningProfiles</key>
-  <dict>
-    <key>com.mydigitalvanity.app</key>
-    <string>My Digital Vanity App</string>
-  </dict>
+  <string>automatic</string>
   <key>uploadSymbols</key>
   <true/>
   <key>compileBitcode</key>

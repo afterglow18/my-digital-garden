@@ -120,8 +120,6 @@ workflows:
             -configuration Release \
             ONLY_ACTIVE_ARCH=NO \
             ARCHS=arm64 \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
             DEVELOPMENT_TEAM=2A78MFVCJS \
             -archivePath "$CM_BUILD_DIR/build/App.xcarchive" \
             archive
