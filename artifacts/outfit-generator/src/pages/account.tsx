@@ -210,7 +210,7 @@ export default function AccountPage() {
             <YellowButton
               onClick={() => setShowUpgrade(true)}
               icon={() => null}
-              label="Unlock Forever — $9.99"
+              label="Lifetime Unlock — $9.99"
             />
           )}
 
