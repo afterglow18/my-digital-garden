@@ -1,11 +1,15 @@
 /**
  * BiometricLockContext
  *
- * Manages the app-lock state:
- *  - Reads persisted "lock enabled" flag from localStorage.
- *  - On mount (app launch), if lock is on → show LockedScreen and trigger auth.
- *  - On app resume from background, if lock is on → lock and re-trigger auth.
- *  - Exposes setLockEnabled so Settings can toggle the feature (requires auth).
+ * Rules:
+ *  - Default is OFF. No biometric prompt fires unless the user has explicitly
+ *    enabled the lock (localStorage flag = "true").
+ *  - checkBiometryAvailable() is intentionally NOT called here — it triggers
+ *    the iOS Face ID permission dialog. That check is deferred to the Settings
+ *    page, only when the user navigates there.
+ *  - On app launch: if lock is ON, show LockedScreen and auto-prompt.
+ *  - On foreground resume: same.
+ *  - setLockEnabled: always requires a successful auth before persisting.
  */
 import React, {
   createContext,
@@ -17,21 +21,19 @@ import React, {
 } from "react";
 import { Capacitor } from "@capacitor/core";
 import { App as CapApp } from "@capacitor/app";
-import { authenticate, checkBiometryAvailable, BiometryType } from "@/lib/biometric";
+import { authenticate } from "@/lib/biometric";
 import { LockedScreen } from "@/components/LockedScreen";
 
 const STORAGE_KEY = "biometric-lock-enabled";
 
 interface BiometricLockContextType {
   isLockEnabled: boolean;
-  biometryType: BiometryType;
-  /** Toggle lock on/off. Requires auth. Returns true if changed successfully. */
+  /** Toggle lock on/off. Requires successful auth. Returns true if changed. */
   setLockEnabled: (enabled: boolean) => Promise<boolean>;
 }
 
 const BiometricLockContext = createContext<BiometricLockContextType>({
   isLockEnabled: false,
-  biometryType: "none",
   setLockEnabled: async () => false,
 });
 
@@ -52,21 +54,18 @@ export function BiometricLockProvider({
 }: {
   children: React.ReactNode;
 }) {
+  // isLockEnabled: has the user turned the lock on?
   const [isLockEnabled, setIsLockEnabled] = useState<boolean>(readStoredEnabled);
-  const [isLocked, setIsLocked] = useState<boolean>(readStoredEnabled); // start locked if enabled
+  // isLocked: should the LockedScreen be shown right now?
+  // Starts locked only if the user previously enabled the setting.
+  const [isLocked, setIsLocked] = useState<boolean>(readStoredEnabled);
   const [isPending, setIsPending] = useState(false);
-  const [biometryType, setBiometryType] = useState<BiometryType>("none");
 
-  // Keep a ref so the appStateChange listener always sees the latest value
+  // Ref so the appStateChange closure always sees the latest value
   const lockEnabledRef = useRef(isLockEnabled);
   lockEnabledRef.current = isLockEnabled;
 
-  // ── Check what biometry hardware is available ──────────────────────────────
-  useEffect(() => {
-    checkBiometryAvailable().then(setBiometryType);
-  }, []);
-
-  // ── Trigger auth prompt ────────────────────────────────────────────────────
+  // ── Auth helper ────────────────────────────────────────────────────────────
   const triggerAuth = useCallback(async () => {
     if (isPending) return;
     setIsPending(true);
@@ -75,33 +74,32 @@ export function BiometricLockProvider({
     if (ok) setIsLocked(false);
   }, [isPending]);
 
-  // ── Initial lock: auto-prompt on mount if locked ───────────────────────────
+  // ── On launch: auto-prompt if we're starting locked ───────────────────────
   const didInitRef = useRef(false);
   useEffect(() => {
     if (didInitRef.current) return;
     didInitRef.current = true;
+    // Only fires if the user previously enabled the lock; otherwise isLocked
+    // is false and nothing happens — no Face ID prompt on a fresh install.
     if (isLocked) {
-      // Slight delay so the UI renders the locked screen first before the
-      // system auth dialog overlays it.
       setTimeout(() => triggerAuth(), 300);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Background → foreground: re-lock and re-prompt ────────────────────────
+  // ── Re-lock when app returns from background ───────────────────────────────
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
-    let inBackground = false;
+    let wentToBackground = false;
 
     const listenerPromise = CapApp.addListener("appStateChange", ({ isActive }) => {
       if (!isActive) {
-        inBackground = true;
-      } else if (inBackground) {
-        inBackground = false;
+        wentToBackground = true;
+      } else if (wentToBackground) {
+        wentToBackground = false;
         if (lockEnabledRef.current) {
           setIsLocked(true);
           setIsPending(false);
-          // Slight delay so locked screen renders before system dialog
           setTimeout(async () => {
             setIsPending(true);
             const ok = await authenticate("Unlock My Suitcase");
@@ -117,7 +115,7 @@ export function BiometricLockProvider({
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Settings toggle ───────────────────────────────────────────────────────
+  // ── Settings toggle ────────────────────────────────────────────────────────
   const setLockEnabled = useCallback(
     async (enabled: boolean): Promise<boolean> => {
       const reason = enabled
@@ -131,7 +129,6 @@ export function BiometricLockProvider({
       try {
         localStorage.setItem(STORAGE_KEY, String(enabled));
       } catch {}
-      // If turning off, ensure we're not in a locked state
       if (!enabled) setIsLocked(false);
       return true;
     },
@@ -139,9 +136,7 @@ export function BiometricLockProvider({
   );
 
   return (
-    <BiometricLockContext.Provider
-      value={{ isLockEnabled, biometryType, setLockEnabled }}
-    >
+    <BiometricLockContext.Provider value={{ isLockEnabled, setLockEnabled }}>
       {isLocked ? (
         <LockedScreen onTryAgain={triggerAuth} isPending={isPending} />
       ) : (

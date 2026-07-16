@@ -6,7 +6,7 @@
  *   2. BACKUP & RESTORE — export/import with warning text
  *   3. MY DIGITAL SUITCASE — app version + tagline
  */
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Download, Upload, RefreshCw, Loader2, Check, AlertTriangle, ShieldCheck } from "lucide-react";
 import { exportBackup, importBackup, pickBackupFile } from "@/lib/backup";
@@ -89,8 +89,16 @@ export default function AccountPage() {
     isRestoring,
   } = useSubscription();
 
-  const { isLockEnabled, biometryType, setLockEnabled } = useBiometricLock();
+  const { isLockEnabled, setLockEnabled } = useBiometricLock();
   const [lockPending, setLockPending] = useState(false);
+  // Loaded lazily here — not at app root — so canEvaluatePolicy (which triggers
+  // the iOS Face ID permission dialog) only fires when the user opens Settings.
+  const [biometryType, setBiometryType] = useState<import("@/lib/biometric").BiometryType>("none");
+  useEffect(() => {
+    import("@/lib/biometric").then(({ checkBiometryAvailable }) =>
+      checkBiometryAvailable().then(setBiometryType),
+    );
+  }, []);
 
   const handleLockToggle = async () => {
     setLockPending(true);
