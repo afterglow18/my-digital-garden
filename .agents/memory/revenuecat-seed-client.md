@@ -13,7 +13,7 @@ description: How to create the RC management API client in scripts/ and what API
 
 ## RC project created
 
-- Project name: "My Digital Suitcase"
+- Project name: "My Digital Garden"
 - Entitlement: `premium`
 - Product identifier: `premium_monthly`  ($9.99/month)
 - Offering: `default` (set as current)

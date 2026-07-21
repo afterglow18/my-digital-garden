@@ -1,13 +1,13 @@
-# My Digital Closet — App Store Connect Listing
+# My Digital Garden — App Store Connect Listing
 
 ## Identity
 
 | Field | Value |
 |---|---|
-| **App Name** | My Digital Closet |
+| **App Name** | My Digital Garden |
 | **Subtitle** (30 chars max) | Style your wardrobe with AI |
-| **Bundle ID** | com.mydigitalcloset.app |
-| **SKU** | MYDIGITALCLOSET001 |
+| **Bundle ID** | com.mydigitalgarden.app |
+| **SKU** | MYDIGITALGARDEN001 |
 | **Primary Category** | Lifestyle |
 | **Secondary Category** | Shopping |
 | **Content Rating** | 4+ |
@@ -17,11 +17,11 @@
 
 ## App Description (up to 4,000 characters)
 
-> **My Digital Closet** is your personal AI-powered wardrobe — a beautiful, effortless way to catalog every piece you own and discover outfits you didn't know you had.
+> **My Digital Garden** is your personal AI-powered wardrobe — a beautiful, effortless way to catalog every piece you own and discover outfits you didn't know you had.
 
 **ADD YOUR CLOTHES. FIND YOUR STYLE.**
 
-Snap a photo, drag it in, or upload from your camera roll. My Digital Closet automatically removes the background and neatly organizes each piece into its category — Tops, Bottoms, Shoes, Outerwear, Accessories, and Dresses. Your closet is always clean, always searchable, and always with you.
+Snap a photo, drag it in, or upload from your camera roll. My Digital Garden automatically removes the background and neatly organizes each piece into its category — Tops, Bottoms, Shoes, Outerwear, Accessories, and Dresses. Your closet is always clean, always searchable, and always with you.
 
 **LET AI DO THE STYLING**
 
@@ -33,12 +33,12 @@ Saved outfits live in your Lookbook. Individual pieces you ❤️ live in Totall
 
 **DESIGNED FOR YOUR PHONE**
 
-My Digital Closet is built to feel native on iPhone — smooth swipe carousels, a beautiful illustrated wardrobe layout, full safe-area support, and an interface that feels like an app, not a website.
+My Digital Garden is built to feel native on iPhone — smooth swipe carousels, a beautiful illustrated wardrobe layout, full safe-area support, and an interface that feels like an app, not a website.
 
 **FREE & PREMIUM**
 
 - Free: up to 20 wardrobe items and 5 saved outfits
-- My Digital Closet Premium: unlimited items, unlimited outfits — one-time purchase, no subscription
+- My Digital Garden Premium: unlimited items, unlimited outfits — one-time purchase, no subscription
 
 ---
 
@@ -53,7 +53,7 @@ wardrobe,outfit,closet,fashion,style,AI outfit,clothes organizer,lookbook,get dr
 ## What's New (first release)
 
 ```
-Welcome to My Digital Closet — your AI-powered wardrobe is here. Catalog your clothes, generate outfits, and build your Lookbook.
+Welcome to My Digital Garden — your AI-powered wardrobe is here. Catalog your clothes, generate outfits, and build your Lookbook.
 ```
 
 ---
@@ -106,11 +106,11 @@ Key points to cover:
 
 | Field | Value |
 |---|---|
-| **Reference Name** | My Digital Closet Premium |
-| **Product ID** | com.mydigitalcloset.app.premium |
+| **Reference Name** | My Digital Garden Premium |
+| **Product ID** | com.mydigitalgarden.app.premium |
 | **Type** | Non-Consumable |
 | **Price** | $4.99 (Tier 5) |
-| **Display Name** | My Digital Closet Premium |
+| **Display Name** | My Digital Garden Premium |
 | **Description** | Unlimited wardrobe items and saved outfits. One-time purchase — no subscription. |
 
 ---

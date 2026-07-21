@@ -1,4 +1,4 @@
-# Clueless Closet — Outfit Generator
+# My Digital Garden — Outfit Generator
 
 A mobile-first digital wardrobe app where you upload clothing photos, categorize them, and generate random outfits — inspired by the iconic Clueless closet scene.
 

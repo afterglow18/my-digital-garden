@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/"
-title = "My Digital Suitcase"
+title = "My Digital Garden"
 version = "1.0.0"
 id = "artifacts/outfit-generator"
 router = "path"

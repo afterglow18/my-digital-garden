@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# Codemagic CI/CD — My Digital Suitcase iOS build
+# Codemagic CI/CD — My Digital Garden iOS build
 # ─────────────────────────────────────────────────────────────────────────────
 #
 # REQUIRED — Codemagic → your app → Environment variables
@@ -20,7 +20,7 @@ workflows:
     environment:
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.mydigitalsuitcase.app
+        bundle_identifier: com.mydigitalgarden.app
       xcode: latest
       node: 22
       groups:
@@ -31,9 +31,9 @@ workflows:
         XCODE_PROJECT: artifacts/outfit-generator/ios/App/App.xcodeproj
         XCODE_WORKSPACE: artifacts/outfit-generator/ios/App/App.xcodeproj/project.xcworkspace
         COREPACK_ENABLE_STRICT: "0"
-        BUNDLE_ID: com.mydigitalsuitcase.app
+        BUNDLE_ID: com.mydigitalgarden.app
         TEAM_ID: 2A78MFVCJS
-        PROFILE_NAME: My Digital Suitcase
+        PROFILE_NAME: My Digital Garden
 
     scripts:
       - name: Install pnpm and dependencies
@@ -136,7 +136,7 @@ workflows:
             ARCHS=arm64 \
             DEVELOPMENT_TEAM=2A78MFVCJS \
             CODE_SIGN_STYLE=Manual \
-            PROVISIONING_PROFILE_SPECIFIER="My Digital Suitcase AppStore" \
+            PROVISIONING_PROFILE_SPECIFIER="My Digital Garden AppStore" \
             -archivePath "$CM_BUILD_DIR/build/App.xcarchive" \
             archive
 

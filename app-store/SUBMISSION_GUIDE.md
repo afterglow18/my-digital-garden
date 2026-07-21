@@ -1,4 +1,4 @@
-# App Store Submission Guide — My Digital Closet
+# App Store Submission Guide — My Digital Garden
 
 ## Overview
 
@@ -31,16 +31,16 @@ Before anything else, deploy the API server so the mobile app has a stable URL t
 2. Click **+** → **New App**
 3. Fill in:
    - Platform: iOS
-   - Name: **My Digital Closet**
+   - Name: **My Digital Garden**
    - Primary Language: English (U.S.)
-   - Bundle ID: **com.mydigitalcloset.app** *(you'll need to register this in your Developer account first)*
-   - SKU: **MYDIGITALCLOSET001**
+   - Bundle ID: **com.mydigitalgarden.app** *(you'll need to register this in your Developer account first)*
+   - SKU: **MYDIGITALGARDEN001**
 4. Complete the listing using `app-store/metadata.md` in this repository
 
 ### Register the Bundle ID
 1. [developer.apple.com](https://developer.apple.com) → Certificates, IDs & Profiles → Identifiers → +
 2. Select **App IDs** → **App**
-3. Bundle ID: `com.mydigitalcloset.app`
+3. Bundle ID: `com.mydigitalgarden.app`
 4. Enable capabilities: **In-App Purchase**
 
 ---
@@ -51,7 +51,7 @@ Codemagic connects to GitHub (or GitLab/Bitbucket).
 
 ```bash
 # From your local terminal or Replit Shell
-git remote add origin https://github.com/YOUR_USERNAME/my-digital-closet.git
+git remote add origin https://github.com/afterglow18/my-digital-garden.git
 git push -u origin main
 ```
 
@@ -148,7 +148,7 @@ Apple's review takes **1–3 business days** for a first submission.
 - [ ] Screenshots captured for iPhone 6.9" and 6.5"
 - [ ] Privacy Policy URL added to App Store Connect: https://classy-alpaca-441.notion.site/Privacy-Policy-39682db6065380b19dedcb108d4a0ef4
 - [ ] `app-store/ExportOptions.plist` updated with your Team ID
-- [ ] In-App Purchase created in App Store Connect (Product ID: `com.mydigitalcloset.app.premium`)
+- [ ] In-App Purchase created in App Store Connect (Product ID: `com.mydigitalgarden.app.premium`)
 - [ ] Stripe webhook is configured for your deployed API URL
 - [ ] TestFlight build installed and tested on a real iPhone
 - [ ] App Review notes filled in (including test account if login is required)
@@ -172,7 +172,7 @@ Apple's review takes **1–3 business days** for a first submission.
 → Make sure `artifacts/outfit-generator/dist/public/index.html` exists (the Vite build must succeed first)
 
 **"No profiles for bundle ID"**
-→ Register `com.mydigitalcloset.app` in your Apple Developer account (Step 3)
+→ Register `com.mydigitalgarden.app` in your Apple Developer account (Step 3)
 
 **App crashes on launch on device**
 → Check that `VITE_API_BASE_URL` points to a live, reachable API server
