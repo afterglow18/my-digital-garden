@@ -129,7 +129,6 @@ workflows:
             ONLY_ACTIVE_ARCH=NO \
             ARCHS=arm64 \
             DEVELOPMENT_TEAM=2A78MFVCJS \
-            CODE_SIGN_STYLE=Automatic \
             -archivePath "$CM_BUILD_DIR/build/App.xcarchive" \
             archive
 
