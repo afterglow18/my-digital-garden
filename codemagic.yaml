@@ -2,13 +2,8 @@
 # Codemagic CI/CD — My Digital Garden iOS build
 # ─────────────────────────────────────────────────────────────────────────────
 #
-# REQUIRED — Codemagic → your app → Environment variables
-# Group "signing":
-#   APP_STORE_CONNECT_KEY_IDENTIFIER   (your key ID, e.g. 67K2T48W7Y)
-#   APP_STORE_CONNECT_ISSUER_ID        (your issuer ID)
+# REQUIRED — Codemagic → your app → Environment variables (no groups needed):
 #   APP_STORE_CONNECT_PRIVATE_KEY      Full .p8 file contents (mark Secure)
-#
-# Group "build_env":
 #   VITE_API_BASE_URL                  Your deployed API URL
 
 workflows:
@@ -23,9 +18,6 @@ workflows:
         bundle_identifier: com.mydigitalgarden.app
       xcode: latest
       node: 22
-      groups:
-        - signing
-        - build_env
       vars:
         XCODE_SCHEME: App
         XCODE_PROJECT: artifacts/outfit-generator/ios/App/App.xcodeproj
@@ -34,6 +26,8 @@ workflows:
         BUNDLE_ID: com.mydigitalgarden.app
         TEAM_ID: 2A78MFVCJS
         PROFILE_NAME: My Digital Garden
+        APP_STORE_CONNECT_KEY_IDENTIFIER: 7Y3UR8F5LN
+        APP_STORE_CONNECT_ISSUER_ID: 66d4ce13-148d-4d6b-bab8-f1d0d8441a1e
 
     scripts:
       - name: Install pnpm and dependencies
