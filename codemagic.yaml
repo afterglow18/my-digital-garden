@@ -129,8 +129,7 @@ workflows:
             ONLY_ACTIVE_ARCH=NO \
             ARCHS=arm64 \
             DEVELOPMENT_TEAM=2A78MFVCJS \
-            CODE_SIGN_STYLE=Manual \
-            PROVISIONING_PROFILE_SPECIFIER="My Digital Garden AppStore" \
+            CODE_SIGN_STYLE=Automatic \
             -archivePath "$CM_BUILD_DIR/build/App.xcarchive" \
             archive
 
