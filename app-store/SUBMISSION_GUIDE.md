@@ -72,7 +72,7 @@ Go to **Team → Global variables & secrets** and add:
 | Variable name | Where to get it |
 |---|---|
 | `VITE_API_BASE_URL` | Your deployed API URL from Step 1 |
-| `APP_STORE_CONNECT_KEY_ID` | App Store Connect → Users & Access → Integrations → Keys |
+| `APP_STORE_CONNECT_KEY_ID` | `7Y3UR8F5LN` |
 | `APP_STORE_CONNECT_ISSUER_ID` | `66d4ce13-148d-4d6b-bab8-f1d0d8441a1e` |
 | `APP_STORE_CONNECT_PRIVATE_KEY` | Download the `.p8` file, paste its full contents |
 | `CERTIFICATE_PRIVATE_KEY` | Your iOS Distribution certificate private key |
