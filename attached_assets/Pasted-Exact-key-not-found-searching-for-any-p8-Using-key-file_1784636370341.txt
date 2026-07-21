@@ -1,0 +1,52 @@
+Exact key not found, searching for any .p8...
+Using key file: /Users/builder/clone/attached_assets/AuthKey_KF2R947UR5_1784140010580.p8
+
+Publish "/Users/builder/clone/build/ipa/App.ipa" to App Store Connect
+App name: My Digital Garden
+Bundle identifier: com.mydigitalgarden.app
+Certificate expires: 2027-07-15T18:08:42.000+0000
+Distribution type: App Store
+Min OS version: 15.0
+Provisioned devices: N/A
+Provisions all devices: No
+Supported platforms: iPhoneOS
+Version code: 6
+Version: 1.0
+
+Upload "/Users/builder/clone/build/ipa/App.ipa" to App Store Connect
+Running altool at path '/Applications/Xcode-26.4.app/Contents/SharedFrameworks/ContentDelivery.framework/Resources/altool'...
+
+26.30.4 (173004)
+Running altool at path '/Applications/Xcode-26.4.app/Contents/SharedFrameworks/ContentDelivery.framework/Resources/altool'...
+
+2026-07-21 12:17:50.301 ERROR: [altool.1014DED40] GET APP SETTINGS: failed to authenticate. The server response was: {
+    errors =     (
+                {
+            code = "NOT_AUTHORIZED";
+            detail = "Provide a properly configured and signed bearer token, and make sure that it has not expired. Learn more about Generating Tokens for API Requests https://developer.apple.com/go/?id=api-generating-tokens";
+            status = 401;
+            title = "Authentication credentials are missing or invalid.";
+        }
+    );
+}
+2026-07-21 12:17:50.302 ERROR: [altool.1014DED40] GET APP SETTINGS: received status code 401, auth issue.
+2026-07-21 12:17:50.678 ERROR: [CDASCAPI.AB6C48480] APP STORE CONNECT API list-apps: failed to authenticate. The server response was: {
+    errors =     (
+                {
+            code = "NOT_AUTHORIZED";
+            detail = "Provide a properly configured and signed bearer token, and make sure that it has not expired. Learn more about Generating Tokens for API Requests https://developer.apple.com/go/?id=api-generating-tokens";
+            status = 401;
+            title = "Authentication credentials are missing or invalid.";
+        }
+    );
+}
+2026-07-21 12:17:50.678 ERROR: [CDASCAPI.AB6C48480] APP STORE CONNECT API list-apps: received status code 401, auth issue.
+2026-07-21 12:17:50.680 ERROR: [altool.AB6C48480] Cannot determine the Apple ID from Bundle ID 'com.mydigitalgarden.app' and platform 'IOS'. (19)
+2026-07-21 12:17:50.682 ERROR: [altool.1014DED40] ExitFailure (31)
+
+Failed to upload archive at "/Users/builder/clone/build/ipa/App.ipa"
+Failed to publish /Users/builder/clone/build/ipa/App.ipa
+
+
+Build failed :|
+Step 13 script `Upload to TestFlight` exited with status code 1
