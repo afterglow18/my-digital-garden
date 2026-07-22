@@ -257,6 +257,23 @@ export function UpgradeSheet({ reason, onClose }: Props) {
         >
           Maybe Later
         </button>
+
+        {/* Legal links — required by Apple */}
+        <p className="text-center text-[10px] text-black/30 leading-relaxed">
+          <button
+            onClick={() => window.open("https://www.apple.com/legal/internet-services/itunes/dev/stdeula/", "_system")}
+            className="underline underline-offset-2 hover:text-black/50 transition-colors"
+          >
+            Terms of Use
+          </button>
+          {" · "}
+          <button
+            onClick={() => window.open("https://app.notion.com/p/My-Digital-Collection-Privacy-Policy-39682db6065380b19dedcb108d4a0ef4?source=copy_link", "_system")}
+            className="underline underline-offset-2 hover:text-black/50 transition-colors"
+          >
+            Privacy Policy
+          </button>
+        </p>
       </div>
     </motion.div>
   );
