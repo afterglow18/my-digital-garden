@@ -134,7 +134,7 @@ export async function generateOutfit(excludeCategories: string[] = []): Promise<
   }
 
   if (picked.length === 0) {
-    throw new Error("Your suitcase is empty. Add some items first!");
+    throw new Error("Your garden is empty. Add some items first!");
   }
 
   return picked;

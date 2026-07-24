@@ -36,7 +36,7 @@ export function LockedScreen({ onTryAgain, isPending }: Props) {
           className="font-display font-black text-3xl uppercase tracking-tight leading-none mb-2"
           style={{ color: "#1a0800" }}
         >
-          My Suitcase
+          My Garden
         </h1>
         <p className="text-sm font-medium text-black/50">
           Authenticate to continue

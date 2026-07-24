@@ -29,7 +29,7 @@ export default function WelcomePage({ onEnter }: Props) {
     return () => window.removeEventListener("resize", update);
   }, []);
 
-  // Suitcase is ~80 % of viewport width, capped for tablets
+  // Welcome graphic is ~80 % of viewport width, capped for tablets
   const SW  = Math.min(vw * 0.80, 360);
   const SH  = SW * 0.68;          // classic briefcase ratio ≈ 3 : 2
   const LH  = SH * 0.44;          // lid is top 44 %
@@ -98,7 +98,7 @@ export default function WelcomePage({ onEnter }: Props) {
         transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
       />
 
-      {/* ── Main content (suitcase + text + button) ── */}
+      {/* ── Main content (graphic + text + button) ── */}
       <motion.div
         style={{
           position: "relative", zIndex: 4,
@@ -265,7 +265,7 @@ export default function WelcomePage({ onEnter }: Props) {
             lineHeight: 1.1,
             color: "#E8D4B0",
           }}>
-            MY DIGITAL<br />SUITCASE
+            MY DIGITAL<br />GARDEN
           </div>
           <div style={{
             marginTop: 9,
@@ -275,7 +275,7 @@ export default function WelcomePage({ onEnter }: Props) {
             textTransform: "uppercase" as const,
             color: "rgba(232,212,176,0.42)",
           }}>
-            your travel collection
+            your digital garden
           </div>
         </div>
 
@@ -303,7 +303,7 @@ export default function WelcomePage({ onEnter }: Props) {
             pointerEvents: phase === "idle" ? "auto" : "none",
           }}
         >
-          Open Suitcase ✨
+          Enter Garden 🌿
         </motion.button>
       </motion.div>
 

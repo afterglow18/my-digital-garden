@@ -308,7 +308,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
                 <p className="text-sm text-muted-foreground mt-1">
                   {progress && progress.total > 1
                     ? `Photo ${progress.current} of ${progress.total}`
-                    : "Adding to your suitcase."}
+                    : "Adding to your garden."}
                 </p>
               </div>
             </motion.div>

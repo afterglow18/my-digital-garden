@@ -1,5 +1,5 @@
 /**
- * GeneratePage — "Spin It" screen for My Digital Suitcase.
+ * GeneratePage — "Spin It" screen for My Digital Garden.
  *
  * Uses generate-bg.png (same 1024×1536 dimensions) with the 4-shelf layout.
  * Phase machine:
@@ -238,7 +238,7 @@ export default function GeneratePage() {
       style={{
         position: "relative",
         width: "100%",
-        height: `calc(100dvh - ${NAV_H}px)`,
+        height: "calc(100dvh - var(--bottom-nav-h, 90px))",
         overflow: "hidden",
         background: "#C8B9A2",
       }}
@@ -246,7 +246,7 @@ export default function GeneratePage() {
       {/* ── Background image — object-fit:cover avoids WebKit negative-left clipping bug ── */}
       <img
         src="/suitcase-open-bg.jpg"
-        alt="My Digital Suitcase"
+        alt="My Digital Garden"
         style={{
           position: "absolute",
           top: 0, left: 0,
@@ -287,7 +287,7 @@ export default function GeneratePage() {
                 color: "#1a0800",
                 lineHeight: 1.1,
               }}>
-                MY DIGITAL SUITCASE
+                MY DIGITAL GARDEN
               </div>
               <div style={{
                 fontFamily: "var(--font-display, serif)",
@@ -409,13 +409,13 @@ export default function GeneratePage() {
                     padding: "3px 11px", borderRadius: 20,
                     whiteSpace: "nowrap",
                   }}>
-                    Packing your suitcase…
+                    Tending your garden…
                   </span>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {/* ── Empty suitcase prompt ── */}
+            {/* ── Empty garden prompt ── */}
             {!hasItems && (
               <div style={{
                 position: "absolute",
@@ -435,13 +435,13 @@ export default function GeneratePage() {
                   letterSpacing: "0.07em", textTransform: "uppercase",
                   color: "#3A2210", fontFamily: "var(--font-display)", margin: 0,
                 }}>
-                  Your suitcase is empty
+                  Your garden is empty
                 </p>
                 <p style={{
                   fontSize: 11, color: "#9a5060",
                   marginTop: 5, lineHeight: 1.5,
                 }}>
-                  Add outfits, beauty, toiletries or essentials in the Suitcase tab first.
+                  Add outfits, beauty, toiletries or essentials in the Garden tab first.
                 </p>
               </div>
             )}

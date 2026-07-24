@@ -1,5 +1,5 @@
 /**
- * Local IndexedDB database for My Digital Suitcase.
+ * Local IndexedDB database for My Digital Garden.
  *
  * Works in both the browser (Replit preview) and in the Capacitor iOS WebView —
  * IndexedDB is natively available in both environments and persists to the

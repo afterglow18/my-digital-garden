@@ -23,7 +23,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     : undefined;
 
   const navItems = [
-    { href: "/",         label: "Suitcase", icon: Shirt,    badge: wardrobeCount },
+    { href: "/",         label: "Garden",   icon: Shirt,    badge: wardrobeCount },
     { href: "/generate", label: "Generate", icon: Sparkles  },
     { href: "/saved",    label: "Saved",    icon: Bookmark  },
     { href: "/account",  label: "Settings", icon: Settings  },
@@ -46,7 +46,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             My Garden
           </p>
           <p className="text-[10px] font-bold uppercase tracking-widest text-black/35 mt-1">
-            Digital Wardrobe
+            Digital Garden
           </p>
         </div>
 

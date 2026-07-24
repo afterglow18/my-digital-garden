@@ -1,5 +1,5 @@
 /**
- * Backup & Restore for My Digital Suitcase.
+ * Backup & Restore for My Digital Garden.
  *
  * Export: bundles ALL clothing items (including embedded image data URLs) and
  *         saved outfits into a single JSON file, shared via the iOS Share Sheet.
@@ -62,7 +62,7 @@ export async function exportBackup(): Promise<void> {
 
   const json = JSON.stringify(backup, null, 2);
   const dateStr = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-  const fileName = `my-digital-suitcase-backup-${dateStr}.json`;
+  const fileName = `my-digital-garden-backup-${dateStr}.json`;
 
   if (Capacitor.isNativePlatform()) {
     // Write to a temp file then share
@@ -81,7 +81,7 @@ export async function exportBackup(): Promise<void> {
     // Share via iOS Share Sheet
     const { Share } = await import("@capacitor/share");
     await Share.share({
-      title: "My Digital Suitcase Backup",
+      title: "My Digital Garden Backup",
       text:  `Backup from ${dateStr} — ${clothing.length} items, ${outfits.length} outfits`,
       url:   uri,
     });

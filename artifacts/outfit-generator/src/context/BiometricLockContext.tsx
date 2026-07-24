@@ -69,7 +69,7 @@ export function BiometricLockProvider({
   const triggerAuth = useCallback(async () => {
     if (isPending) return;
     setIsPending(true);
-    const ok = await authenticate("Unlock My Suitcase");
+    const ok = await authenticate("Unlock My Garden");
     setIsPending(false);
     if (ok) setIsLocked(false);
   }, [isPending]);
@@ -102,7 +102,7 @@ export function BiometricLockProvider({
           setIsPending(false);
           setTimeout(async () => {
             setIsPending(true);
-            const ok = await authenticate("Unlock My Suitcase");
+            const ok = await authenticate("Unlock My Garden");
             setIsPending(false);
             if (ok) setIsLocked(false);
           }, 300);
