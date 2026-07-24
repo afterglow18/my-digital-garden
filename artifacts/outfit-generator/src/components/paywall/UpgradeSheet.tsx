@@ -159,7 +159,7 @@ export function UpgradeSheet({ reason, onClose }: Props) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: "100%" }}
       transition={{ type: "spring", damping: 28, stiffness: 240 }}
-      className="fixed inset-0 z-[80] flex flex-col max-w-md mx-auto"
+      className="fixed inset-0 md:left-[220px] z-[80] flex flex-col max-w-md mx-auto"
       style={{ background: "#F8F4ED" }}
     >
       {/* Close button */}

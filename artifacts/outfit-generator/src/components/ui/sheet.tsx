@@ -34,15 +34,7 @@ export function Sheet({ open, onOpenChange, title, children }: SheetProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => onOpenChange(false)}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 lg:hidden"
-          />
-          {/* Desktop uses absolute constraint within the phone frame */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => onOpenChange(false)}
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm z-50 hidden lg:block"
+            className="fixed inset-0 md:left-[220px] bg-black/40 backdrop-blur-sm z-50"
           />
           
           <motion.div
@@ -50,7 +42,7 @@ export function Sheet({ open, onOpenChange, title, children }: SheetProps) {
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed lg:absolute bottom-0 left-0 right-0 max-h-[90vh] bg-white border-t-4 border-black rounded-t-3xl z-50 flex flex-col shadow-[0px_-8px_0px_0px_rgba(0,0,0,0.1)]"
+            className="fixed bottom-0 left-0 md:left-[220px] right-0 max-h-[90vh] bg-white border-t-4 border-black rounded-t-3xl z-50 flex flex-col shadow-[0px_-8px_0px_0px_rgba(0,0,0,0.1)]"
           >
             <div className="p-4 flex justify-between items-center border-b-2 border-black bg-primary rounded-t-[1.3rem]">
               <h2 className="font-display font-bold text-2xl uppercase">{title}</h2>

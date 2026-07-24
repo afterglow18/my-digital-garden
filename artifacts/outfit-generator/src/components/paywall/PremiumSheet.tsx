@@ -48,7 +48,7 @@ export function PremiumSheet({ onClose }: Props) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: "100%" }}
       transition={{ type: "spring", damping: 28, stiffness: 240 }}
-      className="fixed inset-0 z-[80] flex flex-col max-w-md mx-auto bg-[#f9f4ee]"
+      className="fixed inset-0 md:left-[220px] z-[80] flex flex-col max-w-md mx-auto bg-[#f9f4ee]"
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 bg-white border-b-2 border-black flex-shrink-0"

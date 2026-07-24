@@ -1,4 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Syne:wght@500;600;700;800&display=swap');
+
+/* Bottom-nav height used by the wardrobe full-bleed layout.
+   Override to 0 on tablet/iPad where the nav is a left sidebar. */
+:root { --bottom-nav-h: 90px; }
+@media (min-width: 768px) { :root { --bottom-nav-h: 0px; } }
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @plugin "@tailwindcss/typography";
