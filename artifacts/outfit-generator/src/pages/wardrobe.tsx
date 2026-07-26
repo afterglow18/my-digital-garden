@@ -268,12 +268,23 @@ export default function WardrobePage() {
             const btnCY   = pY(ir, lm.btnCY);
             const btnH    = Math.max(32, pH(ir, 0.045));
 
-            const labelY = pY(ir, lm.btnCY + (lm.sectionTop - lm.btnCY) * 0.08);
+            // Label sits centred on the brick border at sectionTop
+            const labelY = pY(ir, lm.sectionTop);
 
             return (
               <React.Fragment key={key}>
 
-                {/* ── Category label (tappable → add photo) ── */}
+                {/* ── Light sandy overlay so photos show against dark soil ── */}
+                <div style={{
+                  position: "absolute",
+                  top: secTop, left: carLeft, width: carW, height: secH,
+                  background: "rgba(210, 160, 90, 0.38)",
+                  zIndex: 6,
+                  borderRadius: 3,
+                  pointerEvents: "none",
+                }} />
+
+                {/* ── Category label centred on the brick border ── */}
                 <button
                   onClick={addHandlers[key]}
                   aria-label={btnLabel}
@@ -297,12 +308,13 @@ export default function WardrobePage() {
                     letterSpacing: "0.08em",
                     color: "#ffffff",
                     fontFamily: "var(--font-display)",
+                    textShadow: "0 1px 3px rgba(0,0,0,0.6)",
                   }}>
                     {label}
                   </span>
                 </button>
 
-                {/* ── Item carousel — fills the section between buttons ── */}
+                {/* ── Item carousel — clipped to stay inside the bed ── */}
                 {items.length > 0 && (
                   <div
                     data-testid={`row-${key}`}
@@ -313,7 +325,7 @@ export default function WardrobePage() {
                       width:  carW,
                       height: secH,
                       zIndex: 10,
-                      overflow: "visible",
+                      overflow: "hidden",
                     }}
                   >
                     <ClosetRow
@@ -437,7 +449,7 @@ export default function WardrobePage() {
               {saveSuccess ? (
                 <div style={{ textAlign: "center", padding: "12px 0" }}>
                   <div style={{ fontSize: 32, marginBottom: 8 }}>💕</div>
-                  <p style={{ fontWeight: 800, fontSize: 16, fontFamily: "var(--font-display)" }}>Group Saved!</p>
+                  <p style={{ fontWeight: 800, fontSize: 16, fontFamily: "var(--font-display)" }}>Garden Saved!</p>
                 </div>
               ) : (
                 <>

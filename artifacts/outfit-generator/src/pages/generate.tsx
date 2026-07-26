@@ -278,12 +278,23 @@ export default function GeneratePage() {
               const btnCY  = pY(ir, lm.btnCY);
               const btnH   = Math.max(32, pH(ir, 0.045));
 
-              const labelY = pY(ir, lm.btnCY + (lm.sectionTop - lm.btnCY) * 0.08);
+              // Label sits centred on the brick border at sectionTop
+              const labelY = pY(ir, lm.sectionTop);
 
               return (
                 <React.Fragment key={key}>
 
-                  {/* ── Category label ── */}
+                  {/* ── Light sandy overlay so photos show against dark soil ── */}
+                  <div style={{
+                    position: "absolute",
+                    top: secTop, left: carLeft, width: carW, height: secH,
+                    background: "rgba(210, 160, 90, 0.38)",
+                    zIndex: 6,
+                    borderRadius: 3,
+                    pointerEvents: "none",
+                  }} />
+
+                  {/* ── Category label centred on the brick border ── */}
                   <div style={{
                     position: "absolute",
                     top: labelY,
@@ -300,6 +311,7 @@ export default function GeneratePage() {
                       letterSpacing: "0.08em",
                       color: "#ffffff",
                       fontFamily: "var(--font-display)",
+                      textShadow: "0 1px 3px rgba(0,0,0,0.6)",
                     }}>
                       {label}
                     </span>
@@ -310,7 +322,7 @@ export default function GeneratePage() {
                       style={{
                         position: "absolute",
                         top: secTop, left: carLeft, width: carW, height: secH,
-                        zIndex: 10, overflow: "visible",
+                        zIndex: 10, overflow: "hidden",
                       }}
                     >
                       <ClosetRow
