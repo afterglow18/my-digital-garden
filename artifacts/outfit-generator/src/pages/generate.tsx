@@ -33,10 +33,10 @@ const LM = {
   doorL: 0.03,
   doorR: 0.97,
   rows: [
-    { sectionTop: 0.295, shelfY: 0.415, btnCY: 0.280, labelFrac: 0.295 },  // tools       (bed 1)
-    { sectionTop: 0.440, shelfY: 0.560, btnCY: 0.426, labelFrac: 0.440 },  // landscaping (bed 2)
-    { sectionTop: 0.585, shelfY: 0.705, btnCY: 0.571, labelFrac: 0.576 },  // decor       (bed 3) ↑ nudged
-    { sectionTop: 0.730, shelfY: 0.850, btnCY: 0.717, labelFrac: 0.721 },  // plants      (bed 4) ↑ nudged
+    { sectionTop: 0.295, shelfY: 0.415, btnCY: 0.280 },  // tools       (bed 1)
+    { sectionTop: 0.440, shelfY: 0.560, btnCY: 0.426 },  // landscaping (bed 2)
+    { sectionTop: 0.585, shelfY: 0.705, btnCY: 0.571 },  // decor       (bed 3)
+    { sectionTop: 0.730, shelfY: 0.850, btnCY: 0.717 },  // plants      (bed 4)
   ],
   // Action bar: baked-in bottom bar with plant | Save | star icons
   barY:   0.873,
@@ -278,23 +278,12 @@ export default function GeneratePage() {
               const btnCY  = pY(ir, lm.btnCY);
               const btnH   = Math.max(32, pH(ir, 0.045));
 
-              // Label sits centred on the brick border (per-row fine-tune via labelFrac)
-              const labelY = pY(ir, lm.labelFrac);
+              const labelY = pY(ir, lm.btnCY + (lm.sectionTop - lm.btnCY) * 0.08);
 
               return (
                 <React.Fragment key={key}>
 
-                  {/* ── Light sandy overlay so photos show against dark soil ── */}
-                  <div style={{
-                    position: "absolute",
-                    top: secTop, left: carLeft, width: carW, height: secH,
-                    background: "rgba(210, 160, 90, 0.38)",
-                    zIndex: 6,
-                    borderRadius: 3,
-                    pointerEvents: "none",
-                  }} />
-
-                  {/* ── Category label centred on the brick border ── */}
+                  {/* ── Category label ── */}
                   <div style={{
                     position: "absolute",
                     top: labelY,
@@ -311,7 +300,6 @@ export default function GeneratePage() {
                       letterSpacing: "0.08em",
                       color: "#ffffff",
                       fontFamily: "var(--font-display)",
-                      textShadow: "0 1px 3px rgba(0,0,0,0.6)",
                     }}>
                       {label}
                     </span>
@@ -322,7 +310,7 @@ export default function GeneratePage() {
                       style={{
                         position: "absolute",
                         top: secTop, left: carLeft, width: carW, height: secH,
-                        zIndex: 10, overflow: "hidden",
+                        zIndex: 10, overflow: "visible",
                       }}
                     >
                       <ClosetRow
