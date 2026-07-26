@@ -234,12 +234,16 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
   const [cleanProcessing,setCleanProcessing]= useState(false);
   const [cleanFailed,    setCleanFailed]    = useState(false);
   const [cleanSelected,  setCleanSelected]  = useState<"original" | "cleaned">("original");
-  const cleanGenRef = useRef(0);
+  const cleanGenRef    = useRef(0);
+  // True once the user explicitly taps a card — prevents auto-select from
+  // overriding a deliberate "Original" choice made while processing is running.
+  const cleanUserChosen = useRef(false);
 
   const handleStartCleanUp = useCallback(async () => {
     const currentPath = displayImagePath ?? item?.imageObjectPath;
     if (!currentPath) return;
     const myGen = ++cleanGenRef.current;
+    cleanUserChosen.current = false;
     setCleanedUrl(null);
     setCleanFailed(false);
     setCleanSelected("original");
@@ -251,7 +255,8 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
       const resultUrl = await removeBackground(src);
       if (cleanGenRef.current !== myGen) return;
       setCleanedUrl(resultUrl);
-      setCleanSelected("cleaned");
+      // Only auto-select cleaned if the user hasn't already made a choice
+      if (!cleanUserChosen.current) setCleanSelected("cleaned");
     } catch {
       if (cleanGenRef.current === myGen) setCleanFailed(true);
     } finally {
@@ -284,6 +289,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
 
   const handleCancelCleanUp = useCallback(() => {
     cleanGenRef.current += 1; // cancel in-flight removal
+    cleanUserChosen.current = false;
     setCleanUpOpen(false);
     setCleanedUrl(null);
     setCleanFailed(false);
@@ -712,7 +718,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
               <div className="flex gap-3">
                 {/* Original */}
                 <button
-                  onClick={() => setCleanSelected("original")}
+                  onClick={() => { cleanUserChosen.current = true; setCleanSelected("original"); }}
                   className="flex-1 flex flex-col overflow-hidden rounded-2xl transition-all"
                   style={{ padding: 0, background: "none",
                     outline: cleanSelected === "original" ? "4px solid rgb(236,72,153)" : "4px solid rgba(0,0,0,0.15)",
@@ -737,7 +743,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
 
                 {/* Cleaned */}
                 <button
-                  onClick={() => cleanedUrl && setCleanSelected("cleaned")}
+                  onClick={() => { if (cleanedUrl) { cleanUserChosen.current = true; setCleanSelected("cleaned"); } }}
                   disabled={!cleanedUrl}
                   className="flex-1 flex flex-col overflow-hidden rounded-2xl transition-all"
                   style={{ padding: 0, background: "none",
