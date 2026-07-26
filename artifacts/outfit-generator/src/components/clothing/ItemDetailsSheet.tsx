@@ -1,12 +1,19 @@
 /**
  * ItemDetailsSheet — full-screen overlay showing a clothing item's details.
- * Every field is optional and editable. A "Save" button appears only when
- * the form is dirty. Delete is always available.
+ *
+ * "Clean Up Photo" flow:
+ *   1. User taps "Clean Up Photo" — overlay slides up immediately.
+ *   2. Existing stored image is passed to @imgly/background-removal (WASM, on-device).
+ *   3. Overlay shows Original (left) + Cleaned (right) side-by-side; pink ring = selected.
+ *   4. User taps "Save Original" or "Save Cleaned Version".
+ *   5. Chosen URL is written to displayImagePath immediately (optimistic), then the DB
+ *      mutation fires in the background.  No flash back to old photo while writing.
  */
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  X, Heart, Trash2, Save, ChevronDown, ImagePlus, Loader2, Check, RotateCcw,
+  X, Heart, Trash2, Save, ChevronDown,
+  ImagePlus, Loader2, Check, RotateCcw, Sparkles,
 } from "lucide-react";
 import {
   type ClothingItem,
@@ -27,32 +34,21 @@ import {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const SEASON_OPTIONS    = ["", "Spring", "Summer", "Fall", "Winter", "All Season"];
-const OCCASION_OPTIONS  = ["", "Casual", "Work", "Formal", "Sport", "Special Event"];
-const CATEGORY_OPTIONS  = ["tools", "landscaping", "decor", "plants"];
+const SEASON_OPTIONS   = ["", "Spring", "Summer", "Fall", "Winter", "All Season"];
+const OCCASION_OPTIONS = ["", "Casual", "Work", "Formal", "Sport", "Special Event"];
+const CATEGORY_OPTIONS = ["tools", "landscaping", "decor", "plants"];
 
 function Field({
-  label,
-  value,
-  onChange,
-  placeholder,
-  type = "text",
+  label, value, onChange, placeholder, type = "text",
 }: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-  type?: string;
+  label: string; value: string; onChange: (v: string) => void;
+  placeholder?: string; type?: string;
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-[10px] font-bold uppercase tracking-widest text-black/40">
-        {label}
-      </label>
+      <label className="text-[10px] font-bold uppercase tracking-widest text-black/40">{label}</label>
       <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+        type={type} value={value} onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder ?? label}
         className="w-full border-2 border-black rounded-lg px-3 py-2 text-sm font-medium
                    bg-white focus:outline-none focus:ring-2 focus:ring-primary
@@ -63,34 +59,20 @@ function Field({
 }
 
 function SelectField({
-  label,
-  value,
-  onChange,
-  options,
+  label, value, onChange, options,
 }: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: string[];
+  label: string; value: string; onChange: (v: string) => void; options: string[];
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-[10px] font-bold uppercase tracking-widest text-black/40">
-        {label}
-      </label>
+      <label className="text-[10px] font-bold uppercase tracking-widest text-black/40">{label}</label>
       <div className="relative">
         <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
+          value={value} onChange={(e) => onChange(e.target.value)}
           className="w-full appearance-none border-2 border-black rounded-lg px-3 py-2 pr-8
-                     text-sm font-medium bg-white focus:outline-none focus:ring-2 focus:ring-primary
-                     cursor-pointer"
+                     text-sm font-medium bg-white focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
         >
-          {options.map((o) => (
-            <option key={o} value={o}>
-              {o || `— ${label} —`}
-            </option>
-          ))}
+          {options.map((o) => <option key={o} value={o}>{o || `— ${label} —`}</option>)}
         </select>
         <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-black/40" />
       </div>
@@ -98,24 +80,19 @@ function SelectField({
   );
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
-
-/**
- * Resize + JPEG-encode a file to ≤2048 px on the longest edge.
- */
+/** Resize + JPEG-encode a File/Blob to ≤2048 px. */
 async function encodeForUpload(input: File | Blob): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const objectUrl = URL.createObjectURL(input);
     const img = new Image();
     img.onload = () => {
       URL.revokeObjectURL(objectUrl);
-      const MAX   = 2048;
+      const MAX = 2048;
       const scale = Math.min(1, MAX / Math.max(img.naturalWidth, img.naturalHeight));
-      const w     = Math.round(img.naturalWidth  * scale);
-      const h     = Math.round(img.naturalHeight * scale);
+      const w = Math.round(img.naturalWidth * scale);
+      const h = Math.round(img.naturalHeight * scale);
       const canvas = document.createElement("canvas");
-      canvas.width  = w;
-      canvas.height = h;
+      canvas.width = w; canvas.height = h;
       canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
       canvas.toBlob(
         (b) => (b && b.size > 1000 ? resolve(b) : reject(new Error("blank image"))),
@@ -127,6 +104,8 @@ async function encodeForUpload(input: File | Blob): Promise<Blob> {
   });
 }
 
+// ── Types ─────────────────────────────────────────────────────────────────────
+
 interface ItemDetailsSheetProps {
   item: ClothingItem | null;
   onClose: () => void;
@@ -134,17 +113,9 @@ interface ItemDetailsSheetProps {
 }
 
 interface FormState {
-  name: string;
-  brand: string;
-  color: string;
-  size: string;
-  season: string;
-  occasion: string;
-  purchasePrice: string;
-  purchaseDate: string;
-  notes: string;
-  isFavorite: boolean;
-  category: string;
+  name: string; brand: string; color: string; size: string;
+  season: string; occasion: string; purchasePrice: string;
+  purchaseDate: string; notes: string; isFavorite: boolean; category: string;
 }
 
 function toForm(item: ClothingItem): FormState {
@@ -163,9 +134,9 @@ function toForm(item: ClothingItem): FormState {
   };
 }
 
-function isDirty(form: FormState, item: ClothingItem, newImagePath: string | null): boolean {
+function isDirty(form: FormState, item: ClothingItem, hasNewFile: boolean): boolean {
   return (
-    newImagePath !== null ||
+    hasNewFile ||
     form.name          !== (item.name          ?? "") ||
     form.brand         !== (item.brand         ?? "") ||
     form.color         !== (item.color         ?? "") ||
@@ -180,109 +151,178 @@ function isDirty(form: FormState, item: ClothingItem, newImagePath: string | nul
   );
 }
 
+// ── Main component ────────────────────────────────────────────────────────────
+
 export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetProps) {
-  const [form, setForm]           = useState<FormState | null>(null);
+  const [form, setForm]             = useState<FormState | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // ── Photo replacement state ──────────────────────────────────────────────────
-  const [newImagePath,  setNewImagePath]  = useState<string | null>(null);
-  const [bgPhase,       setBgPhase]       = useState<"idle" | "encoding" | "preview">("idle");
-  const [originalBlob,  setOriginalBlob]  = useState<Blob | null>(null);
-  const [originalUrl,   setOriginalUrl]   = useState<string | null>(null);
-  const [cleanedBlob,   setCleanedBlob]   = useState<Blob | null>(null);
-  const [cleanedUrl,    setCleanedUrl]    = useState<string | null>(null);
-  const [bgProcessing,  setBgProcessing]  = useState(false);
-  const [bgFailed,      setBgFailed]      = useState(false);
-  const [bgSelected,    setBgSelected]    = useState<"original" | "cleaned">("original");
-  const bgGenRef    = useRef(0);
+  // Optimistically-updated display photo.
+  // Starts null (falls back to item.imageObjectPath); set immediately on confirm.
+  const [displayImagePath, setDisplayImagePath] = useState<string | null>(null);
+
+  // ── "Replace Photo" — pick a new file ────────────────────────────────────
+  const [newFilePath,   setNewFilePath]   = useState<string | null>(null);
+  const [replacePhase,  setReplacePhase]  = useState<"idle" | "encoding" | "preview">("idle");
+  const [repOrigBlob,   setRepOrigBlob]   = useState<Blob | null>(null);
+  const [repOrigUrl,    setRepOrigUrl]    = useState<string | null>(null);
+  const [repCleanBlob,  setRepCleanBlob]  = useState<Blob | null>(null);
+  const [repCleanUrl,   setRepCleanUrl]   = useState<string | null>(null);
+  const [repProcessing, setRepProcessing] = useState(false);
+  const [repFailed,     setRepFailed]     = useState(false);
+  const [repSelected,   setRepSelected]   = useState<"original" | "cleaned">("original");
+  const repGenRef    = useRef(0);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
-  const resetPhotoState = useCallback(() => {
-    bgGenRef.current += 1;
-    setNewImagePath(null);
-    setBgPhase("idle");
-    setOriginalBlob(null);
-    setOriginalUrl(null);
-    setCleanedBlob(null);
-    setCleanedUrl(null);
-    setBgProcessing(false);
-    setBgFailed(false);
-    setBgSelected("original");
+  const resetReplaceState = useCallback(() => {
+    repGenRef.current += 1;
+    setNewFilePath(null);
+    setReplacePhase("idle");
+    setRepOrigBlob(null); setRepOrigUrl(null);
+    setRepCleanBlob(null); setRepCleanUrl(null);
+    setRepProcessing(false); setRepFailed(false);
+    setRepSelected("original");
   }, []);
 
-  const handleFile = useCallback(async (file: File) => {
-    const myGen = ++bgGenRef.current;
-    setNewImagePath(null);
-    setOriginalBlob(null);
-    setOriginalUrl(null);
-    setCleanedBlob(null);
-    setCleanedUrl(null);
-    setBgFailed(false);
-    setBgProcessing(false);
-    setBgSelected("original");
-    setBgPhase("encoding");
+  const handleReplaceFile = useCallback(async (file: File) => {
+    const myGen = ++repGenRef.current;
+    setNewFilePath(null);
+    setRepOrigBlob(null); setRepOrigUrl(null);
+    setRepCleanBlob(null); setRepCleanUrl(null);
+    setRepFailed(false); setRepProcessing(false); setRepSelected("original");
+    setReplacePhase("encoding");
 
     let jpeg: Blob;
-    try {
-      jpeg = await encodeForUpload(file);
-    } catch {
-      if (bgGenRef.current !== myGen) return;
-      setBgPhase("idle");
-      return;
-    }
-    if (bgGenRef.current !== myGen) return;
+    try { jpeg = await encodeForUpload(file); }
+    catch { if (repGenRef.current === myGen) setReplacePhase("idle"); return; }
+    if (repGenRef.current !== myGen) return;
 
-    setOriginalBlob(jpeg);
-    setOriginalUrl(URL.createObjectURL(jpeg));
-    setBgPhase("preview");
+    setRepOrigBlob(jpeg);
+    setRepOrigUrl(URL.createObjectURL(jpeg));
+    setReplacePhase("preview");
 
-    setBgProcessing(true);
+    setRepProcessing(true);
     try {
       const dataUrl   = await blobToDataUrl(jpeg);
-      if (bgGenRef.current !== myGen) return;
+      if (repGenRef.current !== myGen) return;
       const resultUrl = await removeBackground(dataUrl);
-      if (bgGenRef.current !== myGen) return;
+      if (repGenRef.current !== myGen) return;
       const resultBlob   = await dataUrlToBlob(resultUrl);
       const resultObjUrl = URL.createObjectURL(resultBlob);
-      if (bgGenRef.current !== myGen) { URL.revokeObjectURL(resultObjUrl); return; }
-      setCleanedBlob(resultBlob);
-      setCleanedUrl(resultObjUrl);
-      setBgSelected("cleaned");
+      if (repGenRef.current !== myGen) { URL.revokeObjectURL(resultObjUrl); return; }
+      setRepCleanBlob(resultBlob);
+      setRepCleanUrl(resultObjUrl);
+      setRepSelected("cleaned");
     } catch {
-      if (bgGenRef.current !== myGen) return;
-      setBgFailed(true);
+      if (repGenRef.current === myGen) setRepFailed(true);
     } finally {
-      if (bgGenRef.current === myGen) setBgProcessing(false);
+      if (repGenRef.current === myGen) setRepProcessing(false);
     }
   }, []);
 
-  const handleConfirmPhoto = useCallback(async () => {
-    const blob = bgSelected === "cleaned" && cleanedBlob ? cleanedBlob : originalBlob;
+  const handleConfirmReplace = useCallback(async () => {
+    const blob = repSelected === "cleaned" && repCleanBlob ? repCleanBlob : repOrigBlob;
     if (!blob) return;
     const dataUrl = await blobToDataUrl(blob);
-    setNewImagePath(dataUrl);
-    setBgPhase("idle");
-  }, [bgSelected, cleanedBlob, originalBlob]);
+    setNewFilePath(dataUrl);
+    setReplacePhase("idle");
+  }, [repSelected, repCleanBlob, repOrigBlob]);
 
-  // ─────────────────────────────────────────────────────────────────────────────
+  // ── "Clean Up Photo" — bg-remove the existing stored image ───────────────
+  const [cleanUpOpen,    setCleanUpOpen]    = useState(false);
+  const [cleanedUrl,     setCleanedUrl]     = useState<string | null>(null);
+  const [cleanProcessing,setCleanProcessing]= useState(false);
+  const [cleanFailed,    setCleanFailed]    = useState(false);
+  const [cleanSelected,  setCleanSelected]  = useState<"original" | "cleaned">("original");
+  const cleanGenRef = useRef(0);
 
+  const handleStartCleanUp = useCallback(async () => {
+    const currentPath = displayImagePath ?? item?.imageObjectPath;
+    if (!currentPath) return;
+    const myGen = ++cleanGenRef.current;
+    setCleanedUrl(null);
+    setCleanFailed(false);
+    setCleanSelected("original");
+    setCleanProcessing(true);
+    setCleanUpOpen(true);
+
+    try {
+      const src = getImageUrl(currentPath) ?? currentPath;
+      const resultUrl = await removeBackground(src);
+      if (cleanGenRef.current !== myGen) return;
+      setCleanedUrl(resultUrl);
+      setCleanSelected("cleaned");
+    } catch {
+      if (cleanGenRef.current === myGen) setCleanFailed(true);
+    } finally {
+      if (cleanGenRef.current === myGen) setCleanProcessing(false);
+    }
+  }, [displayImagePath, item]);
+
+  const handleConfirmCleanUp = useCallback(() => {
+    const originalPath = displayImagePath ?? item!.imageObjectPath;
+    const chosen = cleanSelected === "cleaned" && cleanedUrl ? cleanedUrl : originalPath;
+    if (!chosen) return;
+
+    // 1. Optimistic — update the displayed photo immediately; no flash.
+    setDisplayImagePath(chosen);
+    setCleanUpOpen(false);
+
+    // 2. Persist in background — don't await.
+    updateItem.mutate(
+      { id: item!.id, data: { imageObjectPath: chosen } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getWardrobeStatsQueryKey() });
+        },
+      },
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cleanSelected, cleanedUrl, displayImagePath, item]);
+
+  const handleCancelCleanUp = useCallback(() => {
+    cleanGenRef.current += 1; // cancel in-flight removal
+    setCleanUpOpen(false);
+    setCleanedUrl(null);
+    setCleanFailed(false);
+    setCleanProcessing(false);
+    setCleanSelected("original");
+  }, []);
+
+  // ── DB hooks ─────────────────────────────────────────────────────────────
   const updateItem  = useUpdateClothingItem();
   const deleteItem  = useDeleteClothingItem();
   const queryClient = useQueryClient();
 
-  // Reset form + photo state whenever item changes
+  // Reset everything when the item changes
   useEffect(() => {
     if (item) setForm(toForm(item));
     setShowDeleteConfirm(false);
-    resetPhotoState();
+    setDisplayImagePath(null);
+    resetReplaceState();
+    // Also cancel any in-flight clean-up
+    cleanGenRef.current += 1;
+    setCleanUpOpen(false);
+    setCleanedUrl(null);
+    setCleanFailed(false);
+    setCleanProcessing(false);
+    setCleanSelected("original");
   }, [item?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!item || !form) return null;
 
-  const dirty = isDirty(form, item, newImagePath);
-
-  const patch = (key: keyof FormState) => (value: string | boolean) =>
+  const dirty = isDirty(form, item, newFilePath !== null);
+  const patch  = (key: keyof FormState) => (value: string | boolean) =>
     setForm((prev) => prev ? { ...prev, [key]: value } : prev);
+
+  // The photo src to actually render in the sheet (optimistic path wins)
+  const shownImageSrc = displayImagePath
+    ? (getImageUrl(displayImagePath) ?? displayImagePath)
+    : (item.imageObjectPath ? getImageUrl(item.imageObjectPath) : null);
+
+  const hasPhoto = !!(displayImagePath || item.imageObjectPath);
 
   const handleSave = () => {
     updateItem.mutate(
@@ -300,7 +340,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
           notes:         form.notes.trim(),
           isFavorite:    form.isFavorite,
           category:      (form.category || item.category) as ClothingItemUpdateCategory,
-          ...(newImagePath ? { imageObjectPath: newImagePath } : {}),
+          ...(newFilePath ? { imageObjectPath: newFilePath } : {}),
         },
       },
       {
@@ -310,7 +350,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
           queryClient.invalidateQueries({ queryKey: getWardrobeStatsQueryKey() });
           onClose();
         },
-      }
+      },
     );
   };
 
@@ -325,328 +365,448 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
           onDeleted?.();
           onClose();
         },
-      }
+      },
     );
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: "100%" }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: "100%" }}
-      transition={{ type: "spring", damping: 28, stiffness: 240 }}
-      className="fixed inset-0 md:left-[220px] z-[65] flex flex-col max-w-md mx-auto bg-[#f9f4ee] overflow-y-auto"
-    >
-      {/* ── Header ── */}
-      <div className="sticky top-0 z-10 flex items-center justify-between px-4
-                      bg-white border-b-2 border-black flex-shrink-0"
-        style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "0.75rem" }}>
-        <h2 className="font-display font-bold text-xl uppercase tracking-tight">
-          Item Details
-        </h2>
-        <div className="flex items-center gap-2">
-          {/* Favourite toggle — saves instantly */}
-          <button
-            onClick={() => {
-              const next = !form.isFavorite;
-              patch("isFavorite")(next);
-              updateItem.mutate(
-                { id: item.id, data: { isFavorite: next } },
-                {
-                  onSuccess: () => {
+    <>
+      {/* ── Main sheet ── */}
+      <motion.div
+        initial={{ opacity: 0, y: "100%" }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: "100%" }}
+        transition={{ type: "spring", damping: 28, stiffness: 240 }}
+        className="fixed inset-0 md:left-[220px] z-[65] flex flex-col max-w-md mx-auto bg-[#f9f4ee] overflow-y-auto"
+      >
+        {/* Header */}
+        <div
+          className="sticky top-0 z-10 flex items-center justify-between px-4
+                     bg-white border-b-2 border-black flex-shrink-0"
+          style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "0.75rem" }}
+        >
+          <h2 className="font-display font-bold text-xl uppercase tracking-tight">Item Details</h2>
+          <div className="flex items-center gap-2">
+            {/* Favourite — saves instantly */}
+            <button
+              onClick={() => {
+                const next = !form.isFavorite;
+                patch("isFavorite")(next);
+                updateItem.mutate(
+                  { id: item.id, data: { isFavorite: next } },
+                  { onSuccess: () => {
                     queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
                     queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() });
                     queryClient.invalidateQueries({ queryKey: getWardrobeStatsQueryKey() });
-                  },
-                }
-              );
-            }}
-            className={`w-9 h-9 border-2 border-black rounded-full flex items-center justify-center transition-all
-                        ${form.isFavorite
-                          ? "bg-red-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                          : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"}`}
-            title="Favourite"
-          >
-            <Heart
-              className="w-4 h-4"
-              fill={form.isFavorite ? "white" : "none"}
-              stroke={form.isFavorite ? "white" : "currentColor"}
-            />
-          </button>
-          {/* Close */}
-          <button
-            onClick={onClose}
-            className="w-9 h-9 border-2 border-black rounded-full flex items-center justify-center
-                       bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
-                       active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* ── Photo section ── */}
-      <div className="flex-shrink-0 border-b-2 border-black">
-
-        {/* ENCODING spinner */}
-        {bgPhase === "encoding" && (
-          <div className="w-full h-44 flex items-center justify-center bg-black/5">
-            <Loader2 className="w-10 h-10 animate-spin opacity-40" />
-          </div>
-        )}
-
-        {/* PREVIEW — side-by-side bg removal comparison */}
-        {bgPhase === "preview" && (
-          <div className="flex flex-col gap-3 p-4">
-            <p className="text-center font-bold text-[10px] uppercase tracking-widest opacity-40">
-              {bgProcessing ? "Removing background…" : bgFailed ? "Original only" : "Tap to choose"}
-            </p>
-            <div className="flex gap-3">
-              {/* Original */}
-              <button
-                onClick={() => setBgSelected("original")}
-                className="flex-1 flex flex-col overflow-hidden rounded-2xl transition-all"
-                style={{ border: bgSelected === "original" ? "4px solid black" : "4px solid rgba(0,0,0,0.2)", background: "none", padding: 0 }}
-              >
-                <div className="relative bg-black" style={{ minHeight: 140 }}>
-                  {originalUrl && <img src={originalUrl} alt="Original" className="w-full object-contain block" style={{ maxHeight: 140 }} />}
-                  {bgSelected === "original" && (
-                    <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-black flex items-center justify-center">
-                      <Check size={12} color="white" strokeWidth={3} />
-                    </div>
-                  )}
-                </div>
-                <p className="text-center font-bold text-xs uppercase tracking-widest py-1.5">Original</p>
-              </button>
-              {/* Cleaned */}
-              <button
-                onClick={() => cleanedUrl && setBgSelected("cleaned")}
-                disabled={!cleanedUrl}
-                className="flex-1 flex flex-col overflow-hidden rounded-2xl transition-all"
-                style={{ border: bgSelected === "cleaned" && cleanedUrl ? "4px solid black" : "4px solid rgba(0,0,0,0.2)", background: "none", padding: 0 }}
-              >
-                <div className="relative flex items-center justify-center"
-                  style={{ background: "repeating-conic-gradient(#d1d5db 0% 25%, white 0% 50%) 0 0 / 12px 12px", minHeight: 140 }}>
-                  {cleanedUrl ? (
-                    <>
-                      <img src={cleanedUrl} alt="Cleaned" className="w-full object-contain block" style={{ maxHeight: 140 }} />
-                      {bgSelected === "cleaned" && (
-                        <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-black flex items-center justify-center">
-                          <Check size={12} color="white" strokeWidth={3} />
-                        </div>
-                      )}
-                    </>
-                  ) : bgFailed ? (
-                    <p className="text-xs font-bold uppercase opacity-40 text-center px-3">Could not remove background</p>
-                  ) : (
-                    <div className="flex flex-col items-center gap-2">
-                      <Loader2 size={28} className="animate-spin opacity-50" />
-                      <p className="text-xs font-bold uppercase opacity-50">Processing</p>
-                    </div>
-                  )}
-                </div>
-                <p className="text-center font-bold text-xs uppercase tracking-widest py-1.5">Cleaned ✨</p>
-              </button>
-            </div>
-            {/* Retake / Use */}
-            <div className="flex gap-3">
-              <button
-                onClick={resetPhotoState}
-                className="flex items-center justify-center gap-2 px-4 py-3
-                           border-2 border-black rounded-xl bg-white font-bold text-sm uppercase
-                           shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
-                           active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
-              >
-                <RotateCcw className="w-4 h-4" /> Retake
-              </button>
-              <button
-                onClick={handleConfirmPhoto}
-                disabled={bgProcessing}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3
-                           border-2 border-black rounded-xl bg-primary font-bold text-sm uppercase
-                           shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
-                           active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all
-                           disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Check className="w-4 h-4" />
-                {bgProcessing ? "Processing…" : "Use This Photo"}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* IDLE — show current (or newly confirmed) photo + replace button */}
-        {bgPhase === "idle" && (
-          <>
-            {(newImagePath || item.imageObjectPath) ? (
-              <div className="relative w-full h-52"
-                style={{ backgroundImage: "repeating-conic-gradient(#e5e7eb 0% 25%, white 0% 50%)", backgroundSize: "16px 16px" }}>
-                <img
-                  src={newImagePath ? getImageUrl(newImagePath)! : getImageUrl(item.imageObjectPath!)!}
-                  alt={item.name}
-                  className="w-full h-full object-contain"
-                />
-                {/* Replace overlay button */}
-                <button
-                  onClick={() => photoInputRef.current?.click()}
-                  className="absolute bottom-2 right-2 flex items-center gap-1.5 px-3 py-1.5
-                             bg-white/90 border-2 border-black rounded-xl text-xs font-bold uppercase
-                             shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
-                             active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
-                >
-                  <RotateCcw className="w-3 h-3" /> Replace
-                </button>
-              </div>
-            ) : (
-              /* No photo yet — show an upload placeholder */
-              <button
-                onClick={() => photoInputRef.current?.click()}
-                className="w-full h-36 flex flex-col items-center justify-center gap-2
-                           bg-black/5 border-dashed border-2 border-black/20
-                           active:bg-black/10 transition-colors"
-              >
-                <ImagePlus className="w-8 h-8 opacity-30" />
-                <span className="text-xs font-bold uppercase opacity-30">Add Photo</span>
-              </button>
-            )}
-          </>
-        )}
-
-        {/* Hidden file input */}
-        <input
-          ref={photoInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) handleFile(file);
-            e.target.value = "";
-          }}
-        />
-      </div>
-
-      {/* ── Form ── */}
-      <div className="flex-1 px-4 py-5 flex flex-col gap-4">
-
-        {/* Name */}
-        <Field
-          label="Item Name"
-          value={form.name}
-          onChange={patch("name") as (v: string) => void}
-          placeholder="e.g. White Linen Shirt"
-        />
-
-        {/* Brand + Color */}
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Brand"  value={form.brand} onChange={patch("brand") as (v: string) => void} placeholder="Nike, Zara…" />
-          <Field label="Color"  value={form.color} onChange={patch("color") as (v: string) => void} placeholder="Navy Blue" />
-        </div>
-
-        {/* Size */}
-        <Field label="Size / Volume" value={form.size} onChange={patch("size") as (v: string) => void} placeholder="30ml, 50ml, Full Size…" />
-
-        {/* Season + Occasion */}
-        <div className="grid grid-cols-2 gap-3">
-          <SelectField label="Season"   value={form.season}   onChange={patch("season") as (v: string) => void}   options={SEASON_OPTIONS} />
-          <SelectField label="Occasion" value={form.occasion} onChange={patch("occasion") as (v: string) => void} options={OCCASION_OPTIONS} />
-        </div>
-
-        {/* Price + Date */}
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Purchase Price" value={form.purchasePrice} onChange={patch("purchasePrice") as (v: string) => void} placeholder="$49.99" />
-          <Field label="Purchase Date"  value={form.purchaseDate}  onChange={patch("purchaseDate") as (v: string) => void}  type="date" />
-        </div>
-
-        {/* Notes */}
-        <div className="flex flex-col gap-1">
-          <label className="text-[10px] font-bold uppercase tracking-widest text-black/40">
-            Notes
-          </label>
-          <textarea
-            value={form.notes}
-            onChange={(e) => patch("notes")(e.target.value)}
-            placeholder="Anything worth remembering…"
-            rows={3}
-            className="w-full border-2 border-black rounded-lg px-3 py-2 text-sm font-medium
-                       bg-white focus:outline-none focus:ring-2 focus:ring-primary resize-none
-                       placeholder:font-normal placeholder:text-black/25"
-          />
-        </div>
-
-        {/* Category (editable) + Times Worn (read-only) */}
-        <div className="grid grid-cols-2 gap-3">
-          <SelectField
-            label="Category"
-            value={form.category}
-            onChange={patch("category") as (v: string) => void}
-            options={CATEGORY_OPTIONS}
-          />
-          <div className="flex flex-col gap-1 opacity-50 pointer-events-none">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-black/40">Times Worn</span>
-            <div className="border-2 border-black/20 rounded-lg px-3 py-2 text-sm font-medium bg-white/50">
-              {item.timesWorn ?? 0}
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      {/* ── Footer actions ── */}
-      <div className="sticky bottom-0 px-4 py-4 bg-white border-t-2 border-black flex-shrink-0 flex flex-col gap-2">
-
-        {/* Save (only when dirty) */}
-        <AnimatePresence>
-          {dirty && (
-            <motion.button
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              onClick={handleSave}
-              disabled={updateItem.isPending}
-              className="w-full btn-brutalist py-3 rounded-xl flex items-center justify-center gap-2 text-sm"
+                  }},
+                );
+              }}
+              className={`w-9 h-9 border-2 border-black rounded-full flex items-center justify-center transition-all
+                          ${form.isFavorite
+                            ? "bg-red-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                            : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"}`}
             >
-              <Save className="w-4 h-4" />
-              {updateItem.isPending ? "Saving…" : "Save Changes"}
-            </motion.button>
-          )}
-        </AnimatePresence>
-
-        {/* Delete */}
-        {!showDeleteConfirm ? (
-          <button
-            onClick={() => setShowDeleteConfirm(true)}
-            className="w-full py-3 rounded-xl flex items-center justify-center gap-2 text-sm
-                       font-bold uppercase border-2 border-black/20 text-black/35
-                       hover:border-red-500 hover:text-red-600 transition-all"
-          >
-            <Trash2 className="w-4 h-4" />
-            Delete from Garden Forever
-          </button>
-        ) : (
-          <div className="flex gap-2">
+              <Heart className="w-4 h-4"
+                fill={form.isFavorite ? "white" : "none"}
+                stroke={form.isFavorite ? "white" : "currentColor"} />
+            </button>
+            {/* Close */}
             <button
-              onClick={() => setShowDeleteConfirm(false)}
-              className="flex-1 py-3 rounded-xl text-sm font-bold uppercase border-2 border-black bg-white
-                         shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+              onClick={onClose}
+              className="w-9 h-9 border-2 border-black rounded-full flex items-center justify-center
+                         bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
                          active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all"
             >
-              Cancel
-            </button>
-            <button
-              onClick={handleDelete}
-              disabled={deleteItem.isPending}
-              className="flex-1 py-3 rounded-xl text-sm font-bold uppercase border-2 border-red-600
-                         bg-red-500 text-white
-                         shadow-[2px_2px_0px_0px_rgba(185,28,28,1)]
-                         active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all
-                         disabled:opacity-50"
-            >
-              {deleteItem.isPending ? "Deleting…" : "Yes, Delete Forever"}
+              <X className="w-4 h-4" />
             </button>
           </div>
+        </div>
+
+        {/* ── Photo section ── */}
+        <div className="flex-shrink-0 border-b-2 border-black">
+
+          {/* Replace-file: encoding spinner */}
+          {replacePhase === "encoding" && (
+            <div className="w-full h-44 flex items-center justify-center bg-black/5">
+              <Loader2 className="w-10 h-10 animate-spin opacity-40" />
+            </div>
+          )}
+
+          {/* Replace-file: side-by-side preview */}
+          {replacePhase === "preview" && (
+            <div className="flex flex-col gap-3 p-4">
+              <p className="text-center font-bold text-[10px] uppercase tracking-widest opacity-40">
+                {repProcessing ? "Removing background…" : repFailed ? "Original only" : "Tap to choose"}
+              </p>
+              <div className="flex gap-3">
+                {/* Original */}
+                <button
+                  onClick={() => setRepSelected("original")}
+                  className="flex-1 flex flex-col overflow-hidden rounded-2xl transition-all"
+                  style={{ border: repSelected === "original" ? "4px solid black" : "4px solid rgba(0,0,0,0.2)", background: "none", padding: 0 }}
+                >
+                  <div className="relative bg-black" style={{ minHeight: 140 }}>
+                    {repOrigUrl && <img src={repOrigUrl} alt="Original" className="w-full object-contain block" style={{ maxHeight: 140 }} />}
+                    {repSelected === "original" && (
+                      <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-black flex items-center justify-center">
+                        <Check size={12} color="white" strokeWidth={3} />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-center font-bold text-xs uppercase tracking-widest py-1.5">Original</p>
+                </button>
+                {/* Cleaned */}
+                <button
+                  onClick={() => repCleanUrl && setRepSelected("cleaned")}
+                  disabled={!repCleanUrl}
+                  className="flex-1 flex flex-col overflow-hidden rounded-2xl transition-all"
+                  style={{ border: repSelected === "cleaned" && repCleanUrl ? "4px solid black" : "4px solid rgba(0,0,0,0.2)", background: "none", padding: 0 }}
+                >
+                  <div className="relative flex items-center justify-center"
+                    style={{ background: "repeating-conic-gradient(#d1d5db 0% 25%, white 0% 50%) 0 0 / 12px 12px", minHeight: 140 }}>
+                    {repCleanUrl ? (
+                      <>
+                        <img src={repCleanUrl} alt="Cleaned" className="w-full object-contain block" style={{ maxHeight: 140 }} />
+                        {repSelected === "cleaned" && (
+                          <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-black flex items-center justify-center">
+                            <Check size={12} color="white" strokeWidth={3} />
+                          </div>
+                        )}
+                      </>
+                    ) : repFailed ? (
+                      <p className="text-xs font-bold uppercase opacity-40 text-center px-3">Could not remove background</p>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2">
+                        <Loader2 size={28} className="animate-spin opacity-50" />
+                        <p className="text-xs font-bold uppercase opacity-50">Processing</p>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-center font-bold text-xs uppercase tracking-widest py-1.5">Cleaned ✨</p>
+                </button>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={resetReplaceState}
+                  className="flex items-center justify-center gap-2 px-4 py-3
+                             border-2 border-black rounded-xl bg-white font-bold text-sm uppercase
+                             shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
+                             active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+                >
+                  <RotateCcw className="w-4 h-4" /> Retake
+                </button>
+                <button
+                  onClick={handleConfirmReplace}
+                  disabled={repProcessing}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3
+                             border-2 border-black rounded-xl bg-primary font-bold text-sm uppercase
+                             shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
+                             active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all
+                             disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Check className="w-4 h-4" />
+                  {repProcessing ? "Processing…" : "Use This Photo"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Idle — current photo + action buttons */}
+          {replacePhase === "idle" && (
+            <>
+              {hasPhoto && shownImageSrc ? (
+                <div
+                  className="relative w-full h-52"
+                  style={{
+                    backgroundImage: "repeating-conic-gradient(#e5e7eb 0% 25%, white 0% 50%)",
+                    backgroundSize: "16px 16px",
+                  }}
+                >
+                  <img src={shownImageSrc} alt={item.name} className="w-full h-full object-contain" />
+
+                  {/* Bottom-right action pill */}
+                  <div className="absolute bottom-2 right-2 flex gap-1.5">
+                    {/* Clean Up Photo */}
+                    <button
+                      onClick={handleStartCleanUp}
+                      className="flex items-center gap-1.5 px-3 py-1.5
+                                 bg-pink-500 border-2 border-black rounded-xl text-white text-xs font-bold uppercase
+                                 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                                 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+                    >
+                      <Sparkles className="w-3 h-3" /> Clean Up
+                    </button>
+                    {/* Replace (pick new file) */}
+                    <button
+                      onClick={() => photoInputRef.current?.click()}
+                      className="flex items-center gap-1.5 px-3 py-1.5
+                                 bg-white/90 border-2 border-black rounded-xl text-xs font-bold uppercase
+                                 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                                 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+                    >
+                      <RotateCcw className="w-3 h-3" /> Replace
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => photoInputRef.current?.click()}
+                  className="w-full h-36 flex flex-col items-center justify-center gap-2
+                             bg-black/5 border-dashed border-2 border-black/20
+                             active:bg-black/10 transition-colors"
+                >
+                  <ImagePlus className="w-8 h-8 opacity-30" />
+                  <span className="text-xs font-bold uppercase opacity-30">Add Photo</span>
+                </button>
+              )}
+            </>
+          )}
+
+          <input
+            ref={photoInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleReplaceFile(file);
+              e.target.value = "";
+            }}
+          />
+        </div>
+
+        {/* ── Form fields ── */}
+        <div className="flex-1 px-4 py-5 flex flex-col gap-4">
+          <Field label="Item Name" value={form.name}
+            onChange={patch("name") as (v: string) => void} placeholder="e.g. White Linen Shirt" />
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Brand" value={form.brand} onChange={patch("brand") as (v: string) => void} placeholder="Nike, Zara…" />
+            <Field label="Color" value={form.color} onChange={patch("color") as (v: string) => void} placeholder="Navy Blue" />
+          </div>
+
+          <Field label="Size / Volume" value={form.size}
+            onChange={patch("size") as (v: string) => void} placeholder="30ml, 50ml, Full Size…" />
+
+          <div className="grid grid-cols-2 gap-3">
+            <SelectField label="Season"   value={form.season}   onChange={patch("season") as (v: string) => void}   options={SEASON_OPTIONS} />
+            <SelectField label="Occasion" value={form.occasion} onChange={patch("occasion") as (v: string) => void} options={OCCASION_OPTIONS} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Purchase Price" value={form.purchasePrice}
+              onChange={patch("purchasePrice") as (v: string) => void} placeholder="$49.99" />
+            <Field label="Purchase Date"  value={form.purchaseDate}
+              onChange={patch("purchaseDate") as (v: string) => void} type="date" />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-black/40">Notes</label>
+            <textarea
+              value={form.notes} onChange={(e) => patch("notes")(e.target.value)}
+              placeholder="Anything worth remembering…" rows={3}
+              className="w-full border-2 border-black rounded-lg px-3 py-2 text-sm font-medium
+                         bg-white focus:outline-none focus:ring-2 focus:ring-primary resize-none
+                         placeholder:font-normal placeholder:text-black/25"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <SelectField label="Category" value={form.category}
+              onChange={patch("category") as (v: string) => void} options={CATEGORY_OPTIONS} />
+            <div className="flex flex-col gap-1 opacity-50 pointer-events-none">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-black/40">Times Worn</span>
+              <div className="border-2 border-black/20 rounded-lg px-3 py-2 text-sm font-medium bg-white/50">
+                {item.timesWorn ?? 0}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Footer ── */}
+        <div className="sticky bottom-0 px-4 py-4 bg-white border-t-2 border-black flex-shrink-0 flex flex-col gap-2">
+          <AnimatePresence>
+            {dirty && (
+              <motion.button
+                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
+                onClick={handleSave} disabled={updateItem.isPending}
+                className="w-full btn-brutalist py-3 rounded-xl flex items-center justify-center gap-2 text-sm"
+              >
+                <Save className="w-4 h-4" />
+                {updateItem.isPending ? "Saving…" : "Save Changes"}
+              </motion.button>
+            )}
+          </AnimatePresence>
+
+          {!showDeleteConfirm ? (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="w-full py-3 rounded-xl flex items-center justify-center gap-2 text-sm
+                         font-bold uppercase border-2 border-black/20 text-black/35
+                         hover:border-red-500 hover:text-red-600 transition-all"
+            >
+              <Trash2 className="w-4 h-4" /> Delete from Garden Forever
+            </button>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 py-3 rounded-xl text-sm font-bold uppercase border-2 border-black bg-white
+                           shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                           active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all"
+              >Cancel</button>
+              <button
+                onClick={handleDelete} disabled={deleteItem.isPending}
+                className="flex-1 py-3 rounded-xl text-sm font-bold uppercase border-2 border-red-600
+                           bg-red-500 text-white shadow-[2px_2px_0px_0px_rgba(185,28,28,1)]
+                           active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all
+                           disabled:opacity-50"
+              >
+                {deleteItem.isPending ? "Deleting…" : "Yes, Delete Forever"}
+              </button>
+            </div>
+          )}
+        </div>
+      </motion.div>
+
+      {/* ── Clean Up Photo overlay — slides up over the sheet ── */}
+      <AnimatePresence>
+        {cleanUpOpen && (
+          <motion.div
+            key="cleanup-overlay"
+            initial={{ opacity: 0, y: "100%" }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: "100%" }}
+            transition={{ type: "spring", damping: 28, stiffness: 240 }}
+            className="fixed inset-0 md:left-[220px] z-[75] flex flex-col max-w-md mx-auto bg-[#f9f4ee]"
+          >
+            {/* Overlay header */}
+            <div
+              className="flex items-center justify-between px-4 bg-white border-b-2 border-black flex-shrink-0"
+              style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "0.75rem" }}
+            >
+              <h2 className="font-display font-bold text-xl uppercase tracking-tight flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-pink-500" /> Clean Up Photo
+              </h2>
+              <button
+                onClick={handleCancelCleanUp}
+                className="w-9 h-9 border-2 border-black rounded-full flex items-center justify-center
+                           bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                           active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="flex-1 flex flex-col gap-5 p-5 overflow-y-auto">
+              <p className="text-center font-bold text-[11px] uppercase tracking-widest opacity-40">
+                {cleanProcessing
+                  ? "Removing background — this takes a moment…"
+                  : cleanFailed
+                    ? "Could not remove background — tap Original to keep as-is"
+                    : "Tap to select, then save"}
+              </p>
+
+              {/* Side-by-side cards */}
+              <div className="flex gap-3">
+                {/* Original */}
+                <button
+                  onClick={() => setCleanSelected("original")}
+                  className="flex-1 flex flex-col overflow-hidden rounded-2xl transition-all"
+                  style={{ padding: 0, background: "none",
+                    outline: cleanSelected === "original" ? "4px solid rgb(236,72,153)" : "4px solid rgba(0,0,0,0.15)",
+                    outlineOffset: "-4px" }}
+                >
+                  <div
+                    className="relative flex items-center justify-center bg-black"
+                    style={{ minHeight: 220 }}
+                  >
+                    {shownImageSrc && (
+                      <img src={shownImageSrc} alt="Original"
+                        className="w-full object-contain block" style={{ maxHeight: 220 }} />
+                    )}
+                    {cleanSelected === "original" && (
+                      <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-pink-500 flex items-center justify-center">
+                        <Check size={14} color="white" strokeWidth={3} />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-center font-bold text-xs uppercase tracking-widest py-2">Original</p>
+                </button>
+
+                {/* Cleaned */}
+                <button
+                  onClick={() => cleanedUrl && setCleanSelected("cleaned")}
+                  disabled={!cleanedUrl}
+                  className="flex-1 flex flex-col overflow-hidden rounded-2xl transition-all"
+                  style={{ padding: 0, background: "none",
+                    outline: cleanSelected === "cleaned" && cleanedUrl ? "4px solid rgb(236,72,153)" : "4px solid rgba(0,0,0,0.15)",
+                    outlineOffset: "-4px" }}
+                >
+                  <div
+                    className="relative flex items-center justify-center"
+                    style={{
+                      background: "repeating-conic-gradient(#d1d5db 0% 25%, white 0% 50%) 0 0 / 14px 14px",
+                      minHeight: 220,
+                    }}
+                  >
+                    {cleanedUrl ? (
+                      <>
+                        <img src={cleanedUrl} alt="Cleaned"
+                          className="w-full object-contain block" style={{ maxHeight: 220 }} />
+                        {cleanSelected === "cleaned" && (
+                          <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-pink-500 flex items-center justify-center">
+                            <Check size={14} color="white" strokeWidth={3} />
+                          </div>
+                        )}
+                      </>
+                    ) : cleanFailed ? (
+                      <p className="text-xs font-bold uppercase opacity-40 text-center px-4">
+                        Background removal failed
+                      </p>
+                    ) : (
+                      <div className="flex flex-col items-center gap-3">
+                        <Loader2 size={36} className="animate-spin opacity-40" />
+                        <p className="text-xs font-bold uppercase opacity-40">Processing…</p>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-center font-bold text-xs uppercase tracking-widest py-2">Cleaned ✨</p>
+                </button>
+              </div>
+            </div>
+
+            {/* Footer buttons */}
+            <div className="flex-shrink-0 px-5 py-4 bg-white border-t-2 border-black flex flex-col gap-2">
+              <button
+                onClick={handleConfirmCleanUp}
+                disabled={cleanProcessing}
+                className="w-full py-3 rounded-xl flex items-center justify-center gap-2 text-sm font-bold uppercase
+                           border-2 border-black bg-pink-500 text-white
+                           shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
+                           active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all
+                           disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Check className="w-4 h-4" />
+                {cleanProcessing
+                  ? "Processing…"
+                  : cleanSelected === "cleaned"
+                    ? "Save Cleaned Version"
+                    : "Save Original"}
+              </button>
+              <button
+                onClick={handleCancelCleanUp}
+                className="w-full py-3 rounded-xl flex items-center justify-center gap-2 text-sm font-bold uppercase
+                           border-2 border-black/20 text-black/40
+                           active:bg-black/5 transition-all"
+              >
+                Cancel
+              </button>
+            </div>
+          </motion.div>
         )}
-      </div>
-    </motion.div>
+      </AnimatePresence>
+    </>
   );
 }
