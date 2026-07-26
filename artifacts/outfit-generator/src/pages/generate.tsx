@@ -33,10 +33,10 @@ const LM = {
   doorL: 0.03,
   doorR: 0.97,
   rows: [
-    { sectionTop: 0.295, shelfY: 0.415, btnCY: 0.280 },  // OUTFITS    (bed 1)
-    { sectionTop: 0.440, shelfY: 0.560, btnCY: 0.426 },  // BEAUTY     (bed 2)
-    { sectionTop: 0.585, shelfY: 0.705, btnCY: 0.571 },  // TOILETRIES (bed 3)
-    { sectionTop: 0.730, shelfY: 0.850, btnCY: 0.717 },  // ESSENTIALS (bed 4)
+    { sectionTop: 0.295, shelfY: 0.415, btnCY: 0.280, labelFrac: 0.295 },  // tools       (bed 1)
+    { sectionTop: 0.440, shelfY: 0.560, btnCY: 0.426, labelFrac: 0.440 },  // landscaping (bed 2)
+    { sectionTop: 0.585, shelfY: 0.705, btnCY: 0.571, labelFrac: 0.576 },  // decor       (bed 3) ↑ nudged
+    { sectionTop: 0.730, shelfY: 0.850, btnCY: 0.717, labelFrac: 0.721 },  // plants      (bed 4) ↑ nudged
   ],
   // Action bar: baked-in bottom bar with plant | Save | star icons
   barY:   0.873,
@@ -278,8 +278,8 @@ export default function GeneratePage() {
               const btnCY  = pY(ir, lm.btnCY);
               const btnH   = Math.max(32, pH(ir, 0.045));
 
-              // Label sits centred on the brick border at sectionTop
-              const labelY = pY(ir, lm.sectionTop);
+              // Label sits centred on the brick border (per-row fine-tune via labelFrac)
+              const labelY = pY(ir, lm.labelFrac);
 
               return (
                 <React.Fragment key={key}>
