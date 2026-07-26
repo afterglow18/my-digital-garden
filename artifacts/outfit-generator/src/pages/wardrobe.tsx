@@ -273,16 +273,6 @@ export default function WardrobePage() {
             return (
               <React.Fragment key={key}>
 
-                {/* ── Light overlay behind photos so items show against dark soil ── */}
-                <div style={{
-                  position: "absolute",
-                  top: secTop, left: carLeft, width: carW, height: secH,
-                  background: "rgba(210, 160, 90, 0.38)",
-                  zIndex: 6,
-                  borderRadius: 3,
-                  pointerEvents: "none",
-                }} />
-
                 {/* ── Category label (tappable → add photo) ── */}
                 <button
                   onClick={addHandlers[key]}
