@@ -178,14 +178,14 @@ export function useRemoveItemFromOutfit() {
 
 /** Used by ClothingForm.tsx as z.nativeEnum(ClothingItemInputCategory) */
 export const ClothingItemInputCategory = {
-  outfits:    "outfits",
-  beauty:     "beauty",
-  toiletries: "toiletries",
-  essentials: "essentials",
+  tools:       "tools",
+  landscaping: "landscaping",
+  decor:       "decor",
+  plants:      "plants",
 } as const;
 
 // ── Type aliases kept for compatibility with old api-client-react consumers ───
-export type ClothingItemCategory       = "outfits" | "beauty" | "toiletries" | "essentials";
+export type ClothingItemCategory       = "tools" | "landscaping" | "decor" | "plants";
 export type ListClothingCategory        = ClothingItemCategory;
 export type ClothingItemUpdateCategory  = ClothingItemCategory;
 export type ClothingItemInputCategoryType = ClothingItemCategory;

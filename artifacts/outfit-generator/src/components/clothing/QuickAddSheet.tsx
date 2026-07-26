@@ -21,13 +21,13 @@ import {
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type Category = "outfits" | "beauty" | "toiletries" | "essentials";
+type Category = "tools" | "landscaping" | "decor" | "plants";
 
 const CATEGORY_LABELS: Record<Category, string> = {
-  outfits:    "Outfits",
-  beauty:     "Beauty",
-  toiletries: "Toiletries",
-  essentials: "Essentials",
+  tools:       "🧤 Tools & Supplies",
+  landscaping: "🪨 Landscaping",
+  decor:       "🌿 Garden Décor",
+  plants:      "🌱 Plants",
 };
 
 type Phase = "pick" | "encoding" | "preview" | "uploading";

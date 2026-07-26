@@ -7,7 +7,28 @@
 
 import { getDB, type ClothingItem, type SavedOutfit, type StoredClothingItem, type StoredOutfit, type StoredOutfitItem } from "./db";
 
-const CATEGORIES = ["outfits", "beauty", "toiletries", "essentials"] as const;
+const CATEGORIES = ["tools", "landscaping", "decor", "plants"] as const;
+
+// ── One-time DB migration: rename legacy category keys ────────────────────────
+const CATEGORY_RENAMES: Record<string, string> = {
+  outfits:    "tools",
+  beauty:     "landscaping",
+  toiletries: "decor",
+  essentials: "plants",
+};
+
+export async function migrateCategories(): Promise<void> {
+  const db  = await getDB();
+  const all = await db.getAll("clothing_items") as StoredClothingItem[];
+  const tx  = db.transaction("clothing_items", "readwrite");
+  for (const item of all) {
+    const newCat = CATEGORY_RENAMES[item.category];
+    if (newCat) {
+      await tx.store.put({ ...item, category: newCat, updatedAt: new Date().toISOString() });
+    }
+  }
+  await tx.done;
+}
 
 // ── Clothing items ────────────────────────────────────────────────────────────
 

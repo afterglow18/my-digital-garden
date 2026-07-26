@@ -22,7 +22,7 @@ export const DB_VERSION = 1;
 export interface StoredClothingItem {
   id?:            number;        // auto-incremented
   name:           string;
-  category:       string;        // "outfits" | "beauty" | "toiletries" | "essentials"
+  category:       string;        // "tools" | "landscaping" | "decor" | "plants"
   imageObjectPath: string | null; // JPEG data URL  (e.g. "data:image/jpeg;base64,...")
   isFavorite:     boolean;
   timesWorn:      number;

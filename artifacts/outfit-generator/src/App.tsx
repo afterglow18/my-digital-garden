@@ -11,6 +11,7 @@ import WelcomePage from './pages/welcome';
 import { SubscriptionProvider, initializeRevenueCat } from '@/lib/revenuecat';
 import { queryClient } from '@/lib/queryClient';
 import { BiometricLockProvider } from '@/context/BiometricLockContext';
+import { migrateCategories } from '@/lib/localDB';
 
 // ── Initialise RevenueCat once at startup ────────────────────────────────────
 try {
@@ -20,6 +21,11 @@ try {
 } catch (err) {
   console.warn("[RevenueCat] Init error (non-fatal):", err);
 }
+
+// ── Migrate legacy category keys (outfits→tools, beauty→landscaping, etc.) ───
+migrateCategories().catch((err) =>
+  console.warn("[DB] Category migration error (non-fatal):", err)
+);
 
 // ── First-launch welcome ──────────────────────────────────────────────────────
 const ENTERED_KEY = "garden-entered";

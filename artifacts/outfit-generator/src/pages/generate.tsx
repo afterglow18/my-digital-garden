@@ -72,14 +72,14 @@ const pX = (ir: ImgRect, f: number) => ir.left   + ir.width  * f;
 const pY = (ir: ImgRect, f: number) => ir.top    + ir.height * f;
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-type RowKey = "outfits" | "beauty" | "toiletries" | "essentials";
+type RowKey = "tools" | "landscaping" | "decor" | "plants";
 type Phase  = "idle" | "spinning" | "result";
 
 const ROWS: { key: RowKey; label: string }[] = [
-  { key: "outfits",    label: "🧤 Tools & Supplies" },
-  { key: "beauty",     label: "🪨 Landscaping"       },
-  { key: "toiletries", label: "🌿 Garden Décor"      },
-  { key: "essentials", label: "🌱 Plants"             },
+  { key: "tools",       label: "🧤 Tools & Supplies" },
+  { key: "landscaping", label: "🪨 Landscaping"       },
+  { key: "decor",       label: "🌿 Garden Décor"      },
+  { key: "plants",      label: "🌱 Plants"             },
 ];
 
 const MIN_SPIN_MS = 1600;
@@ -91,10 +91,10 @@ export default function GeneratePage() {
   const ready = ir.width > 0;
 
   const rowRefs: Record<RowKey, RefObject<ClosetRowHandle | null>> = {
-    outfits:    useRef<ClosetRowHandle | null>(null),
-    beauty:     useRef<ClosetRowHandle | null>(null),
-    toiletries: useRef<ClosetRowHandle | null>(null),
-    essentials: useRef<ClosetRowHandle | null>(null),
+    tools:       useRef<ClosetRowHandle | null>(null),
+    landscaping: useRef<ClosetRowHandle | null>(null),
+    decor:       useRef<ClosetRowHandle | null>(null),
+    plants:      useRef<ClosetRowHandle | null>(null),
   };
 
   const [phase,      setPhase]      = useState<Phase>("idle");
@@ -103,23 +103,23 @@ export default function GeneratePage() {
   const [saveName,   setSaveName]   = useState("");
 
   const rowDataRef = useRef<Record<RowKey, ClothingItem[]>>({
-    outfits: [], beauty: [], toiletries: [], essentials: [],
+    tools: [], landscaping: [], decor: [], plants: [],
   });
 
-  const { data: outfits    = [] } = useListClothing({ category: "outfits"    }, { query: { queryKey: getListClothingQueryKey({ category: "outfits"    }) } });
-  const { data: beauty     = [] } = useListClothing({ category: "beauty"     }, { query: { queryKey: getListClothingQueryKey({ category: "beauty"     }) } });
-  const { data: toiletries = [] } = useListClothing({ category: "toiletries" }, { query: { queryKey: getListClothingQueryKey({ category: "toiletries" }) } });
-  const { data: essentials = [] } = useListClothing({ category: "essentials" }, { query: { queryKey: getListClothingQueryKey({ category: "essentials" }) } });
+  const { data: tools       = [] } = useListClothing({ category: "tools"       }, { query: { queryKey: getListClothingQueryKey({ category: "tools"       }) } });
+  const { data: landscaping = [] } = useListClothing({ category: "landscaping" }, { query: { queryKey: getListClothingQueryKey({ category: "landscaping" }) } });
+  const { data: decor       = [] } = useListClothing({ category: "decor"       }, { query: { queryKey: getListClothingQueryKey({ category: "decor"       }) } });
+  const { data: plants      = [] } = useListClothing({ category: "plants"      }, { query: { queryKey: getListClothingQueryKey({ category: "plants"      }) } });
 
-  useEffect(() => { rowDataRef.current = { outfits, beauty, toiletries, essentials }; }, [outfits, beauty, toiletries, essentials]);
+  useEffect(() => { rowDataRef.current = { tools, landscaping, decor, plants }; }, [tools, landscaping, decor, plants]);
 
-  const hasItems = outfits.length > 0 || beauty.length > 0 || toiletries.length > 0 || essentials.length > 0;
+  const hasItems = tools.length > 0 || landscaping.length > 0 || decor.length > 0 || plants.length > 0;
 
   const setCentredHandlers: Record<RowKey, (item: ClothingItem | null) => void> = {
-    outfits:    useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, outfits:    item ?? undefined })), []),
-    beauty:     useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, beauty:     item ?? undefined })), []),
-    toiletries: useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, toiletries: item ?? undefined })), []),
-    essentials: useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, essentials: item ?? undefined })), []),
+    tools:       useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, tools:       item ?? undefined })), []),
+    landscaping: useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, landscaping: item ?? undefined })), []),
+    decor:       useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, decor:       item ?? undefined })), []),
+    plants:      useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, plants:      item ?? undefined })), []),
   };
 
   const generateOutfit = useGenerateOutfit();
@@ -138,7 +138,7 @@ export default function GeneratePage() {
     setSaveName("");
 
     const spinStart = Date.now();
-    const stop: Record<RowKey, boolean> = { outfits: false, beauty: false, toiletries: false, essentials: false };
+    const stop: Record<RowKey, boolean> = { tools: false, landscaping: false, decor: false, plants: false };
 
     ROWS.forEach(({ key }, ri) => {
       const INTERVAL = 65 + ri * 18;
@@ -163,7 +163,7 @@ export default function GeneratePage() {
           const landMap: Partial<Record<RowKey, { item: ClothingItem; idx: number }>> = {};
           data.items.forEach(apiItem => {
             const key = apiItem.category as RowKey;
-            if (!["outfits", "beauty", "toiletries", "essentials"].includes(key)) return;
+            if (!["tools", "landscaping", "decor", "plants"].includes(key)) return;
             const arr = rowDataRef.current[key];
             const localIdx = arr.findIndex(i => i.id === apiItem.id);
             landMap[key] = { item: apiItem, idx: localIdx >= 0 ? localIdx : 0 };
@@ -272,7 +272,7 @@ export default function GeneratePage() {
             {/* ── 4 shelf carousels + ADD-button covers ── */}
             {ROWS.map(({ key, label }, rowIdx) => {
               const lm    = LM.rows[rowIdx];
-              const items = { outfits, beauty, toiletries, essentials }[key];
+              const items = { tools, landscaping, decor, plants }[key];
               const secTop = pY(ir, lm.sectionTop);
               const secH   = pH(ir, lm.shelfY - lm.sectionTop);
               const btnCY  = pY(ir, lm.btnCY);
@@ -405,7 +405,7 @@ export default function GeneratePage() {
                   fontSize: 11, color: "#9a5060",
                   marginTop: 5, lineHeight: 1.5,
                 }}>
-                  Add outfits, beauty, toiletries or essentials in the Garden tab first.
+                  Add tools, plants, décor or landscaping items in the Garden tab first.
                 </p>
               </div>
             )}

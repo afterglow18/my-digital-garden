@@ -35,14 +35,14 @@ import { useEntitlements } from "@/hooks/useEntitlements";
 import { FREE_ITEM_LIMIT } from "@/lib/entitlements";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-type RowKey   = "outfits" | "beauty" | "toiletries" | "essentials";
-type Category = "outfits" | "beauty" | "toiletries" | "essentials";
+type RowKey   = "tools" | "landscaping" | "decor" | "plants";
+type Category = "tools" | "landscaping" | "decor" | "plants";
 
 const ROWS: { key: RowKey; label: string; btnLabel: string }[] = [
-  { key: "outfits",    label: "🧤 Tools & Supplies", btnLabel: "Add Tools & Supplies"  },
-  { key: "beauty",     label: "🪨 Landscaping",      btnLabel: "Add Landscaping items" },
-  { key: "toiletries", label: "🌿 Garden Décor",     btnLabel: "Add Garden Décor"      },
-  { key: "essentials", label: "🌱 Plants",            btnLabel: "Add Plants"            },
+  { key: "tools",       label: "🧤 Tools & Supplies", btnLabel: "Add Tools & Supplies"  },
+  { key: "landscaping", label: "🪨 Landscaping",      btnLabel: "Add Landscaping items" },
+  { key: "decor",       label: "🌿 Garden Décor",     btnLabel: "Add Garden Décor"      },
+  { key: "plants",      label: "🌱 Plants",            btnLabel: "Add Plants"            },
 ];
 
 // ── Image constants ───────────────────────────────────────────────────────────
@@ -103,10 +103,10 @@ export default function WardrobePage() {
   const ir = useImageRect(containerRef);
 
   const rowRefs: Record<RowKey, RefObject<ClosetRowHandle | null>> = {
-    outfits:    useRef<ClosetRowHandle | null>(null),
-    beauty:     useRef<ClosetRowHandle | null>(null),
-    toiletries: useRef<ClosetRowHandle | null>(null),
-    essentials: useRef<ClosetRowHandle | null>(null),
+    tools:       useRef<ClosetRowHandle | null>(null),
+    landscaping: useRef<ClosetRowHandle | null>(null),
+    decor:       useRef<ClosetRowHandle | null>(null),
+    plants:      useRef<ClosetRowHandle | null>(null),
   };
 
   const [centred,       setCentred]       = useState<Partial<Record<RowKey, ClothingItem>>>({});
@@ -119,14 +119,14 @@ export default function WardrobePage() {
 
   const saveOutfit = useSaveOutfit();
 
-  const { data: outfitsItems  = [] } = useListClothing({ category: "outfits"    }, { query: { queryKey: getListClothingQueryKey({ category: "outfits"    }) } });
-  const { data: beautyItems   = [] } = useListClothing({ category: "beauty"     }, { query: { queryKey: getListClothingQueryKey({ category: "beauty"     }) } });
-  const { data: toiletriesItems = [] } = useListClothing({ category: "toiletries" }, { query: { queryKey: getListClothingQueryKey({ category: "toiletries" }) } });
-  const { data: essentialsItems = [] } = useListClothing({ category: "essentials" }, { query: { queryKey: getListClothingQueryKey({ category: "essentials" }) } });
+  const { data: toolsItems       = [] } = useListClothing({ category: "tools"       }, { query: { queryKey: getListClothingQueryKey({ category: "tools"       }) } });
+  const { data: landscapingItems = [] } = useListClothing({ category: "landscaping" }, { query: { queryKey: getListClothingQueryKey({ category: "landscaping" }) } });
+  const { data: decorItems       = [] } = useListClothing({ category: "decor"       }, { query: { queryKey: getListClothingQueryKey({ category: "decor"       }) } });
+  const { data: plantsItems      = [] } = useListClothing({ category: "plants"      }, { query: { queryKey: getListClothingQueryKey({ category: "plants"      }) } });
   const { data: savedOutfitsList = [] } = useListOutfits();
 
-  const rowData: Record<RowKey, ClothingItem[]> = { outfits: outfitsItems, beauty: beautyItems, toiletries: toiletriesItems, essentials: essentialsItems };
-  const totalItems = outfitsItems.length + beautyItems.length + toiletriesItems.length + essentialsItems.length;
+  const rowData: Record<RowKey, ClothingItem[]> = { tools: toolsItems, landscaping: landscapingItems, decor: decorItems, plants: plantsItems };
+  const totalItems = toolsItems.length + landscapingItems.length + decorItems.length + plantsItems.length;
 
 
   const queryClient = useQueryClient();
@@ -136,20 +136,20 @@ export default function WardrobePage() {
     setCentred(prev => {
       const next = { ...prev };
       let changed = false;
-      (["outfits", "beauty", "toiletries", "essentials"] as RowKey[]).forEach(key => {
+      (["tools", "landscaping", "decor", "plants"] as RowKey[]).forEach(key => {
         if (rowData[key].length === 0 && next[key] !== undefined) {
           delete next[key]; changed = true;
         }
       });
       return changed ? next : prev;
     });
-  }, [outfitsItems.length, beautyItems.length, toiletriesItems.length, essentialsItems.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [toolsItems.length, landscapingItems.length, decorItems.length, plantsItems.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const setCentredHandlers: Record<RowKey, (item: ClothingItem | null) => void> = {
-    outfits:    useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, outfits:    item ?? undefined })), []),
-    beauty:     useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, beauty:     item ?? undefined })), []),
-    toiletries: useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, toiletries: item ?? undefined })), []),
-    essentials: useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, essentials: item ?? undefined })), []),
+    tools:       useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, tools:       item ?? undefined })), []),
+    landscaping: useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, landscaping: item ?? undefined })), []),
+    decor:       useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, decor:       item ?? undefined })), []),
+    plants:      useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, plants:      item ?? undefined })), []),
   };
 
   const handleAddClick = useCallback((cat: Category) => {
@@ -157,10 +157,10 @@ export default function WardrobePage() {
   }, [canAddItem, totalItems]);
 
   const addHandlers: Record<RowKey, () => void> = {
-    outfits:    useCallback(() => handleAddClick("outfits"),    [handleAddClick]),
-    beauty:     useCallback(() => handleAddClick("beauty"),     [handleAddClick]),
-    toiletries: useCallback(() => handleAddClick("toiletries"), [handleAddClick]),
-    essentials: useCallback(() => handleAddClick("essentials"), [handleAddClick]),
+    tools:       useCallback(() => handleAddClick("tools"),       [handleAddClick]),
+    landscaping: useCallback(() => handleAddClick("landscaping"), [handleAddClick]),
+    decor:       useCallback(() => handleAddClick("decor"),       [handleAddClick]),
+    plants:      useCallback(() => handleAddClick("plants"),      [handleAddClick]),
   };
 
   const handleItemTap = useCallback((item: ClothingItem) => setDetailsItem(item), []);
