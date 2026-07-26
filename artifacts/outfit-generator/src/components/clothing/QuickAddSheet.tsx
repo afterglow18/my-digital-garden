@@ -2,25 +2,22 @@
  * QuickAddSheet
  *
  * Upload flow:
- *   pick ──(file chosen)──► uploading ──► close
- *
- * To re-enable background removal in a future update, replace encodeToPng
- * with processClothingImage from @/lib/processImage.
+ *   pick ──(file chosen)──► encoding ──► preview (Original | Cleaned ✨) ──► uploading ──► close
  */
 import React, { useRef, useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  X,
-  Loader2,
-  Check,
-} from "lucide-react";
+import { motion } from "framer-motion";
+import { X, Loader2, Check, RotateCcw } from "lucide-react";
 import {
   useCreateClothingItem,
   getListClothingQueryKey,
   getWardrobeStatsQueryKey,
 } from "@/hooks/useLocalDB";
 import { useQueryClient } from "@tanstack/react-query";
-import { encodeToPng } from "@/lib/processImage";
+import {
+  removeBackground,
+  blobToDataUrl,
+  dataUrlToBlob,
+} from "@/lib/backgroundRemoval";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -33,35 +30,39 @@ const CATEGORY_LABELS: Record<Category, string> = {
   essentials: "Essentials",
 };
 
-type Phase =
-  | "pick"       // two-button landing screen
-  | "uploading"; // encoding + uploading PNG, creating DB record
+type Phase = "pick" | "encoding" | "preview" | "uploading";
 
-interface UploadProgress {
-  current: number;
-  total:   number;
-}
+// ── Helpers (outside component to avoid re-creation) ───────────────────────────
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
-
-/** Convert a Blob to a JPEG data URL (compressed, ready for DB storage). */
-async function blobToDataUrl(blob: Blob): Promise<string> {
+/**
+ * Resize and JPEG-encode a File/Blob to ≤2048px on the longest edge.
+ * Rejects if the image cannot be loaded or the canvas produces a blank result.
+ */
+async function encodeForUpload(input: File | Blob): Promise<Blob> {
   return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(input);
     const img = new Image();
-    const url = URL.createObjectURL(blob);
     img.onload = () => {
-      URL.revokeObjectURL(url);
+      URL.revokeObjectURL(objectUrl);
+      const MAX   = 2048;
+      const scale = Math.min(1, MAX / Math.max(img.naturalWidth, img.naturalHeight));
+      const w     = Math.round(img.naturalWidth  * scale);
+      const h     = Math.round(img.naturalHeight * scale);
       const canvas = document.createElement("canvas");
-      // Cap at 800px wide to keep data URLs small
-      const scale = Math.min(1, 800 / img.naturalWidth);
-      canvas.width  = Math.round(img.naturalWidth  * scale);
-      canvas.height = Math.round(img.naturalHeight * scale);
-      canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
-      resolve(dataUrl);
+      canvas.width  = w;
+      canvas.height = h;
+      canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
+      canvas.toBlob(
+        (b) => (b && b.size > 1000 ? resolve(b) : reject(new Error("blank image"))),
+        "image/jpeg",
+        0.85,
+      );
     };
-    img.onerror = reject;
-    img.src = url;
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("failed to load image"));
+    };
+    img.src = objectUrl;
   });
 }
 
@@ -91,37 +92,104 @@ const CATEGORY_EXAMPLES: Record<string, { emoji: string; items: string[] }> = {
 };
 
 export function QuickAddSheet({ open, onOpenChange, category, existingCount, onCreated }: Props) {
-  const [phase,    setPhase]   = useState<Phase>("pick");
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [progress, setProgress] = useState<UploadProgress | null>(null);
+  const [phase,        setPhase]        = useState<Phase>("pick");
+  const [errorMsg,     setErrorMsg]     = useState<string | null>(null);
+  const [originalBlob, setOriginalBlob] = useState<Blob | null>(null);
+  const [originalUrl,  setOriginalUrl]  = useState<string | null>(null);
+  const [cleanedBlob,  setCleanedBlob]  = useState<Blob | null>(null);
+  const [cleanedUrl,   setCleanedUrl]   = useState<string | null>(null);
+  const [bgProcessing, setBgProcessing] = useState(false);
+  const [bgFailed,     setBgFailed]     = useState(false);
+  const [selected,     setSelected]     = useState<"original" | "cleaned">("original");
 
-  // Two separate file inputs: one triggers camera, one opens gallery
+  // Each photo pick bumps this counter. Every async step checks it before writing state —
+  // prevents a slow first photo from clobbering a fast second one.
+  const bgGenRef = useRef(0);
+
   const cameraInputRef  = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const createItem  = useCreateClothingItem();
   const queryClient = useQueryClient();
 
-  // ── Reset ────────────────────────────────────────────────────────────────
+  // ── Reset ──────────────────────────────────────────────────────────────────
   const handleClose = useCallback(() => {
+    bgGenRef.current += 1;   // cancels any in-flight removal
+    setBgProcessing(false);  // MUST reset — close can happen mid-removal
     setPhase("pick");
     setErrorMsg(null);
+    setOriginalBlob(null);
+    setOriginalUrl(null);
+    setCleanedBlob(null);
+    setCleanedUrl(null);
+    setBgFailed(false);
+    setSelected("original");
     onOpenChange(false);
   }, [onOpenChange]);
 
-  // ── Single-file encode + save (returns true on success) ──────────────────
-  const saveOneFile = useCallback(async (file: File, itemIndex: number): Promise<boolean> => {
-    let png: Blob;
+  // ── Pick & encode one photo, then run background removal ──────────────────
+  const handleFile = useCallback(async (file: File | Blob) => {
+    setErrorMsg(null);
+    // Switch to "encoding" BEFORE any async work so the user sees a spinner
+    // immediately instead of sitting on the pick screen for 1–3 s.
+    const myGen = ++bgGenRef.current;
+    setOriginalBlob(null);
+    setOriginalUrl(null);
+    setCleanedBlob(null);
+    setCleanedUrl(null);
+    setBgFailed(false);
+    setBgProcessing(false);
+    setSelected("original");
+    setPhase("encoding");
+
+    // Encode to JPEG ≤ 2048 px
+    let jpeg: Blob;
     try {
-      png = await encodeToPng(file);
+      jpeg = await encodeForUpload(file);
     } catch (err) {
-      console.error("PNG encoding failed:", err);
-      return false;
+      if (bgGenRef.current !== myGen) return;
+      setErrorMsg(`Could not read the photo: ${err instanceof Error ? err.message : String(err)}`);
+      setPhase("pick");
+      return;
     }
+    if (bgGenRef.current !== myGen) return;
+
+    // Show original and switch to comparison screen
+    setOriginalBlob(jpeg);
+    setOriginalUrl(URL.createObjectURL(jpeg));
+    setPhase("preview");
+
+    // Background removal — generation guard discards stale results
+    setBgProcessing(true);
     try {
-      const path     = await blobToDataUrl(png);
+      const dataUrl = await blobToDataUrl(jpeg);
+      if (bgGenRef.current !== myGen) return;
+      const resultUrl = await removeBackground(dataUrl);
+      if (bgGenRef.current !== myGen) return;
+      const resultBlob   = await dataUrlToBlob(resultUrl);
+      const resultObjUrl = URL.createObjectURL(resultBlob);
+      if (bgGenRef.current !== myGen) { URL.revokeObjectURL(resultObjUrl); return; }
+      setCleanedBlob(resultBlob);
+      setCleanedUrl(resultObjUrl);
+      setSelected("cleaned");
+    } catch (err) {
+      if (bgGenRef.current !== myGen) return;
+      console.warn("Background removal failed:", err);
+      setBgFailed(true);
+    } finally {
+      if (bgGenRef.current === myGen) setBgProcessing(false);
+    }
+  }, []);
+
+  // ── Save whichever version the user chose ─────────────────────────────────
+  const handleSave = useCallback(async () => {
+    const blob = selected === "cleaned" && cleanedBlob ? cleanedBlob : originalBlob;
+    if (!blob) return;
+    setPhase("uploading");
+    try {
+      const path     = await blobToDataUrl(blob);
       const label    = CATEGORY_LABELS[category];
-      const n        = itemIndex + 1;
+      const n        = existingCount + 1;
       const autoName = n === 1 ? label : `${label} ${n}`;
       await new Promise<void>((resolve, reject) => {
         createItem.mutate(
@@ -137,39 +205,16 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
           },
         );
       });
-      return true;
-    } catch (err) {
-      console.error("Upload / create failed:", err);
-      return false;
-    }
-  }, [category, createItem, queryClient, onCreated]);
-
-  // ── Process one or many files sequentially ────────────────────────────────
-  const handleFiles = useCallback(async (files: File[]) => {
-    if (!files.length) return;
-    setErrorMsg(null);
-    setPhase("uploading");
-    setProgress({ current: 0, total: files.length });
-
-    let failed = 0;
-    for (let i = 0; i < files.length; i++) {
-      setProgress({ current: i + 1, total: files.length });
-      const ok = await saveOneFile(files[i], existingCount + i);
-      if (!ok) failed++;
-    }
-
-    setProgress(null);
-    if (failed > 0) {
-      setErrorMsg(`${failed} photo${failed > 1 ? "s" : ""} could not be saved. Please try again.`);
-      setPhase("pick");
-    } else {
       handleClose();
+    } catch (err) {
+      setErrorMsg(`Save failed: ${err instanceof Error ? err.message : String(err)}`);
+      setPhase("preview");
     }
-  }, [saveOneFile, existingCount, handleClose]);
+  }, [selected, cleanedBlob, originalBlob, handleClose, category, existingCount, createItem, queryClient, onCreated]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? []);
-    if (files.length) handleFiles(files);
+    const file = e.target.files?.[0];
+    if (file) handleFile(file);
     e.target.value = "";
   };
 
@@ -186,8 +231,10 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
       className="fixed inset-0 md:left-[220px] z-[70] flex flex-col max-w-md mx-auto bg-[#f9f4ee]"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 bg-white border-b-2 border-black flex-shrink-0"
-        style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "0.75rem" }}>
+      <div
+        className="flex items-center justify-between px-4 bg-white border-b-2 border-black flex-shrink-0"
+        style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "0.75rem" }}
+      >
         <h2 className="font-display font-bold text-xl uppercase tracking-tight">
           Add {label}
         </h2>
@@ -203,118 +250,246 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
         )}
       </div>
 
-      {/* Body */}
+      {/* Body — plain conditional divs; NO AnimatePresence.
+          Any AnimatePresence wrapper creates exit-animation windows where no
+          child is mounted → blank screen between every phase change. */}
       <div className="flex-1 flex flex-col overflow-y-auto">
-        <AnimatePresence mode="wait">
 
-          {/* ── PICK ── */}
-          {phase === "pick" && (
-            <motion.div
-              key="pick"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col p-5 gap-5"
-            >
-              {errorMsg && (
-                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-center">
-                  {errorMsg}
-                </p>
-              )}
+        {/* ── PICK ── */}
+        {phase === "pick" && (
+          <div className="flex flex-col p-5 gap-5">
+            {errorMsg && (
+              <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-center">
+                {errorMsg}
+              </p>
+            )}
 
-              {/* Two big action buttons */}
-              <div className="flex gap-3">
-                {/* Take Photo */}
-                <button
-                  onClick={() => cameraInputRef.current?.click()}
-                  className="flex-1 flex flex-col items-center justify-center gap-3 py-8
-                             border-4 border-black rounded-2xl bg-primary
-                             shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]
-                             active:translate-x-1 active:translate-y-1 active:shadow-none
-                             transition-all"
-                >
-                  <span className="text-4xl leading-none">📷</span>
-                  <span className="font-display font-bold text-base uppercase tracking-tight text-center leading-tight">
-                    Take<br />Photo
-                  </span>
-                </button>
+            <div className="flex gap-3">
+              {/* Take Photo */}
+              <button
+                onClick={() => cameraInputRef.current?.click()}
+                className="flex-1 flex flex-col items-center justify-center gap-3 py-8
+                           border-4 border-black rounded-2xl bg-primary
+                           shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]
+                           active:translate-x-1 active:translate-y-1 active:shadow-none
+                           transition-all"
+              >
+                <span className="text-4xl leading-none">📷</span>
+                <span className="font-display font-bold text-base uppercase tracking-tight text-center leading-tight">
+                  Take<br />Photo
+                </span>
+              </button>
 
-                {/* Upload Photo */}
-                <button
-                  onClick={() => galleryInputRef.current?.click()}
-                  className="flex-1 flex flex-col items-center justify-center gap-3 py-8
-                             border-4 border-black rounded-2xl bg-white
-                             shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]
-                             active:translate-x-1 active:translate-y-1 active:shadow-none
-                             transition-all"
-                >
-                  <span className="text-4xl leading-none">🖼️</span>
-                  <span className="font-display font-bold text-base uppercase tracking-tight text-center leading-tight">
-                    Upload<br />Photo
-                  </span>
-                </button>
-              </div>
+              {/* Upload Photo */}
+              <button
+                onClick={() => galleryInputRef.current?.click()}
+                className="flex-1 flex flex-col items-center justify-center gap-3 py-8
+                           border-4 border-black rounded-2xl bg-white
+                           shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]
+                           active:translate-x-1 active:translate-y-1 active:shadow-none
+                           transition-all"
+              >
+                <span className="text-4xl leading-none">🖼️</span>
+                <span className="font-display font-bold text-base uppercase tracking-tight text-center leading-tight">
+                  Upload<br />Photo
+                </span>
+              </button>
+            </div>
 
-              {/* What to add */}
-              {CATEGORY_EXAMPLES[category] && (
-                <div className="border-2 border-black rounded-2xl bg-white p-4
-                                shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-                  <p className="font-display font-bold text-sm uppercase tracking-tight mb-2 flex items-center gap-2">
-                    <span>{CATEGORY_EXAMPLES[category].emoji}</span> WHAT TO ADD
-                  </p>
-                  <p className="text-sm text-black/70 leading-snug">
-                    {CATEGORY_EXAMPLES[category].items.join(", ")}
-                  </p>
-                </div>
-              )}
-
-              {/* Photo tips */}
+            {CATEGORY_EXAMPLES[category] && (
               <div className="border-2 border-black rounded-2xl bg-white p-4
                               shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-                <p className="font-display font-bold text-sm uppercase tracking-tight mb-3 flex items-center gap-2">
-                  <span>📸</span> PHOTO TIPS
+                <p className="font-display font-bold text-sm uppercase tracking-tight mb-2 flex items-center gap-2">
+                  <span>{CATEGORY_EXAMPLES[category].emoji}</span> WHAT TO ADD
                 </p>
-                <ul className="flex flex-col gap-2">
-                  {PHOTO_TIPS.map((tip) => (
-                    <li key={tip} className="flex items-start gap-2 text-sm text-black/70 leading-snug">
-                      <span className="mt-0.5 w-4 h-4 border-2 border-black rounded-sm bg-primary
-                                       flex items-center justify-center flex-shrink-0">
-                        <Check className="w-2.5 h-2.5" strokeWidth={3} />
-                      </span>
-                      {tip}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </motion.div>
-          )}
-
-          {/* ── UPLOADING ── */}
-          {phase === "uploading" && (
-            <motion.div
-              key="uploading"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex-1 flex flex-col items-center justify-center gap-5 p-6"
-            >
-              <div className="w-28 h-28 border-4 border-black rounded-3xl bg-white
-                              flex items-center justify-center
-                              shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
-                <Loader2 className="w-12 h-12 animate-spin" strokeWidth={1.5} />
-              </div>
-              <div className="text-center">
-                <p className="font-display font-bold text-2xl uppercase tracking-tight">Saving…</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {progress && progress.total > 1
-                    ? `Photo ${progress.current} of ${progress.total}`
-                    : "Adding to your garden."}
+                <p className="text-sm text-black/70 leading-snug">
+                  {CATEGORY_EXAMPLES[category].items.join(", ")}
                 </p>
               </div>
-            </motion.div>
-          )}
+            )}
 
-        </AnimatePresence>
+            <div className="border-2 border-black rounded-2xl bg-white p-4
+                            shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+              <p className="font-display font-bold text-sm uppercase tracking-tight mb-3 flex items-center gap-2">
+                <span>📸</span> PHOTO TIPS
+              </p>
+              <ul className="flex flex-col gap-2">
+                {PHOTO_TIPS.map((tip) => (
+                  <li key={tip} className="flex items-start gap-2 text-sm text-black/70 leading-snug">
+                    <span className="mt-0.5 w-4 h-4 border-2 border-black rounded-sm bg-primary
+                                     flex items-center justify-center flex-shrink-0">
+                      <Check className="w-2.5 h-2.5" strokeWidth={3} />
+                    </span>
+                    {tip}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+
+        {/* ── ENCODING — full-screen spinner shown immediately after photo is picked ── */}
+        {phase === "encoding" && (
+          <div className="flex-1 flex flex-col items-center justify-center gap-5 p-6">
+            <div className="w-28 h-28 border-4 border-black rounded-3xl bg-white
+                            flex items-center justify-center
+                            shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+              <Loader2 className="w-12 h-12 animate-spin" strokeWidth={1.5} />
+            </div>
+            <div className="text-center">
+              <p className="font-display font-bold text-2xl uppercase tracking-tight">Processing…</p>
+              <p className="text-sm text-muted-foreground mt-1">Getting your photo ready.</p>
+            </div>
+          </div>
+        )}
+
+        {/* ── PREVIEW — side-by-side Original | Cleaned ✨ comparison ── */}
+        {phase === "preview" && (
+          <div className="flex flex-col gap-4 p-5">
+            {errorMsg && (
+              <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-center">
+                {errorMsg}
+              </p>
+            )}
+
+            <p className="text-center font-display font-bold text-xs uppercase tracking-widest opacity-40">
+              {bgProcessing ? "This will take a moment…" : bgFailed ? "Original" : "Tap to choose"}
+            </p>
+
+            {/* Cards */}
+            <div className="flex gap-3">
+              {/* Original card */}
+              <button
+                onClick={() => setSelected("original")}
+                className="flex-1 flex flex-col overflow-hidden rounded-2xl transition-all"
+                style={{
+                  border: selected === "original"
+                    ? "4px solid black"
+                    : "4px solid rgba(0,0,0,0.2)",
+                  background: "none",
+                  padding: 0,
+                }}
+              >
+                <div className="relative bg-black" style={{ minHeight: 176 }}>
+                  {originalUrl && (
+                    <img
+                      src={originalUrl}
+                      alt="Original"
+                      className="w-full object-contain block"
+                      style={{ maxHeight: 176 }}
+                    />
+                  )}
+                  {selected === "original" && (
+                    <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-black
+                                    flex items-center justify-center">
+                      <Check size={12} color="white" strokeWidth={3} />
+                    </div>
+                  )}
+                </div>
+                <p className="text-center font-display font-bold text-xs uppercase tracking-widest py-1.5">
+                  Original
+                </p>
+              </button>
+
+              {/* Cleaned card */}
+              <button
+                onClick={() => cleanedUrl && setSelected("cleaned")}
+                disabled={!cleanedUrl}
+                className="flex-1 flex flex-col overflow-hidden rounded-2xl transition-all"
+                style={{
+                  border: selected === "cleaned" && cleanedUrl
+                    ? "4px solid black"
+                    : "4px solid rgba(0,0,0,0.2)",
+                  background: "none",
+                  padding: 0,
+                }}
+              >
+                {/* Checkerboard reveals transparency */}
+                <div
+                  className="relative flex items-center justify-center"
+                  style={{
+                    background: "repeating-conic-gradient(#d1d5db 0% 25%, white 0% 50%) 0 0 / 12px 12px",
+                    minHeight: 176,
+                  }}
+                >
+                  {cleanedUrl ? (
+                    <>
+                      <img
+                        src={cleanedUrl}
+                        alt="Cleaned"
+                        className="w-full object-contain block"
+                        style={{ maxHeight: 176 }}
+                      />
+                      {selected === "cleaned" && (
+                        <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-black
+                                        flex items-center justify-center">
+                          <Check size={12} color="white" strokeWidth={3} />
+                        </div>
+                      )}
+                    </>
+                  ) : bgFailed ? (
+                    <p className="text-xs font-bold uppercase opacity-40 text-center px-3">
+                      Could not remove background
+                    </p>
+                  ) : (
+                    /* Spinner while ONNX model downloads (~15 MB, first use only) and runs */
+                    <div className="flex flex-col items-center gap-2">
+                      <Loader2 size={32} className="animate-spin opacity-50" />
+                      <p className="text-xs font-bold uppercase opacity-50">Processing</p>
+                    </div>
+                  )}
+                </div>
+                <p className="text-center font-display font-bold text-xs uppercase tracking-widest py-1.5">
+                  Cleaned ✨
+                </p>
+              </button>
+            </div>
+
+            {/* Action row */}
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={() => setPhase("pick")}
+                className="flex items-center justify-center gap-2 px-4 py-3
+                           border-2 border-black rounded-xl bg-white font-display font-bold text-sm uppercase
+                           shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
+                           active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Retake
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={bgProcessing}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3
+                           border-2 border-black rounded-xl bg-primary font-display font-bold text-sm uppercase
+                           shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
+                           active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all
+                           disabled:opacity-50 disabled:cursor-not-allowed
+                           disabled:active:translate-x-0 disabled:active:translate-y-0
+                           disabled:active:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+              >
+                <Check className="w-4 h-4" />
+                {bgProcessing ? "Processing…" : "Save to Closet"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── UPLOADING ── */}
+        {phase === "uploading" && (
+          <div className="flex-1 flex flex-col items-center justify-center gap-5 p-6">
+            <div className="w-28 h-28 border-4 border-black rounded-3xl bg-white
+                            flex items-center justify-center
+                            shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+              <Loader2 className="w-12 h-12 animate-spin" strokeWidth={1.5} />
+            </div>
+            <div className="text-center">
+              <p className="font-display font-bold text-2xl uppercase tracking-tight">Saving…</p>
+              <p className="text-sm text-muted-foreground mt-1">Adding to your garden.</p>
+            </div>
+          </div>
+        )}
+
       </div>
 
       {/* Hidden file inputs */}
@@ -327,12 +502,11 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
         className="hidden"
         onChange={handleInputChange}
       />
-      {/* Gallery — opens photo library / file picker (multiple selection) */}
+      {/* Gallery — opens photo library / file picker (single selection) */}
       <input
         ref={galleryInputRef}
         type="file"
         accept="image/*"
-        multiple
         className="hidden"
         onChange={handleInputChange}
       />
