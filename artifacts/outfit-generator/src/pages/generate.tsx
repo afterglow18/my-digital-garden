@@ -33,10 +33,10 @@ const LM = {
   doorL: 0.03,
   doorR: 0.97,
   rows: [
-    { sectionTop: 0.295, shelfY: 0.415, btnCY: 0.280 },  // tools       (bed 1)
-    { sectionTop: 0.440, shelfY: 0.560, btnCY: 0.426 },  // landscaping (bed 2)
-    { sectionTop: 0.585, shelfY: 0.705, btnCY: 0.571 },  // decor       (bed 3)
-    { sectionTop: 0.730, shelfY: 0.850, btnCY: 0.717 },  // plants      (bed 4)
+    { sectionTop: 0.295, shelfY: 0.415, btnCY: 0.280, labelFrac: null  },  // tools       (bed 1) — keep as-is
+    { sectionTop: 0.440, shelfY: 0.560, btnCY: 0.426, labelFrac: 0.417 },  // landscaping (bed 2) ↑ to bricks
+    { sectionTop: 0.585, shelfY: 0.705, btnCY: 0.571, labelFrac: 0.562 },  // decor       (bed 3) ↑ to bricks
+    { sectionTop: 0.730, shelfY: 0.850, btnCY: 0.717, labelFrac: 0.708 },  // plants      (bed 4) ↑ to bricks
   ],
   // Action bar: baked-in bottom bar with plant | Save | star icons
   barY:   0.873,
@@ -278,7 +278,7 @@ export default function GeneratePage() {
               const btnCY  = pY(ir, lm.btnCY);
               const btnH   = Math.max(32, pH(ir, 0.045));
 
-              const labelY = pY(ir, lm.btnCY + (lm.sectionTop - lm.btnCY) * 0.08);
+              const labelY = pY(ir, lm.labelFrac ?? (lm.btnCY + (lm.sectionTop - lm.btnCY) * 0.08));
 
               return (
                 <React.Fragment key={key}>
