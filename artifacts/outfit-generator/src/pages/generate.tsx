@@ -299,7 +299,7 @@ export default function GeneratePage() {
                       fontSize: Math.max(9, pH(ir, 0.013)),
                       fontWeight: 800,
                       letterSpacing: "0.12em",
-                      color: "#3A2210",
+                      color: "#ffffff",
                       fontFamily: "var(--font-display)",
                       textTransform: "uppercase",
                     }}>
