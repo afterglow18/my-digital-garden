@@ -1,11 +1,11 @@
 /**
  * GeneratePage — "Spin It" screen for My Digital Garden.
  *
- * Uses generate-bg.png (same 1024×1536 dimensions) with the 4-shelf layout.
+ * Uses garden-bg.png (941×1672) with 4 raised-bed layout.
  * Phase machine:
  *   idle     → shelves display items; "✨ Spin It!" button at bottom
  *   spinning → carousels cycle randomly while API is in flight
- *   result   → carousels landed on AI pick; "As If!" + "Save It ♡" buttons
+ *   result   → carousels landed on AI pick; "Respin" + "Save ♡" buttons
  *   (save input inline, same pattern as wardrobe)
  */
 
@@ -23,22 +23,23 @@ import { ClosetRow, ClosetRowHandle } from "@/components/ClosetRow";
 import { useQueryClient } from "@tanstack/react-query";
 
 // ── Layout constants (same as wardrobe.tsx) ───────────────────────────────────
-const IMG_W = 1024;
-const IMG_H = 1536;
+const IMG_W = 941;
+const IMG_H = 1672;
 const NAV_H = 90;
 const PINK  = "#E8D4B0";
 
+// ── Landmark fractions (calibrated for garden-bg.png 941×1672) ───────────────
 const LM = {
-  doorL: 0.182,
-  doorR: 0.776,
+  doorL: 0.03,
+  doorR: 0.97,
   rows: [
-    { sectionTop: 0.170, shelfY: 0.265, btnCY: 0.150 },  // OUTFITS  (lid, upper)
-    { sectionTop: 0.305, shelfY: 0.400, btnCY: 0.285 },  // BEAUTY   (lid, lower)
-    { sectionTop: 0.505, shelfY: 0.618, btnCY: 0.485 },  // TOILETRIES (body, upper)
-    { sectionTop: 0.660, shelfY: 0.770, btnCY: 0.640 },  // ESSENTIALS (body, lower)
+    { sectionTop: 0.295, shelfY: 0.415, btnCY: 0.280 },  // OUTFITS    (bed 1)
+    { sectionTop: 0.440, shelfY: 0.560, btnCY: 0.426 },  // BEAUTY     (bed 2)
+    { sectionTop: 0.585, shelfY: 0.705, btnCY: 0.571 },  // TOILETRIES (bed 3)
+    { sectionTop: 0.730, shelfY: 0.850, btnCY: 0.717 },  // ESSENTIALS (bed 4)
   ],
-  // Action bar: from just below FRAGRANCES through the full bottom
-  barY:   0.848,
+  // Action bar: baked-in bottom bar with plant | Save | star icons
+  barY:   0.873,
   barBot: 1.000,
 } as const;
 
@@ -240,12 +241,12 @@ export default function GeneratePage() {
         width: "100%",
         height: "calc(100dvh - var(--bottom-nav-h, 90px))",
         overflow: "hidden",
-        background: "#C8B9A2",
+        background: "#1a2a1a",
       }}
     >
-      {/* ── Background image — object-fit:cover avoids WebKit negative-left clipping bug ── */}
+      {/* ── Background image ── */}
       <img
-        src="/suitcase-open-bg.jpg"
+        src="/garden-bg.png"
         alt="My Digital Garden"
         style={{
           position: "absolute",
@@ -266,42 +267,7 @@ export default function GeneratePage() {
 
         return (
           <>
-            {/* ── Page title ── */}
-            <div style={{
-              position: "absolute",
-              top: pY(ir, 0.095),
-              left: 8,
-              right: 8,
-              zIndex: 25,
-              textAlign: "center",
-              pointerEvents: "none",
-              overflow: "hidden",
-            }}>
-              <div style={{
-                fontFamily: "var(--font-display, serif)",
-                fontWeight: 900,
-                fontSize: Math.max(8, Math.min(pW(ir, 0.030), ir.containerH * 0.025)),
-                letterSpacing: "0.08em",
-                whiteSpace: "nowrap",
-                textTransform: "uppercase",
-                color: "#1a0800",
-                lineHeight: 1.1,
-              }}>
-                MY DIGITAL GARDEN
-              </div>
-              <div style={{
-                fontFamily: "var(--font-display, serif)",
-                fontWeight: 900,
-                fontSize: Math.max(10, Math.min(pW(ir, 0.040), ir.containerH * 0.032)),
-                letterSpacing: "0.06em",
-                whiteSpace: "nowrap",
-                textTransform: "uppercase",
-                color: "#1a0800",
-                lineHeight: 1.1,
-              }}>
-                MATCHMAKER
-              </div>
-            </div>
+            {/* Title omitted — garden image has "My Digital Garden" baked into the arch sign */}
 
             {/* ── 4 shelf carousels + ADD-button covers ── */}
             {ROWS.map(({ key }, rowIdx) => {

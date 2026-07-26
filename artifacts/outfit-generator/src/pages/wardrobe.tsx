@@ -1,20 +1,16 @@
 /**
- * WardrobePage — briefcase-bg.png (1024×1536 PNG)
+ * WardrobePage — garden-bg.png (941×1672 PNG)
  *
- * Layout: 4 shelf sections inside a Hollywood-mirror frame.
- * Items sit ON TOP of each shelf surface (bottom-anchored within each section).
- * Baked-in pink "ADD X" pills show through the background when shelves are empty;
- * a React-rendered transparent tap zone handles the click.
- * When items are present, the carousel fills the section and covers the pill.
+ * Layout: 4 raised garden beds used as display rows.
+ * Items sit inside each soil bed (carousel fills the bed area).
+ * Baked-in stone borders define section boundaries.
+ * Bottom action bar (plant icon | Save | star) is baked into the image.
  *
  * Sections (y-fractions of image height):
- *   Section 1 (TOPS):        0.19 → 0.39
- *   Section 2 (BOTTOMS):     0.39 → 0.55
- *   Section 3 (SHOES):       0.55 → 0.71
- *   Section 4 (ACCESSORIES): 0.71 → 0.85
- *
- * No rod-overlay technique needed — shelf surfaces are already below items.
- * Save outfit: floating pill button at the top of the mirror.
+ *   Bed 1 (OUTFITS):    0.295 → 0.415
+ *   Bed 2 (BEAUTY):     0.440 → 0.560
+ *   Bed 3 (TOILETRIES): 0.585 → 0.705
+ *   Bed 4 (ESSENTIALS): 0.730 → 0.850
  */
 
 import React, {
@@ -50,27 +46,25 @@ const ROWS: { key: RowKey; btnLabel: string }[] = [
 ];
 
 // ── Image constants ───────────────────────────────────────────────────────────
-const IMG_W = 1024;
-const IMG_H = 1536;
+const IMG_W = 941;
+const IMG_H = 1672;
 const NAV_H = 90;
 
-// ── Landmark fractions (calibrated for suitcase-open-bg.jpg 989×1536) ─────────
-// Real-photo suitcase, shot from above.
-// Lid interior:  y ≈ 0.05 → 0.38   (rows 1 & 2)
-// Main body:     y ≈ 0.42 → 0.80   (rows 3 & 4)
-// doorL/doorR:   left/right inner walls of the suitcase interior
+// ── Landmark fractions (calibrated for garden-bg.png 941×1672) ───────────────
+// 4 raised stone-bordered garden beds; arch + flowers above, action bar below.
+// doorL/doorR: left/right extents of the bed display area
 const LM = {
-  doorL: 0.182,  // inner left wall
-  doorR: 0.776,  // inner right wall
+  doorL: 0.03,   // left edge of beds
+  doorR: 0.97,   // right edge of beds
 
   rows: [
-    { sectionTop: 0.170, shelfY: 0.265, btnCY: 0.150 },  // OUTFITS  (lid, upper)
-    { sectionTop: 0.305, shelfY: 0.400, btnCY: 0.285 },  // BEAUTY   (lid, lower)
-    { sectionTop: 0.505, shelfY: 0.618, btnCY: 0.485 },  // TOILETRIES (body, upper)
-    { sectionTop: 0.660, shelfY: 0.770, btnCY: 0.640 },  // ESSENTIALS (body, lower)
+    { sectionTop: 0.295, shelfY: 0.415, btnCY: 0.280 },  // OUTFITS    (bed 1)
+    { sectionTop: 0.440, shelfY: 0.560, btnCY: 0.426 },  // BEAUTY     (bed 2)
+    { sectionTop: 0.585, shelfY: 0.705, btnCY: 0.571 },  // TOILETRIES (bed 3)
+    { sectionTop: 0.730, shelfY: 0.850, btnCY: 0.717 },  // ESSENTIALS (bed 4)
   ],
 
-  saveAreaY: 0.84,
+  saveAreaY: 0.873,
 } as const;
 
 // ── useImageRect ─────────────────────────────────────────────────────────────
@@ -210,12 +204,12 @@ export default function WardrobePage() {
         /* On phone: subtract bottom nav. On iPad (md+): full height via CSS var. */
         height: "calc(100dvh - var(--bottom-nav-h, 90px))",
         overflow: "hidden",
-        background: "#C8B9A2",
+        background: "#1a2a1a",
       }}
     >
-      {/* ── Background image — object-fit:cover avoids WebKit negative-left clipping bug ── */}
+      {/* ── Background image ── */}
       <img
-        src="/suitcase-open-bg.jpg"
+        src="/garden-bg.png"
         alt="My Digital Garden"
         style={{
           position: "absolute",
@@ -232,32 +226,8 @@ export default function WardrobePage() {
 
       {ready && (
         <>
-          {/* ── Page title ── */}
-          <div style={{
-            position: "absolute",
-            top: pY(ir, 0.090),
-            left: 8,
-            right: 8,
-            zIndex: 25,
-            textAlign: "center",
-            pointerEvents: "none",
-            overflow: "hidden",
-          }}>
-            <div style={{
-              fontFamily: "var(--font-display, serif)",
-              fontWeight: 900,
-              fontSize: Math.max(8, Math.min(pW(ir, 0.030), ir.containerW * 0.040)),
-              letterSpacing: "0.08em",
-              whiteSpace: "nowrap",
-              textTransform: "uppercase",
-              color: "#1a0800",
-              lineHeight: 1.1,
-            }}>
-              MY DIGITAL GARDEN
-            </div>
-          </div>
-
           {/* ── Item-count badge (free tier) ── */}
+          {/* Title omitted — garden image has "My Digital Garden" baked into the arch sign */}
           {itemsLeft !== null && (
             <button
               onClick={() => setUpgradeReason("items")}
@@ -265,7 +235,7 @@ export default function WardrobePage() {
               aria-label={`${totalItems} of ${FREE_ITEM_LIMIT} items used — tap to upgrade`}
               style={{
                 position: "absolute",
-                top: pY(ir, 0.108), left: "50%", transform: "translateX(-50%)",
+                top: pY(ir, 0.155), left: "50%", transform: "translateX(-50%)",
                 zIndex: 25,
                 padding: "3px 14px", borderRadius: 20, border: "none",
                 background: totalItems >= FREE_ITEM_LIMIT
@@ -384,17 +354,17 @@ export default function WardrobePage() {
           })}
 
 
-          {/* ── Person icon tap zone ── */}
+          {/* ── Plant icon tap zone (left) → saved looks ── */}
           <button
             onClick={() => navigate("/favorites")}
             data-testid="button-person-icon"
             aria-label="View saved looks"
             style={{
               position: "absolute",
-              top:    pY(ir, 0.895),
-              left:   pX(ir, 0.115),
-              width:  pW(ir, 0.170),
-              height: pH(ir, 0.080),
+              top:    pY(ir, 0.878),
+              left:   pX(ir, 0.02),
+              width:  pW(ir, 0.28),
+              height: pH(ir, 0.112),
               zIndex: 25,
               background: "transparent",
               border: "none",
@@ -402,16 +372,16 @@ export default function WardrobePage() {
             }}
           />
 
-          {/* ── Lipstick icon tap zone — opens premium upgrade sheet ── */}
+          {/* ── Star icon tap zone (right) → premium upgrade ── */}
           <button
             onClick={() => setUpgradeReason("items")}
             aria-label="Upgrade to premium"
             style={{
               position: "absolute",
-              top:    pY(ir, 0.905),
-              left:   pX(ir, 0.755),
-              width:  pW(ir, 0.110),
-              height: pH(ir, 0.065),
+              top:    pY(ir, 0.878),
+              left:   pX(ir, 0.70),
+              width:  pW(ir, 0.28),
+              height: pH(ir, 0.112),
               zIndex: 25,
               background: "transparent",
               border: "none",
@@ -419,34 +389,23 @@ export default function WardrobePage() {
             }}
           />
 
-          {/* ── SAVE circular button — covers the baked-in circle ── */}
+          {/* ── Save button — covers the baked-in "Save" pill centre ── */}
           <button
             onClick={() => { setSaveName(""); setIsSaveOpen(true); }}
-            aria-label="Save current case"
+            aria-label="Save current look"
             style={{
               position: "absolute",
-              top:    pY(ir, 0.9466) - pW(ir, 0.074),
-              left:   pX(ir, 0.500)  - pW(ir, 0.074),
-              width:  pW(ir, 0.148),
-              height: pW(ir, 0.148),
-              borderRadius: "50%",
+              top:    pY(ir, 0.880),
+              left:   pX(ir, 0.30),
+              width:  pW(ir, 0.40),
+              height: pH(ir, 0.108),
+              borderRadius: 32,
               zIndex: 26,
-              background: "linear-gradient(160deg, #E8D4B0 0%, #B8894E 100%)",
-              border: "2px solid #B8894E",
-              boxShadow: "0 2px 8px rgba(120,80,40,0.25)",
+              background: "transparent",
+              border: "none",
               cursor: "pointer",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 0,
-              lineHeight: 1.15,
-              padding: 0,
             }}
-          >
-            <span style={{ fontSize: pW(ir, 0.022), fontWeight: 900, color: "#3A2210", letterSpacing: "0.06em", fontFamily: "var(--font-display)" }}>SAVE</span>
-            <span style={{ fontSize: pW(ir, 0.019), fontWeight: 800, color: "#3A2210", letterSpacing: "0.04em", fontFamily: "var(--font-display)" }}>CASE 🤎</span>
-          </button>
+          />
         </>
       )}
 
