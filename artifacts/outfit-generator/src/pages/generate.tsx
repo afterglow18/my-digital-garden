@@ -75,11 +75,11 @@ const pY = (ir: ImgRect, f: number) => ir.top    + ir.height * f;
 type RowKey = "outfits" | "beauty" | "toiletries" | "essentials";
 type Phase  = "idle" | "spinning" | "result";
 
-const ROWS: { key: RowKey }[] = [
-  { key: "outfits"    },
-  { key: "beauty"     },
-  { key: "toiletries" },
-  { key: "essentials" },
+const ROWS: { key: RowKey; label: string }[] = [
+  { key: "outfits",    label: "🧤 Tools & Supplies" },
+  { key: "beauty",     label: "🪨 Landscaping"       },
+  { key: "toiletries", label: "🌿 Garden Décor"      },
+  { key: "essentials", label: "🌱 Plants"             },
 ];
 
 const MIN_SPIN_MS = 1600;
@@ -270,7 +270,7 @@ export default function GeneratePage() {
             {/* Title omitted — garden image has "My Digital Garden" baked into the arch sign */}
 
             {/* ── 4 shelf carousels + ADD-button covers ── */}
-            {ROWS.map(({ key }, rowIdx) => {
+            {ROWS.map(({ key, label }, rowIdx) => {
               const lm    = LM.rows[rowIdx];
               const items = { outfits, beauty, toiletries, essentials }[key];
               const secTop = pY(ir, lm.sectionTop);
@@ -278,7 +278,6 @@ export default function GeneratePage() {
               const btnCY  = pY(ir, lm.btnCY);
               const btnH   = Math.max(32, pH(ir, 0.045));
 
-              const label = key.toUpperCase();
               const labelY = pY(ir, lm.btnCY + (lm.sectionTop - lm.btnCY) * 0.08);
 
               return (
@@ -298,10 +297,9 @@ export default function GeneratePage() {
                     <span style={{
                       fontSize: Math.max(9, pH(ir, 0.013)),
                       fontWeight: 800,
-                      letterSpacing: "0.12em",
+                      letterSpacing: "0.08em",
                       color: "#ffffff",
                       fontFamily: "var(--font-display)",
-                      textTransform: "uppercase",
                     }}>
                       {label}
                     </span>
