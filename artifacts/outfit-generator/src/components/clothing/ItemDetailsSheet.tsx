@@ -3,10 +3,10 @@
  * Every field is optional and editable. A "Save" button appears only when
  * the form is dirty. Delete is always available.
  */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  X, Heart, Trash2, Save, ChevronDown,
+  X, Heart, Trash2, Save, ChevronDown, ImagePlus, Loader2, Check, RotateCcw,
 } from "lucide-react";
 import {
   type ClothingItem,
@@ -19,6 +19,11 @@ import {
 } from "@/hooks/useLocalDB";
 import { useQueryClient } from "@tanstack/react-query";
 import { getImageUrl } from "@/lib/utils";
+import {
+  removeBackground,
+  blobToDataUrl,
+  dataUrlToBlob,
+} from "@/lib/backgroundRemoval";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -95,6 +100,33 @@ function SelectField({
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
+/**
+ * Resize + JPEG-encode a file to ≤2048 px on the longest edge.
+ */
+async function encodeForUpload(input: File | Blob): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(input);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      const MAX   = 2048;
+      const scale = Math.min(1, MAX / Math.max(img.naturalWidth, img.naturalHeight));
+      const w     = Math.round(img.naturalWidth  * scale);
+      const h     = Math.round(img.naturalHeight * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width  = w;
+      canvas.height = h;
+      canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
+      canvas.toBlob(
+        (b) => (b && b.size > 1000 ? resolve(b) : reject(new Error("blank image"))),
+        "image/jpeg", 0.85,
+      );
+    };
+    img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("failed to load image")); };
+    img.src = objectUrl;
+  });
+}
+
 interface ItemDetailsSheetProps {
   item: ClothingItem | null;
   onClose: () => void;
@@ -131,8 +163,9 @@ function toForm(item: ClothingItem): FormState {
   };
 }
 
-function isDirty(form: FormState, item: ClothingItem): boolean {
+function isDirty(form: FormState, item: ClothingItem, newImagePath: string | null): boolean {
   return (
+    newImagePath !== null ||
     form.name          !== (item.name          ?? "") ||
     form.brand         !== (item.brand         ?? "") ||
     form.color         !== (item.color         ?? "") ||
@@ -151,19 +184,102 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
   const [form, setForm]           = useState<FormState | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  // ── Photo replacement state ──────────────────────────────────────────────────
+  const [newImagePath,  setNewImagePath]  = useState<string | null>(null);
+  const [bgPhase,       setBgPhase]       = useState<"idle" | "encoding" | "preview">("idle");
+  const [originalBlob,  setOriginalBlob]  = useState<Blob | null>(null);
+  const [originalUrl,   setOriginalUrl]   = useState<string | null>(null);
+  const [cleanedBlob,   setCleanedBlob]   = useState<Blob | null>(null);
+  const [cleanedUrl,    setCleanedUrl]    = useState<string | null>(null);
+  const [bgProcessing,  setBgProcessing]  = useState(false);
+  const [bgFailed,      setBgFailed]      = useState(false);
+  const [bgSelected,    setBgSelected]    = useState<"original" | "cleaned">("original");
+  const bgGenRef    = useRef(0);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
+  const resetPhotoState = useCallback(() => {
+    bgGenRef.current += 1;
+    setNewImagePath(null);
+    setBgPhase("idle");
+    setOriginalBlob(null);
+    setOriginalUrl(null);
+    setCleanedBlob(null);
+    setCleanedUrl(null);
+    setBgProcessing(false);
+    setBgFailed(false);
+    setBgSelected("original");
+  }, []);
+
+  const handleFile = useCallback(async (file: File) => {
+    const myGen = ++bgGenRef.current;
+    setNewImagePath(null);
+    setOriginalBlob(null);
+    setOriginalUrl(null);
+    setCleanedBlob(null);
+    setCleanedUrl(null);
+    setBgFailed(false);
+    setBgProcessing(false);
+    setBgSelected("original");
+    setBgPhase("encoding");
+
+    let jpeg: Blob;
+    try {
+      jpeg = await encodeForUpload(file);
+    } catch {
+      if (bgGenRef.current !== myGen) return;
+      setBgPhase("idle");
+      return;
+    }
+    if (bgGenRef.current !== myGen) return;
+
+    setOriginalBlob(jpeg);
+    setOriginalUrl(URL.createObjectURL(jpeg));
+    setBgPhase("preview");
+
+    setBgProcessing(true);
+    try {
+      const dataUrl   = await blobToDataUrl(jpeg);
+      if (bgGenRef.current !== myGen) return;
+      const resultUrl = await removeBackground(dataUrl);
+      if (bgGenRef.current !== myGen) return;
+      const resultBlob   = await dataUrlToBlob(resultUrl);
+      const resultObjUrl = URL.createObjectURL(resultBlob);
+      if (bgGenRef.current !== myGen) { URL.revokeObjectURL(resultObjUrl); return; }
+      setCleanedBlob(resultBlob);
+      setCleanedUrl(resultObjUrl);
+      setBgSelected("cleaned");
+    } catch {
+      if (bgGenRef.current !== myGen) return;
+      setBgFailed(true);
+    } finally {
+      if (bgGenRef.current === myGen) setBgProcessing(false);
+    }
+  }, []);
+
+  const handleConfirmPhoto = useCallback(async () => {
+    const blob = bgSelected === "cleaned" && cleanedBlob ? cleanedBlob : originalBlob;
+    if (!blob) return;
+    const dataUrl = await blobToDataUrl(blob);
+    setNewImagePath(dataUrl);
+    setBgPhase("idle");
+  }, [bgSelected, cleanedBlob, originalBlob]);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+
   const updateItem  = useUpdateClothingItem();
   const deleteItem  = useDeleteClothingItem();
   const queryClient = useQueryClient();
 
-  // Reset form whenever item changes
+  // Reset form + photo state whenever item changes
   useEffect(() => {
     if (item) setForm(toForm(item));
     setShowDeleteConfirm(false);
-  }, [item?.id]);
+    resetPhotoState();
+  }, [item?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!item || !form) return null;
 
-  const dirty = isDirty(form, item);
+  const dirty = isDirty(form, item, newImagePath);
 
   const patch = (key: keyof FormState) => (value: string | boolean) =>
     setForm((prev) => prev ? { ...prev, [key]: value } : prev);
@@ -173,8 +289,6 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
       {
         id: item.id,
         data: {
-          // Always send every editable field so the backend can clear it when empty.
-          // Backend converts "" → null in DB.
           name:          form.name.trim() || item.name,
           brand:         form.brand.trim(),
           color:         form.color.trim(),
@@ -186,6 +300,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
           notes:         form.notes.trim(),
           isFavorite:    form.isFavorite,
           category:      (form.category || item.category) as ClothingItemUpdateCategory,
+          ...(newImagePath ? { imageObjectPath: newImagePath } : {}),
         },
       },
       {
@@ -270,22 +385,146 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
         </div>
       </div>
 
-      {/* ── Photo ── */}
-      {item.imageObjectPath && (
-        <div
-          className="w-full h-52 flex-shrink-0 border-b-2 border-black"
-          style={{
-            backgroundImage: "repeating-conic-gradient(#e5e7eb 0% 25%, white 0% 50%)",
-            backgroundSize: "16px 16px",
+      {/* ── Photo section ── */}
+      <div className="flex-shrink-0 border-b-2 border-black">
+
+        {/* ENCODING spinner */}
+        {bgPhase === "encoding" && (
+          <div className="w-full h-44 flex items-center justify-center bg-black/5">
+            <Loader2 className="w-10 h-10 animate-spin opacity-40" />
+          </div>
+        )}
+
+        {/* PREVIEW — side-by-side bg removal comparison */}
+        {bgPhase === "preview" && (
+          <div className="flex flex-col gap-3 p-4">
+            <p className="text-center font-bold text-[10px] uppercase tracking-widest opacity-40">
+              {bgProcessing ? "Removing background…" : bgFailed ? "Original only" : "Tap to choose"}
+            </p>
+            <div className="flex gap-3">
+              {/* Original */}
+              <button
+                onClick={() => setBgSelected("original")}
+                className="flex-1 flex flex-col overflow-hidden rounded-2xl transition-all"
+                style={{ border: bgSelected === "original" ? "4px solid black" : "4px solid rgba(0,0,0,0.2)", background: "none", padding: 0 }}
+              >
+                <div className="relative bg-black" style={{ minHeight: 140 }}>
+                  {originalUrl && <img src={originalUrl} alt="Original" className="w-full object-contain block" style={{ maxHeight: 140 }} />}
+                  {bgSelected === "original" && (
+                    <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-black flex items-center justify-center">
+                      <Check size={12} color="white" strokeWidth={3} />
+                    </div>
+                  )}
+                </div>
+                <p className="text-center font-bold text-xs uppercase tracking-widest py-1.5">Original</p>
+              </button>
+              {/* Cleaned */}
+              <button
+                onClick={() => cleanedUrl && setBgSelected("cleaned")}
+                disabled={!cleanedUrl}
+                className="flex-1 flex flex-col overflow-hidden rounded-2xl transition-all"
+                style={{ border: bgSelected === "cleaned" && cleanedUrl ? "4px solid black" : "4px solid rgba(0,0,0,0.2)", background: "none", padding: 0 }}
+              >
+                <div className="relative flex items-center justify-center"
+                  style={{ background: "repeating-conic-gradient(#d1d5db 0% 25%, white 0% 50%) 0 0 / 12px 12px", minHeight: 140 }}>
+                  {cleanedUrl ? (
+                    <>
+                      <img src={cleanedUrl} alt="Cleaned" className="w-full object-contain block" style={{ maxHeight: 140 }} />
+                      {bgSelected === "cleaned" && (
+                        <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-black flex items-center justify-center">
+                          <Check size={12} color="white" strokeWidth={3} />
+                        </div>
+                      )}
+                    </>
+                  ) : bgFailed ? (
+                    <p className="text-xs font-bold uppercase opacity-40 text-center px-3">Could not remove background</p>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2">
+                      <Loader2 size={28} className="animate-spin opacity-50" />
+                      <p className="text-xs font-bold uppercase opacity-50">Processing</p>
+                    </div>
+                  )}
+                </div>
+                <p className="text-center font-bold text-xs uppercase tracking-widest py-1.5">Cleaned ✨</p>
+              </button>
+            </div>
+            {/* Retake / Use */}
+            <div className="flex gap-3">
+              <button
+                onClick={resetPhotoState}
+                className="flex items-center justify-center gap-2 px-4 py-3
+                           border-2 border-black rounded-xl bg-white font-bold text-sm uppercase
+                           shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
+                           active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+              >
+                <RotateCcw className="w-4 h-4" /> Retake
+              </button>
+              <button
+                onClick={handleConfirmPhoto}
+                disabled={bgProcessing}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3
+                           border-2 border-black rounded-xl bg-primary font-bold text-sm uppercase
+                           shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
+                           active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all
+                           disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Check className="w-4 h-4" />
+                {bgProcessing ? "Processing…" : "Use This Photo"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* IDLE — show current (or newly confirmed) photo + replace button */}
+        {bgPhase === "idle" && (
+          <>
+            {(newImagePath || item.imageObjectPath) ? (
+              <div className="relative w-full h-52"
+                style={{ backgroundImage: "repeating-conic-gradient(#e5e7eb 0% 25%, white 0% 50%)", backgroundSize: "16px 16px" }}>
+                <img
+                  src={newImagePath ? getImageUrl(newImagePath)! : getImageUrl(item.imageObjectPath!)!}
+                  alt={item.name}
+                  className="w-full h-full object-contain"
+                />
+                {/* Replace overlay button */}
+                <button
+                  onClick={() => photoInputRef.current?.click()}
+                  className="absolute bottom-2 right-2 flex items-center gap-1.5 px-3 py-1.5
+                             bg-white/90 border-2 border-black rounded-xl text-xs font-bold uppercase
+                             shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                             active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+                >
+                  <RotateCcw className="w-3 h-3" /> Replace
+                </button>
+              </div>
+            ) : (
+              /* No photo yet — show an upload placeholder */
+              <button
+                onClick={() => photoInputRef.current?.click()}
+                className="w-full h-36 flex flex-col items-center justify-center gap-2
+                           bg-black/5 border-dashed border-2 border-black/20
+                           active:bg-black/10 transition-colors"
+              >
+                <ImagePlus className="w-8 h-8 opacity-30" />
+                <span className="text-xs font-bold uppercase opacity-30">Add Photo</span>
+              </button>
+            )}
+          </>
+        )}
+
+        {/* Hidden file input */}
+        <input
+          ref={photoInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleFile(file);
+            e.target.value = "";
           }}
-        >
-          <img
-            src={getImageUrl(item.imageObjectPath)!}
-            alt={item.name}
-            className="w-full h-full object-contain"
-          />
-        </div>
-      )}
+        />
+      </div>
 
       {/* ── Form ── */}
       <div className="flex-1 px-4 py-5 flex flex-col gap-4">

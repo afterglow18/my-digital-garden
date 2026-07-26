@@ -106,6 +106,11 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
   // prevents a slow first photo from clobbering a fast second one.
   const bgGenRef = useRef(0);
 
+  // Multi-photo queue (gallery "multiple" picks)
+  const fileQueueRef = useRef<File[]>([]);
+  const [queuePos,   setQueuePos]   = useState(0); // 1-based position of current photo
+  const [queueTotal, setQueueTotal] = useState(0);
+
   const cameraInputRef  = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
@@ -124,6 +129,9 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
     setCleanedUrl(null);
     setBgFailed(false);
     setSelected("original");
+    fileQueueRef.current = [];
+    setQueuePos(0);
+    setQueueTotal(0);
     onOpenChange(false);
   }, [onOpenChange]);
 
@@ -205,17 +213,41 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
           },
         );
       });
-      handleClose();
+
+      // If there are more queued files, process the next one without closing
+      const remaining = fileQueueRef.current;
+      if (remaining.length > 0) {
+        const next = remaining[0];
+        fileQueueRef.current = remaining.slice(1);
+        setQueuePos((p) => p + 1);
+        // Reset preview state then start next file
+        setErrorMsg(null);
+        setOriginalBlob(null);
+        setOriginalUrl(null);
+        setCleanedBlob(null);
+        setCleanedUrl(null);
+        setBgFailed(false);
+        setBgProcessing(false);
+        setSelected("original");
+        handleFile(next);
+      } else {
+        handleClose();
+      }
     } catch (err) {
       setErrorMsg(`Save failed: ${err instanceof Error ? err.message : String(err)}`);
       setPhase("preview");
     }
-  }, [selected, cleanedBlob, originalBlob, handleClose, category, existingCount, createItem, queryClient, onCreated]);
+  }, [selected, cleanedBlob, originalBlob, handleClose, handleFile, category, existingCount, createItem, queryClient, onCreated]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) handleFile(file);
+    const files = Array.from(e.target.files ?? []);
     e.target.value = "";
+    if (!files.length) return;
+    // Queue remaining files; start first immediately
+    fileQueueRef.current = files.slice(1);
+    setQueuePos(1);
+    setQueueTotal(files.length);
+    handleFile(files[0]);
   };
 
   if (!open) return null;
@@ -235,8 +267,13 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
         className="flex items-center justify-between px-4 bg-white border-b-2 border-black flex-shrink-0"
         style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "0.75rem" }}
       >
-        <h2 className="font-display font-bold text-xl uppercase tracking-tight">
+        <h2 className="font-display font-bold text-xl uppercase tracking-tight flex items-center gap-2">
           Add {label}
+          {queueTotal > 1 && (
+            <span className="text-sm font-normal opacity-40 normal-case tracking-normal">
+              ({queuePos}/{queueTotal})
+            </span>
+          )}
         </h2>
         {phase === "pick" && (
           <button
@@ -502,11 +539,12 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
         className="hidden"
         onChange={handleInputChange}
       />
-      {/* Gallery — opens photo library / file picker (single selection) */}
+      {/* Gallery — opens photo library / file picker (multiple selection allowed) */}
       <input
         ref={galleryInputRef}
         type="file"
         accept="image/*"
+        multiple
         className="hidden"
         onChange={handleInputChange}
       />
