@@ -323,6 +323,11 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
   const patch  = (key: keyof FormState) => (value: string | boolean) =>
     setForm((prev) => prev ? { ...prev, [key]: value } : prev);
 
+  // All uploads are JPEG-encoded; removeBackground() always returns PNG.
+  // So data:image/png = already cleaned — hide the Clean Up button.
+  const currentPhotoPath = displayImagePath ?? item.imageObjectPath;
+  const alreadyCleaned = !!currentPhotoPath && currentPhotoPath.startsWith("data:image/png");
+
   // The photo src to actually render in the sheet (optimistic path wins)
   const shownImageSrc = displayImagePath
     ? (getImageUrl(displayImagePath) ?? displayImagePath)
@@ -532,16 +537,18 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
 
                   {/* Bottom-right action pill */}
                   <div className="absolute bottom-2 right-2 flex gap-1.5">
-                    {/* Clean Up Photo */}
-                    <button
-                      onClick={handleStartCleanUp}
-                      className="flex items-center gap-1.5 px-3 py-1.5
-                                 bg-pink-500 border-2 border-black rounded-xl text-white text-xs font-bold uppercase
-                                 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
-                                 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
-                    >
-                      <Sparkles className="w-3 h-3" /> Clean Up
-                    </button>
+                    {/* Clean Up Photo — hidden once photo is already a PNG (already cleaned) */}
+                    {!alreadyCleaned && (
+                      <button
+                        onClick={handleStartCleanUp}
+                        className="flex items-center gap-1.5 px-3 py-1.5
+                                   bg-pink-500 border-2 border-black rounded-xl text-white text-xs font-bold uppercase
+                                   shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                                   active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+                      >
+                        <Sparkles className="w-3 h-3" /> Clean Up
+                      </button>
+                    )}
                     {/* Replace (pick new file) */}
                     <button
                       onClick={() => photoInputRef.current?.click()}
