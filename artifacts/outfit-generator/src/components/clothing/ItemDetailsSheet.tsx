@@ -787,7 +787,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
             <div className="flex-shrink-0 px-5 py-4 bg-white border-t-2 border-black flex flex-col gap-2">
               <button
                 onClick={handleConfirmCleanUp}
-                disabled={cleanProcessing}
+                disabled={cleanSelected === "cleaned" && !cleanedUrl}
                 className="w-full py-3 rounded-xl flex items-center justify-center gap-2 text-sm font-bold uppercase
                            border-2 border-black bg-pink-500 text-white
                            shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
@@ -795,7 +795,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
                            disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Check className="w-4 h-4" />
-                {cleanProcessing
+                {cleanSelected === "cleaned" && !cleanedUrl
                   ? "Processing…"
                   : cleanSelected === "cleaned"
                     ? "Save Cleaned Version"
