@@ -1,0 +1,23 @@
+The root cause was ONNX Runtime Web blocking the JavaScript main thread during AI inference.
+
+Here's what was happening and what fixed it:
+
+The problem The background-removal library (@imgly/background-removal) runs a neural network (ONNX model) to cut out backgrounds. By default it runs that inference synchronously on the main JavaScript thread. While the model is thinking, the entire JS engine is frozen — no button taps, no React updates, nothing.
+
+Why the obvious fix didn't work ONNX Runtime Web has a wasm.proxy = true setting that moves inference into a Web Worker, freeing the main thread. But @imgly/background-removal internally sets it back to false right before it creates the inference session (because it only enables the proxy when WebGPU is available, which it isn't on iOS Safari/WKWebView).
+
+The actual fix — three parts
+
+Object.defineProperty to lock the proxy setting. Instead of a simple assignment (ort.env.wasm.proxy = true), we use Object.defineProperty with a no-op setter so imgly's internal proxy = false write is silently ignored and the value stays true. ONNX Runtime then runs inference in a sub-worker.
+numThreads = 1. iOS Safari has no SharedArrayBuffer, which WASM multithreading requires. Leaving threads > 1 causes a silent crash. Single-threaded avoids it.
+Dynamic import() instead of a top-level import. Importing onnxruntime-web at module parse time triggered Vite's dependency pre-bundling mid-session, causing a full page reload that corrupted React's internal dispatcher. Importing it dynamically (await import(...)) inside the function means it only loads the moment inference is first requested — after everything is stable.
+// Called once, just before the first removeBackground() invocation
+async function configureOrt() {
+  const ort = await import("onnxruntime-web");
+  Object.defineProperty(ort.env.wasm, "proxy", {
+    get: () => true,
+    set: () => {},   // blocks imgly from setting it back to false
+    configurable: true,
+  });
+  ort.env.wasm.numThreads = 1;
+}
