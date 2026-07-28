@@ -264,13 +264,13 @@ export default function WelcomePage({ onEnter }: Props) {
       >
         <div style={{
           fontFamily: "var(--font-display, serif)",
-          fontWeight: 900,
-          fontSize: "clamp(30px, 8vw, 48px)",
-          letterSpacing: "-0.02em",
-          lineHeight: 1.1,
+          fontWeight: 800,
+          fontSize: "clamp(30px, 8vw, 46px)",
+          letterSpacing: "0.06em",
+          lineHeight: 1.12,
           color: "#F0EBD8",
           textAlign: "center",
-          textShadow: "0 2px 14px rgba(0,0,0,0.75)",
+          textShadow: "0 1px 4px rgba(0,0,0,0.65), 0 2px 12px rgba(0,0,0,0.40)",
         }}>
           MY DIGITAL<br />GARDEN
         </div>

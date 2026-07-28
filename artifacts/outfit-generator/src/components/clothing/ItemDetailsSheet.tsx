@@ -46,12 +46,12 @@ function Field({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-[10px] font-bold uppercase tracking-widest text-black/40">{label}</label>
+      <label className="text-[10px] font-bold uppercase tracking-widest text-[#8A6A3A]/65">{label}</label>
       <input
         type={type} value={value} onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder ?? label}
-        className="w-full border-2 border-black rounded-lg px-3 py-2 text-sm font-medium
-                   bg-white focus:outline-none focus:ring-2 focus:ring-primary
+        className="w-full border border-[#C8B870]/45 rounded-lg px-3 py-2 text-sm font-medium
+                   bg-[#faf8f2] focus:outline-none focus:ring-2 focus:ring-[#C8B870]/20
                    placeholder:font-normal placeholder:text-black/25"
       />
     </div>
@@ -65,12 +65,12 @@ function SelectField({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-[10px] font-bold uppercase tracking-widest text-black/40">{label}</label>
+      <label className="text-[10px] font-bold uppercase tracking-widest text-[#8A6A3A]/65">{label}</label>
       <div className="relative">
         <select
           value={value} onChange={(e) => onChange(e.target.value)}
-          className="w-full appearance-none border-2 border-black rounded-lg px-3 py-2 pr-8
-                     text-sm font-medium bg-white focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+          className="w-full appearance-none border border-[#C8B870]/45 rounded-lg px-3 py-2 pr-8
+                     text-sm font-medium bg-[#faf8f2] focus:outline-none focus:ring-2 focus:ring-[#C8B870]/20 cursor-pointer"
         >
           {options.map((o) => <option key={o} value={o}>{o || `— ${label} —`}</option>)}
         </select>
@@ -393,7 +393,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
         {/* Header */}
         <div
           className="sticky top-0 z-10 flex items-center justify-between px-4
-                     bg-white border-b-2 border-black flex-shrink-0"
+                     bg-[#f9f4ee] border-b border-[#C8B870]/30 flex-shrink-0"
           style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "0.75rem" }}
         >
           <h2 className="font-display font-bold text-xl uppercase tracking-tight">Item Details</h2>
@@ -412,10 +412,10 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
                   }},
                 );
               }}
-              className={`w-9 h-9 border-2 border-black rounded-full flex items-center justify-center transition-all
+              className={`w-9 h-9 border rounded-full flex items-center justify-center transition-all
                           ${form.isFavorite
-                            ? "bg-red-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                            : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"}`}
+                            ? "bg-red-400 border-red-300"
+                            : "bg-[#faf8f2] border-[#C8B870]/45"}`}
             >
               <Heart className="w-4 h-4"
                 fill={form.isFavorite ? "white" : "none"}
@@ -424,9 +424,8 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
             {/* Close */}
             <button
               onClick={onClose}
-              className="w-9 h-9 border-2 border-black rounded-full flex items-center justify-center
-                         bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
-                         active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all"
+              className="w-9 h-9 border border-[#C8B870]/45 rounded-full flex items-center justify-center
+                         bg-[#faf8f2] active:bg-[#f0e8d8] transition-all"
             >
               <X className="w-4 h-4" />
             </button>
@@ -434,7 +433,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
         </div>
 
         {/* ── Photo section ── */}
-        <div className="flex-shrink-0 border-b-2 border-black">
+        <div className="flex-shrink-0 border-b border-[#C8B870]/30">
 
           {/* Replace-file: encoding spinner */}
           {replacePhase === "encoding" && (
@@ -500,9 +499,8 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
                 <button
                   onClick={resetReplaceState}
                   className="flex items-center justify-center gap-2 px-4 py-3
-                             border-2 border-black rounded-xl bg-white font-bold text-sm uppercase
-                             shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
-                             active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+                             border border-[#C8B870]/45 rounded-xl bg-[#faf8f2] font-bold text-sm uppercase
+                             active:bg-[#f0e8d8] transition-all"
                 >
                   <RotateCcw className="w-4 h-4" /> Retake
                 </button>
@@ -510,10 +508,10 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
                   onClick={handleConfirmReplace}
                   disabled={repProcessing}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-3
-                             border-2 border-black rounded-xl bg-primary font-bold text-sm uppercase
-                             shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
-                             active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all
+                             border border-[#B8894E] rounded-xl font-bold text-sm uppercase
+                             active:opacity-80 transition-all
                              disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: "linear-gradient(to bottom, #E8D4B0, #B8894E)", color: "#3A2210" }}
                 >
                   <Check className="w-4 h-4" />
                   {repProcessing ? "Processing…" : "Use This Photo"}
@@ -542,8 +540,8 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
                       <button
                         onClick={handleStartCleanUp}
                         className="flex items-center gap-1.5 px-3 py-1.5
-                                   bg-pink-500 border-2 border-black rounded-xl text-white text-xs font-bold uppercase
-                                   shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                                   bg-pink-500 border border-pink-400 rounded-xl text-white text-xs font-bold uppercase
+                                   shadow-[1px_1px_0px_0px_rgba(190,24,93,0.5)]
                                    active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
                       >
                         <Sparkles className="w-3 h-3" /> Clean Up
@@ -553,9 +551,8 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
                     <button
                       onClick={() => photoInputRef.current?.click()}
                       className="flex items-center gap-1.5 px-3 py-1.5
-                                 bg-white/90 border-2 border-black rounded-xl text-xs font-bold uppercase
-                                 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
-                                 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+                                 bg-[#faf8f2] border border-[#C8B870]/45 rounded-xl text-xs font-bold uppercase
+                                 active:bg-[#f0e8d8] transition-all"
                     >
                       <RotateCcw className="w-3 h-3" /> Replace
                     </button>
@@ -618,8 +615,8 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
             <textarea
               value={form.notes} onChange={(e) => patch("notes")(e.target.value)}
               placeholder="Anything worth remembering…" rows={3}
-              className="w-full border-2 border-black rounded-lg px-3 py-2 text-sm font-medium
-                         bg-white focus:outline-none focus:ring-2 focus:ring-primary resize-none
+              className="w-full border border-[#C8B870]/45 rounded-lg px-3 py-2 text-sm font-medium
+                         bg-[#faf8f2] focus:outline-none focus:ring-2 focus:ring-[#C8B870]/20 resize-none
                          placeholder:font-normal placeholder:text-black/25"
             />
           </div>
@@ -629,7 +626,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
               onChange={patch("category") as (v: string) => void} options={CATEGORY_OPTIONS} />
             <div className="flex flex-col gap-1 opacity-50 pointer-events-none">
               <span className="text-[10px] font-bold uppercase tracking-widest text-black/40">Times Worn</span>
-              <div className="border-2 border-black/20 rounded-lg px-3 py-2 text-sm font-medium bg-white/50">
+              <div className="border border-[#C8B870]/30 rounded-lg px-3 py-2 text-sm font-medium bg-[#faf8f2]/50">
                 {item.timesWorn ?? 0}
               </div>
             </div>
@@ -637,13 +634,19 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
         </div>
 
         {/* ── Footer ── */}
-        <div className="sticky bottom-0 px-4 py-4 bg-white border-t-2 border-black flex-shrink-0 flex flex-col gap-2">
+        <div className="sticky bottom-0 px-4 py-4 bg-[#f9f4ee] border-t border-[#C8B870]/30 flex-shrink-0 flex flex-col gap-2">
           <AnimatePresence>
             {dirty && (
               <motion.button
                 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
                 onClick={handleSave} disabled={updateItem.isPending}
-                className="w-full btn-brutalist py-3 rounded-xl flex items-center justify-center gap-2 text-sm"
+                className="w-full py-3 rounded-xl flex items-center justify-center gap-2 text-sm font-bold uppercase"
+                style={{
+                  background: "linear-gradient(to bottom, #E8D4B0, #B8894E)",
+                  border: "1.5px solid #B8894E",
+                  color: "#3A2210",
+                  boxShadow: "2px 2px 0 rgba(0,0,0,0.45)",
+                }}
               >
                 <Save className="w-4 h-4" />
                 {updateItem.isPending ? "Saving…" : "Save Changes"}
@@ -655,8 +658,8 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
             <button
               onClick={() => setShowDeleteConfirm(true)}
               className="w-full py-3 rounded-xl flex items-center justify-center gap-2 text-sm
-                         font-bold uppercase border-2 border-black/20 text-black/35
-                         hover:border-red-500 hover:text-red-600 transition-all"
+                         font-bold uppercase border border-[#C8B870]/30 text-black/35
+                         hover:border-red-400 hover:text-red-500 transition-all"
             >
               <Trash2 className="w-4 h-4" /> Delete from Garden Forever
             </button>
@@ -664,15 +667,13 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
             <div className="flex gap-2">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 py-3 rounded-xl text-sm font-bold uppercase border-2 border-black bg-white
-                           shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
-                           active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all"
+                className="flex-1 py-3 rounded-xl text-sm font-bold uppercase border border-[#C8B870]/40 bg-[#faf8f2]
+                           active:bg-[#f0e8d8] transition-all"
               >Cancel</button>
               <button
                 onClick={handleDelete} disabled={deleteItem.isPending}
-                className="flex-1 py-3 rounded-xl text-sm font-bold uppercase border-2 border-red-600
-                           bg-red-500 text-white shadow-[2px_2px_0px_0px_rgba(185,28,28,1)]
-                           active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all
+                className="flex-1 py-3 rounded-xl text-sm font-bold uppercase border border-red-400
+                           bg-red-500 text-white active:opacity-80 transition-all
                            disabled:opacity-50"
               >
                 {deleteItem.isPending ? "Deleting…" : "Yes, Delete Forever"}
@@ -695,7 +696,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
           >
             {/* Overlay header */}
             <div
-              className="flex items-center justify-between px-4 bg-white border-b-2 border-black flex-shrink-0"
+              className="flex items-center justify-between px-4 bg-[#f9f4ee] border-b border-[#C8B870]/30 flex-shrink-0"
               style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "0.75rem" }}
             >
               <h2 className="font-display font-bold text-xl uppercase tracking-tight flex items-center gap-2">
@@ -791,14 +792,13 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
             </div>
 
             {/* Footer buttons */}
-            <div className="flex-shrink-0 px-5 py-4 bg-white border-t-2 border-black flex flex-col gap-2">
+            <div className="flex-shrink-0 px-5 py-4 bg-[#f9f4ee] border-t border-[#C8B870]/30 flex flex-col gap-2">
               <button
                 onClick={handleConfirmCleanUp}
                 disabled={cleanSelected === "cleaned" && !cleanedUrl}
                 className="w-full py-3 rounded-xl flex items-center justify-center gap-2 text-sm font-bold uppercase
-                           border-2 border-black bg-pink-500 text-white
-                           shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
-                           active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all
+                           border border-pink-400 bg-pink-500 text-white
+                           active:opacity-80 transition-all
                            disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Check className="w-4 h-4" />
@@ -811,8 +811,8 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
               <button
                 onClick={handleCancelCleanUp}
                 className="w-full py-3 rounded-xl flex items-center justify-center gap-2 text-sm font-bold uppercase
-                           border-2 border-black/20 text-black/40
-                           active:bg-black/5 transition-all"
+                           border border-[#C8B870]/30 text-black/40
+                           active:bg-[#f0e8d8] transition-all"
               >
                 Cancel
               </button>

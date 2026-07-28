@@ -300,6 +300,7 @@ export default function GeneratePage() {
                       letterSpacing: "0.08em",
                       color: "#ffffff",
                       fontFamily: "var(--font-display)",
+                      textShadow: "0 1px 3px rgba(0,0,0,0.60), 0 2px 10px rgba(0,0,0,0.35)",
                     }}>
                       {label}
                     </span>
