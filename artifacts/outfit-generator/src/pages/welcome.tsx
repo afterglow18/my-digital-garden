@@ -1,10 +1,13 @@
 /**
- * WelcomePage — Garden gate entrance animation.
+ * WelcomePage — Tall white picket fence covers the screen.
+ * Tapping "Enter Garden" lifts the fence skyward (left-to-right stagger),
+ * revealing the hero garden behind it, then fades to the wardrobe page.
  *
- * IDLE     : Two white gate panels cover the screen; title + "Enter Garden" button visible.
- * SWINGING : Button tapped → panels swing open on a 3D hinge (rotateY), title fades.
- * OPEN     : Brief hold — hero garden fully visible behind the open gate.
- * FADING   : Screen fades to black → onEnter() fires → wardrobe page loads.
+ * Phases:
+ *   IDLE     → Fence visible, title + button at bottom.
+ *   SWINGING → Pickets rise off-screen with a left-to-right wave, text fades.
+ *   OPEN     → Garden hero fully visible; brief hold.
+ *   FADING   → Fade to dark → onEnter() → wardrobe loads.
  */
 
 import { useState, useRef, useCallback } from "react";
@@ -14,101 +17,9 @@ interface Props { onEnter: () => void; }
 
 type Phase = "idle" | "swinging" | "open" | "fading";
 
-// ── Gate panel visual ──────────────────────────────────────────────────────────
-
-function GatePanel({ side }: { side: "left" | "right" }) {
-  const isLeft = side === "left";
-  return (
-    <div style={{ width: "100%", height: "100%", position: "relative", overflow: "hidden",
-      background: "linear-gradient(160deg, #FEFCF6 0%, #F4EDD8 55%, #EDE4CA 100%)",
-    }}>
-
-      {/* Subtle vertical plank tints */}
-      {[0, 1, 2, 3].map((i) => (
-        <div key={i} style={{
-          position: "absolute",
-          left: `${i * 25}%`, width: "25%", top: 0, bottom: 0,
-          background: i % 2 === 0
-            ? "rgba(0,0,0,0.018)" : "rgba(255,255,255,0.05)",
-          borderRight: i < 3 ? "1px solid rgba(180,160,110,0.15)" : "none",
-        }} />
-      ))}
-
-      {/* Horizontal rails */}
-      {[0.10, 0.50, 0.90].map((frac) => (
-        <div key={frac} style={{
-          position: "absolute", left: 0, right: 0,
-          top: `calc(${frac * 100}% - 7px)`, height: 14,
-          background: "linear-gradient(to bottom, #E0D4B2, #C8BB90, #E0D4B2)",
-          boxShadow: "0 2px 6px rgba(0,0,0,0.14)",
-          zIndex: 2,
-        }} />
-      ))}
-
-      {/* Z-brace diagonals — classic garden gate pattern */}
-      <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", zIndex: 1 }}
-        viewBox="0 0 100 100" preserveAspectRatio="none">
-        {/* Top section */}
-        <line
-          x1={isLeft ? 4 : 96} y1="14"
-          x2={isLeft ? 96 : 4} y2="48"
-          stroke="#C0B080" strokeWidth="1.4" strokeLinecap="round"
-        />
-        {/* Bottom section — mirrors direction */}
-        <line
-          x1={isLeft ? 96 : 4} y1="52"
-          x2={isLeft ? 4 : 96} y2="88"
-          stroke="#C0B080" strokeWidth="1.4" strokeLinecap="round"
-        />
-      </svg>
-
-      {/* Outer frame */}
-      <div style={{
-        position: "absolute", inset: 0,
-        border: "8px solid #C8BB90",
-        boxSizing: "border-box",
-        pointerEvents: "none",
-        zIndex: 3,
-        // Hide the center-facing inner edge border (panels touch flush)
-        ...(isLeft
-          ? { borderRight: "none" }
-          : { borderLeft: "none" }),
-      }} />
-
-      {/* Center-seam edge — slightly darker to show the join line */}
-      <div style={{
-        position: "absolute",
-        [isLeft ? "right" : "left"]: 0,
-        top: 0, bottom: 0, width: 2,
-        background: "rgba(120,100,60,0.35)",
-        zIndex: 4,
-      }} />
-
-      {/* Hinge plates on the outer edge */}
-      {[0.20, 0.80].map((frac) => (
-        <div key={frac} style={{
-          position: "absolute",
-          [isLeft ? "left" : "right"]: 3,
-          top: `${frac * 100}%`,
-          transform: "translateY(-50%)",
-          width: 14, height: 32,
-          borderRadius: 4,
-          background: "linear-gradient(to right, #A89870, #C8B888, #A89870)",
-          boxShadow: "0 2px 5px rgba(0,0,0,0.30)",
-          zIndex: 5,
-        }} />
-      ))}
-
-      {/* Bottom gradient so white text at the bottom stays readable */}
-      <div style={{
-        position: "absolute", bottom: 0, left: 0, right: 0, height: "46%",
-        background: "linear-gradient(to bottom, transparent, rgba(10,18,8,0.55) 60%, rgba(6,14,4,0.88) 100%)",
-        pointerEvents: "none",
-        zIndex: 6,
-      }} />
-    </div>
-  );
-}
+const NUM_PICKETS = 22;
+/** Vertical positions (0–1) for the two horizontal fence rails */
+const RAIL_FRACS = [0.22, 0.65];
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
@@ -125,21 +36,22 @@ export default function WelcomePage({ onEnter }: Props) {
   const handleEnter = () => {
     if (phase !== "idle") return;
     setPhase("swinging");
+    // Last picket starts at delay 0.28 s and finishes at 0.28 + 0.72 = 1.00 s
     setTimeout(() => {
       setPhase("open");
       setTimeout(() => {
         setPhase("fading");
-        setTimeout(finish, 620);
-      }, 380);
-    }, 870);
+        setTimeout(finish, 640);
+      }, 360);
+    }, 1060);
   };
 
-  const isOpen = phase !== "idle";
+  const isLifting = phase !== "idle";
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 200, overflow: "hidden" }}>
 
-      {/* ── Layer 1: Hero garden background, always present behind the gate ── */}
+      {/* ── Layer 1: Hero garden revealed behind the rising fence ── */}
       <img
         src="/garden-welcome-bg.png"
         alt=""
@@ -152,70 +64,84 @@ export default function WelcomePage({ onEnter }: Props) {
         }}
       />
 
-      {/* ── Layer 2: Gate panels — 3D perspective double-door swing ── */}
-      <div style={{
-        position: "absolute", inset: 0,
-        perspective: "900px",
-        perspectiveOrigin: "50% 48%",
-      }}>
-        {/* Left gate half — hinged on the left edge */}
-        <motion.div
-          animate={{ rotateY: isOpen ? -108 : 0 }}
-          transition={{ duration: 0.88, ease: [0.32, 0, 0.10, 1] }}
-          style={{
-            position: "absolute", left: 0, top: 0,
-            width: "50%", height: "100%",
-            transformOrigin: "0% 50%",
-            transformStyle: "preserve-3d",
-            willChange: "transform",
-          }}
-        >
-          {/* Front face */}
-          <div style={{ position: "absolute", inset: 0 }}>
-            <GatePanel side="left" />
-          </div>
-          {/* Back face — prevents see-through on iOS */}
-          <div style={{
-            position: "absolute", inset: 0,
-            backfaceVisibility: "hidden",
-            WebkitBackfaceVisibility: "hidden",
-            background: "#2A4010",
-          }} />
-        </motion.div>
+      {/* ── Layer 2: Picket fence — lifts skyward on enter ── */}
+      <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
+        {Array.from({ length: NUM_PICKETS }).map((_, i) => {
+          // Left-to-right wave: first picket (i=0) rises immediately,
+          // last picket (i=NUM_PICKETS-1) starts 0.28 s later.
+          const ltrDelay = (i / (NUM_PICKETS - 1)) * 0.28;
 
-        {/* Right gate half — hinged on the right edge */}
-        <motion.div
-          animate={{ rotateY: isOpen ? 108 : 0 }}
-          transition={{ duration: 0.88, ease: [0.32, 0, 0.10, 1] }}
-          style={{
-            position: "absolute", right: 0, top: 0,
-            width: "50%", height: "100%",
-            transformOrigin: "100% 50%",
-            transformStyle: "preserve-3d",
-            willChange: "transform",
-          }}
-        >
-          {/* Front face */}
-          <div style={{ position: "absolute", inset: 0 }}>
-            <GatePanel side="right" />
-          </div>
-          {/* Back face */}
-          <div style={{
-            position: "absolute", inset: 0,
-            backfaceVisibility: "hidden",
-            WebkitBackfaceVisibility: "hidden",
-            background: "#2A4010",
-          }} />
-        </motion.div>
+          return (
+            <motion.div
+              key={i}
+              animate={{ y: isLifting ? "-115%" : "0%" }}
+              transition={{
+                duration: 0.72,
+                delay: ltrDelay,
+                ease: [0.35, 0, 0.12, 1],
+              }}
+              style={{
+                position: "absolute",
+                left: `${(i / NUM_PICKETS) * 100}%`,
+                // Tiny width overlap (+0.15%) eliminates sub-pixel gaps between pickets
+                width: `${100 / NUM_PICKETS + 0.15}%`,
+                top: 0,
+                bottom: "-14px",        // extend a hair below screen edge
+                // Alternating subtle cream tones give individual plank depth
+                background: i % 2 === 0
+                  ? "linear-gradient(to right, #F3EEE2 0%, #FEFEF8 50%, #F3EEE2 100%)"
+                  : "linear-gradient(to right, #FEFEF8 0%, #F8F4EC 50%, #FEFEF8 100%)",
+                // Pentagon clip-path: pointed top, flat sides and bottom
+                clipPath: "polygon(50% 0%, 100% 3.5%, 100% 100%, 0% 100%, 0% 3.5%)",
+                // Hairline border between planks
+                boxShadow: "1px 0 0 rgba(175,160,125,0.20), -1px 0 0 rgba(175,160,125,0.10)",
+                willChange: "transform",
+              }}
+            >
+              {/* Horizontal rail segments — move with each picket */}
+              {RAIL_FRACS.map((frac) => (
+                <div
+                  key={frac}
+                  style={{
+                    position: "absolute",
+                    left: -2, right: -2,
+                    top: `${frac * 100}%`,
+                    height: 16,
+                    transform: "translateY(-50%)",
+                    background: "linear-gradient(to bottom, #DAD0A2, #C5BA80, #DAD0A2)",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.13)",
+                    zIndex: 2,
+                  }}
+                />
+              ))}
+
+              {/* Dark gradient at the bottom of each plank — keeps white text readable */}
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: 0, left: 0, right: 0,
+                  height: "48%",
+                  background:
+                    "linear-gradient(to bottom, transparent, rgba(8,16,6,0.60) 62%, rgba(4,12,3,0.92) 100%)",
+                  pointerEvents: "none",
+                  zIndex: 3,
+                }}
+              />
+            </motion.div>
+          );
+        })}
       </div>
 
-      {/* ── Layer 3: Title + button, centered on the gate, fades out on tap ── */}
+      {/* ── Layer 3: Title + button (visible on fence, fades when lifted) ── */}
       <motion.div
         animate={{ opacity: phase === "idle" ? 1 : 0, y: phase === "idle" ? 0 : 10 }}
-        transition={{ duration: 0.28 }}
+        transition={{ duration: 0.26 }}
         style={{
-          position: "absolute", bottom: 0, left: 0, right: 0,
-          display: "flex", flexDirection: "column", alignItems: "center",
+          position: "absolute",
+          bottom: 0, left: 0, right: 0,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
           padding: "0 24px calc(env(safe-area-inset-bottom) + 96px)",
           gap: 10,
           pointerEvents: phase === "idle" ? "auto" : "none",
@@ -230,13 +156,14 @@ export default function WelcomePage({ onEnter }: Props) {
           lineHeight: 1.1,
           color: "#F0EBD8",
           textAlign: "center",
-          textShadow: "0 2px 14px rgba(0,0,0,0.7)",
+          textShadow: "0 2px 14px rgba(0,0,0,0.72)",
         }}>
           MY DIGITAL<br />GARDEN
         </div>
 
         <div style={{
-          fontSize: 11, fontWeight: 500,
+          fontSize: 11,
+          fontWeight: 500,
           letterSpacing: "0.28em",
           textTransform: "uppercase" as const,
           color: "rgba(240,235,216,0.50)",
@@ -251,7 +178,8 @@ export default function WelcomePage({ onEnter }: Props) {
           style={{
             marginTop: 14,
             fontFamily: "var(--font-display, sans-serif)",
-            fontWeight: 800, fontSize: 15,
+            fontWeight: 800,
+            fontSize: 15,
             letterSpacing: "0.04em",
             color: "#1A3A12",
             background: "linear-gradient(to bottom, #C8DFB0, #7BAE60)",
@@ -259,7 +187,8 @@ export default function WelcomePage({ onEnter }: Props) {
             borderRadius: 100,
             padding: "14px 44px",
             cursor: "pointer",
-            boxShadow: "0 4px 20px rgba(40,90,20,0.45), 2px 2px 0 rgba(0,0,0,0.55)",
+            boxShadow:
+              "0 4px 20px rgba(40,90,20,0.45), 2px 2px 0 rgba(0,0,0,0.55)",
             whiteSpace: "nowrap" as const,
           }}
         >
@@ -267,10 +196,10 @@ export default function WelcomePage({ onEnter }: Props) {
         </motion.button>
       </motion.div>
 
-      {/* ── Layer 4: Final fade-to-dark before loading the wardrobe ── */}
+      {/* ── Layer 4: Final fade-to-dark before wardrobe loads ── */}
       <motion.div
         animate={{ opacity: phase === "fading" ? 1 : 0 }}
-        transition={{ duration: 0.62 }}
+        transition={{ duration: 0.64 }}
         style={{
           position: "absolute", inset: 0,
           background: "#080F05",
@@ -284,7 +213,10 @@ export default function WelcomePage({ onEnter }: Props) {
         position: "fixed",
         bottom: "calc(env(safe-area-inset-bottom) + 10px)",
         left: 0, right: 0,
-        display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 4,
         zIndex: 30,
         opacity: phase === "idle" ? 1 : 0,
         transition: "opacity 0.3s",
@@ -292,14 +224,30 @@ export default function WelcomePage({ onEnter }: Props) {
       }}>
         <a
           href="https://classy-alpaca-441.notion.site/Privacy-Policy-39682db6065380b19dedcb108d4a0ef4"
-          target="_blank" rel="noopener noreferrer"
-          style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.25)", textDecoration: "none", letterSpacing: "0.02em" }}
-        >Privacy Policy</a>
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            fontSize: 11, fontWeight: 500,
+            color: "rgba(255,255,255,0.25)",
+            textDecoration: "none",
+            letterSpacing: "0.02em",
+          }}
+        >
+          Privacy Policy
+        </a>
         <a
           href="https://app.notion.com/p/My-Digital-Closet-Support-39782db60653802a9088dcbae84c0527?source=copy_link"
-          target="_blank" rel="noopener noreferrer"
-          style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.25)", textDecoration: "none", letterSpacing: "0.02em" }}
-        >Support</a>
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            fontSize: 11, fontWeight: 500,
+            color: "rgba(255,255,255,0.25)",
+            textDecoration: "none",
+            letterSpacing: "0.02em",
+          }}
+        >
+          Support
+        </a>
       </div>
     </div>
   );
