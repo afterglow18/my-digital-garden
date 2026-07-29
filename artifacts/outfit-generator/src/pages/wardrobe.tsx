@@ -59,8 +59,8 @@ const LM = {
 
   rows: [
     { sectionTop: 0.302, shelfY: 0.422, btnCY: 0.287, labelFrac: null,  photoHFrac: 0.92 },  // tools       (bed 1)
-    { sectionTop: 0.433, shelfY: 0.553, btnCY: 0.419, labelFrac: 0.420, photoHFrac: 0.85 },  // landscaping (bed 2)
-    { sectionTop: 0.565, shelfY: 0.685, btnCY: 0.551, labelFrac: 0.552, photoHFrac: 0.92 },  // decor       (bed 3)
+    { sectionTop: 0.426, shelfY: 0.546, btnCY: 0.412, labelFrac: 0.413, photoHFrac: 0.85 },  // landscaping (bed 2)
+    { sectionTop: 0.572, shelfY: 0.692, btnCY: 0.558, labelFrac: 0.559, photoHFrac: 0.92 },  // decor       (bed 3)
     { sectionTop: 0.710, shelfY: 0.830, btnCY: 0.697, labelFrac: 0.698, photoHFrac: 0.92 },  // plants      (bed 4)
   ],
 
