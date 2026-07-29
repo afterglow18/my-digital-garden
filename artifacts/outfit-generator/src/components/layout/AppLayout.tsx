@@ -119,14 +119,14 @@ export function AppLayout({ children }: AppLayoutProps) {
                       className={cn(
                         "p-2.5 rounded-full border-2 transition-all duration-200 ease-spring relative",
                         isActive
-                          ? "bg-primary border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] -translate-y-1"
+                          ? "bg-[#243B24] border-[#243B24] shadow-[3px_3px_0px_0px_rgba(0,0,0,0.5)] -translate-y-1"
                           : "bg-transparent border-transparent group-hover:bg-muted group-active:scale-95"
                       )}
                     >
                       <Icon
                         className={cn(
                           "w-6 h-6",
-                          isActive ? "text-black" : "text-muted-foreground",
+                          isActive ? "text-white" : "text-muted-foreground",
                           item.href === "/generate" && isActive ? "animate-pulse" : ""
                         )}
                         strokeWidth={isActive ? 2.5 : 2}
@@ -142,7 +142,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                     <span
                       className={cn(
                         "text-[10px] font-bold uppercase tracking-wider transition-colors",
-                        isActive ? "text-black" : "text-muted-foreground"
+                        isActive ? "text-[#243B24]" : "text-muted-foreground"
                       )}
                     >
                       {item.label}

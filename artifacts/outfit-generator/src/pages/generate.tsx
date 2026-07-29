@@ -33,10 +33,10 @@ const LM = {
   doorL: 0.03,
   doorR: 0.97,
   rows: [
-    { sectionTop: 0.295, shelfY: 0.415, btnCY: 0.280, labelFrac: null  },  // tools       (bed 1) — keep as-is
-    { sectionTop: 0.440, shelfY: 0.560, btnCY: 0.426, labelFrac: 0.417 },  // landscaping (bed 2) ↑ to bricks
-    { sectionTop: 0.585, shelfY: 0.705, btnCY: 0.571, labelFrac: 0.562 },  // decor       (bed 3) ↑ to bricks
-    { sectionTop: 0.730, shelfY: 0.850, btnCY: 0.717, labelFrac: 0.708 },  // plants      (bed 4) ↑ to bricks
+    { sectionTop: 0.295, shelfY: 0.415, btnCY: 0.280, labelFrac: 0.322, photoHFrac: 0.62 },  // tools       (bed 1)
+    { sectionTop: 0.440, shelfY: 0.560, btnCY: 0.426, labelFrac: 0.424, photoHFrac: 0.78 },  // landscaping (bed 2)
+    { sectionTop: 0.585, shelfY: 0.705, btnCY: 0.571, labelFrac: 0.550, photoHFrac: 0.78 },  // decor       (bed 3)
+    { sectionTop: 0.730, shelfY: 0.850, btnCY: 0.717, labelFrac: 0.696, photoHFrac: 0.78 },  // plants      (bed 4)
   ],
   // Action bar: baked-in bottom bar with plant | Save | star icons
   barY:   0.873,
@@ -242,8 +242,30 @@ export default function GeneratePage() {
         height: "calc(100dvh - var(--bottom-nav-h, 90px))",
         overflow: "hidden",
         background: "#1a2a1a",
+        paddingTop: "env(safe-area-inset-top)",
       }}
     >
+      {/* ── Top heading ── */}
+      <div style={{
+        position: "absolute",
+        top: "calc(env(safe-area-inset-top) + 10px)",
+        left: 0,
+        width: "100%",
+        textAlign: "center",
+        zIndex: 20,
+        pointerEvents: "none",
+      }}>
+        <span style={{
+          fontFamily: "'Great Vibes', cursive",
+          fontSize: "clamp(28px, 8vw, 38px)",
+          color: "#ffffff",
+          textShadow: "0 1px 6px rgba(0,0,0,0.55), 0 3px 14px rgba(0,0,0,0.30)",
+          lineHeight: 1,
+        }}>
+          My Digital Garden
+        </span>
+      </div>
+
       {/* ── Background image ── */}
       <img
         src="/garden-bg.png"
@@ -318,7 +340,7 @@ export default function GeneratePage() {
                         ref={rowRefs[key]}
                         items={items}
                         onCenteredItem={setCentredHandlers[key]}
-                        maxPhotoH={Math.max(0, sectionHeights[rowIdx] - 4)}
+                        maxPhotoH={Math.max(0, sectionHeights[rowIdx] * lm.photoHFrac - 4)}
                         disableSwipe
                       />
                     </div>
@@ -581,7 +603,7 @@ export default function GeneratePage() {
                     <input
                       autoFocus
                       type="text"
-                      placeholder="Name this case…"
+                      placeholder="Name this garden…"
                       value={saveName}
                       onChange={e => setSaveName(e.target.value)}
                       onKeyDown={e => e.key === "Enter" && handleSave()}
