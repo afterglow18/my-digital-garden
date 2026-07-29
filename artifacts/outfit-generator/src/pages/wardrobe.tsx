@@ -59,9 +59,9 @@ const LM = {
 
   rows: [
     { sectionTop: 0.295, shelfY: 0.415, btnCY: 0.280, labelFrac: null  },  // tools       (bed 1) — keep as-is
-    { sectionTop: 0.440, shelfY: 0.560, btnCY: 0.426, labelFrac: 0.417 },  // landscaping (bed 2) ↑ to bricks
-    { sectionTop: 0.585, shelfY: 0.705, btnCY: 0.571, labelFrac: 0.562 },  // decor       (bed 3) ↑ to bricks
-    { sectionTop: 0.730, shelfY: 0.850, btnCY: 0.717, labelFrac: 0.708 },  // plants      (bed 4) ↑ to bricks
+    { sectionTop: 0.440, shelfY: 0.560, btnCY: 0.426, labelFrac: 0.427 },  // landscaping (bed 2) ↓ a little
+    { sectionTop: 0.585, shelfY: 0.705, btnCY: 0.571, labelFrac: 0.552 },  // decor       (bed 3) ↑ a little
+    { sectionTop: 0.730, shelfY: 0.850, btnCY: 0.717, labelFrac: 0.698 },  // plants      (bed 4) ↑ a little
   ],
 
   saveAreaY: 0.873,
