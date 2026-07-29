@@ -58,7 +58,7 @@ const LM = {
   doorR: 0.97,   // right edge of beds
 
   rows: [
-    { sectionTop: 0.295, shelfY: 0.415, btnCY: 0.280, labelFrac: null,  photoHFrac: 0.92 },  // tools       (bed 1)
+    { sectionTop: 0.310, shelfY: 0.430, btnCY: 0.295, labelFrac: null,  photoHFrac: 0.92 },  // tools       (bed 1)
     { sectionTop: 0.440, shelfY: 0.560, btnCY: 0.426, labelFrac: 0.427, photoHFrac: 0.85 },  // landscaping (bed 2)
     { sectionTop: 0.565, shelfY: 0.685, btnCY: 0.551, labelFrac: 0.552, photoHFrac: 0.92 },  // decor       (bed 3)
     { sectionTop: 0.710, shelfY: 0.830, btnCY: 0.697, labelFrac: 0.698, photoHFrac: 0.92 },  // plants      (bed 4)

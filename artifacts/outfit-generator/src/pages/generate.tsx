@@ -33,7 +33,7 @@ const LM = {
   doorL: 0.03,
   doorR: 0.97,
   rows: [
-    { sectionTop: 0.283, shelfY: 0.403, btnCY: 0.268, labelFrac: 0.333, photoHFrac: 0.92 },  // tools       (bed 1)
+    { sectionTop: 0.298, shelfY: 0.418, btnCY: 0.283, labelFrac: 0.348, photoHFrac: 0.92 },  // tools       (bed 1)
     { sectionTop: 0.428, shelfY: 0.548, btnCY: 0.414, labelFrac: 0.412, photoHFrac: 0.85 },  // landscaping (bed 2)
     { sectionTop: 0.573, shelfY: 0.693, btnCY: 0.559, labelFrac: 0.528, photoHFrac: 0.92 },  // decor       (bed 3)
     { sectionTop: 0.718, shelfY: 0.838, btnCY: 0.705, labelFrac: 0.674, photoHFrac: 0.92 },  // plants      (bed 4)
