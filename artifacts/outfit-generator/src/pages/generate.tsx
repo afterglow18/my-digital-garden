@@ -33,10 +33,10 @@ const LM = {
   doorL: 0.03,
   doorR: 0.97,
   rows: [
-    { sectionTop: 0.290, shelfY: 0.410, btnCY: 0.275, labelFrac: 0.340, photoHFrac: 0.92 },  // tools       (bed 1)
-    { sectionTop: 0.421, shelfY: 0.541, btnCY: 0.407, labelFrac: 0.412, photoHFrac: 0.85 },  // landscaping (bed 2)
-    { sectionTop: 0.580, shelfY: 0.700, btnCY: 0.566, labelFrac: 0.535, photoHFrac: 0.92 },  // decor       (bed 3)
-    { sectionTop: 0.718, shelfY: 0.838, btnCY: 0.705, labelFrac: 0.674, photoHFrac: 0.92 },  // plants      (bed 4)
+    { sectionTop: 0.302, shelfY: 0.422, btnCY: 0.287, labelFrac: null,  photoHFrac: 0.92 },  // tools       (bed 1)
+    { sectionTop: 0.433, shelfY: 0.553, btnCY: 0.419, labelFrac: 0.427, photoHFrac: 0.85 },  // landscaping (bed 2)
+    { sectionTop: 0.572, shelfY: 0.692, btnCY: 0.558, labelFrac: 0.559, photoHFrac: 0.92 },  // decor       (bed 3)
+    { sectionTop: 0.710, shelfY: 0.830, btnCY: 0.697, labelFrac: 0.698, photoHFrac: 0.92 },  // plants      (bed 4)
   ],
   // Action bar: baked-in bottom bar with plant | Save | star icons
   barY:   0.873,
@@ -242,34 +242,8 @@ export default function GeneratePage() {
         height: "calc(100dvh - var(--bottom-nav-h, 90px))",
         overflow: "hidden",
         background: "#1a2a1a",
-        paddingTop: "env(safe-area-inset-top)",
       }}
     >
-      {/* ── Top heading ── */}
-      <div style={{
-        position: "absolute",
-        top: "calc(env(safe-area-inset-top, 0px) + 12px)",
-        left: 0,
-        width: "100%",
-        textAlign: "center",
-        zIndex: 50,
-        pointerEvents: "none",
-      }}>
-        <span style={{
-          fontFamily: "'Great Vibes', 'Brush Script MT', cursive",
-          fontSize: "clamp(32px, 9vw, 44px)",
-          color: "#ffffff",
-          textShadow:
-            "0 0 12px rgba(0,0,0,0.70), " +
-            "0 2px 8px rgba(0,0,0,0.60), " +
-            "0 4px 20px rgba(0,0,0,0.40)",
-          lineHeight: 1,
-          display: "inline-block",
-        }}>
-          My Digital Garden
-        </span>
-      </div>
-
 
       {/* ── Background image ── */}
       <img
