@@ -311,10 +311,11 @@ export default function WardrobePage() {
                     transform: "translateY(-50%)",
                     zIndex: 23,
                     textAlign: "center",
-                    background: "none",
+                    background: "rgba(85,107,47,0.52)",
                     border: "none",
                     cursor: "pointer",
-                    padding: 0,
+                    padding: "4px 0",
+                    borderRadius: 6,
                   }}
                 >
                   <span style={{

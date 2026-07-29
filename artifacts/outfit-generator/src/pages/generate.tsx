@@ -320,6 +320,9 @@ export default function GeneratePage() {
                     zIndex: 12,
                     textAlign: "center",
                     pointerEvents: "none",
+                    background: "rgba(85,107,47,0.52)",
+                    padding: "4px 0",
+                    borderRadius: 6,
                   }}>
                     <span style={{
                       fontSize: Math.max(9, pH(ir, 0.013)),
