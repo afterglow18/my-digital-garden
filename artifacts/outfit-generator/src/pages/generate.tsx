@@ -34,7 +34,7 @@ const LM = {
   doorR: 0.97,
   rows: [
     { sectionTop: 0.290, shelfY: 0.410, btnCY: 0.275, labelFrac: 0.340, photoHFrac: 0.92 },  // tools       (bed 1)
-    { sectionTop: 0.414, shelfY: 0.534, btnCY: 0.400, labelFrac: 0.398, photoHFrac: 0.85 },  // landscaping (bed 2)
+    { sectionTop: 0.421, shelfY: 0.541, btnCY: 0.407, labelFrac: 0.405, photoHFrac: 0.85 },  // landscaping (bed 2)
     { sectionTop: 0.580, shelfY: 0.700, btnCY: 0.566, labelFrac: 0.535, photoHFrac: 0.92 },  // decor       (bed 3)
     { sectionTop: 0.718, shelfY: 0.838, btnCY: 0.705, labelFrac: 0.674, photoHFrac: 0.92 },  // plants      (bed 4)
   ],
