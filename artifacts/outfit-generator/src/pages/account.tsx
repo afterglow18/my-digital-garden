@@ -44,7 +44,7 @@ function Card({
   );
 }
 
-// ─── Big yellow action button ─────────────────────────────────────────────────
+// ─── Big green action button ──────────────────────────────────────────────────
 
 function YellowButton({
   onClick,
@@ -63,7 +63,7 @@ function YellowButton({
       disabled={!!pending}
       className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl
                  border-[3px] border-black font-display font-bold text-sm uppercase
-                 tracking-tight bg-primary text-black
+                 tracking-tight bg-[#243B24] text-white
                  active:translate-x-0.5 active:translate-y-0.5 transition-all
                  disabled:opacity-50 disabled:cursor-not-allowed"
     >
