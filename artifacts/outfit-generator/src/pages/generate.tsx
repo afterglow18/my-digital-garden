@@ -349,10 +349,11 @@ export default function GeneratePage() {
                   }}>
                     <span style={{
                       fontSize: Math.max(9, pH(ir, 0.013)),
-                      fontWeight: 800,
+                      fontWeight: 900,
                       letterSpacing: "0.08em",
                       color: "#ffffff",
                       fontFamily: "var(--font-display)",
+                      fontVariant: "small-caps",
                       textShadow: "0 1px 3px rgba(0,0,0,0.60), 0 2px 10px rgba(0,0,0,0.35)",
                       background: "rgba(85,107,47,0.55)",
                       padding: "0 8px",
