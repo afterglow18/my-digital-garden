@@ -264,10 +264,10 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
     >
       {/* Header */}
       <div
-        className="flex items-center justify-between px-4 bg-white border-b-2 border-black flex-shrink-0"
+        className="flex items-center justify-between px-4 bg-[#f9f4ee] border-b border-[#C8B870]/30 flex-shrink-0"
         style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "0.75rem" }}
       >
-        <h2 className="font-display font-bold text-xl uppercase tracking-tight flex items-center gap-2">
+        <h2 className="font-display font-bold text-xl uppercase tracking-tight flex items-center gap-2 text-[#5C4A1E]">
           Add {label}
           {queueTotal > 1 && (
             <span className="text-sm font-normal opacity-40 normal-case tracking-normal">
@@ -278,9 +278,8 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
         {phase === "pick" && (
           <button
             onClick={handleClose}
-            className="w-9 h-9 border-2 border-black rounded-full flex items-center justify-center
-                       bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
-                       active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all"
+            className="w-9 h-9 border border-[#C8B870]/50 rounded-full flex items-center justify-center
+                       bg-[#faf8f2] text-[#8B6914] hover:bg-[#f0e8d0] transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -306,13 +305,12 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
               <button
                 onClick={() => cameraInputRef.current?.click()}
                 className="flex-1 flex flex-col items-center justify-center gap-3 py-8
-                           border-4 border-black rounded-2xl bg-primary
-                           shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]
-                           active:translate-x-1 active:translate-y-1 active:shadow-none
+                           border border-[#C8B870]/45 rounded-2xl bg-[#faf8f2]
+                           shadow-sm hover:bg-[#f4eedf] active:scale-[0.98]
                            transition-all"
               >
                 <span className="text-4xl leading-none">📷</span>
-                <span className="font-display font-bold text-base uppercase tracking-tight text-center leading-tight">
+                <span className="font-display font-bold text-base uppercase tracking-tight text-center leading-tight text-[#5C4A1E]">
                   Take<br />Photo
                 </span>
               </button>
@@ -321,41 +319,38 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
               <button
                 onClick={() => galleryInputRef.current?.click()}
                 className="flex-1 flex flex-col items-center justify-center gap-3 py-8
-                           border-4 border-black rounded-2xl bg-white
-                           shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]
-                           active:translate-x-1 active:translate-y-1 active:shadow-none
+                           border border-[#C8B870]/45 rounded-2xl bg-[#faf8f2]
+                           shadow-sm hover:bg-[#f4eedf] active:scale-[0.98]
                            transition-all"
               >
                 <span className="text-4xl leading-none">🖼️</span>
-                <span className="font-display font-bold text-base uppercase tracking-tight text-center leading-tight">
+                <span className="font-display font-bold text-base uppercase tracking-tight text-center leading-tight text-[#5C4A1E]">
                   Upload<br />Photo
                 </span>
               </button>
             </div>
 
             {CATEGORY_EXAMPLES[category] && (
-              <div className="border-2 border-black rounded-2xl bg-white p-4
-                              shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-                <p className="font-display font-bold text-sm uppercase tracking-tight mb-2 flex items-center gap-2">
+              <div className="border border-[#C8B870]/45 rounded-2xl bg-[#faf8f2] p-4">
+                <p className="font-display font-bold text-sm uppercase tracking-tight mb-2 flex items-center gap-2 text-[#5C4A1E]">
                   <span>{CATEGORY_EXAMPLES[category].emoji}</span> WHAT TO ADD
                 </p>
-                <p className="text-sm text-black/70 leading-snug">
+                <p className="text-sm text-[#7A6235]/80 leading-snug">
                   {CATEGORY_EXAMPLES[category].items.join(", ")}
                 </p>
               </div>
             )}
 
-            <div className="border-2 border-black rounded-2xl bg-white p-4
-                            shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-              <p className="font-display font-bold text-sm uppercase tracking-tight mb-3 flex items-center gap-2">
+            <div className="border border-[#C8B870]/45 rounded-2xl bg-[#faf8f2] p-4">
+              <p className="font-display font-bold text-sm uppercase tracking-tight mb-3 flex items-center gap-2 text-[#5C4A1E]">
                 <span>📸</span> PHOTO TIPS
               </p>
               <ul className="flex flex-col gap-2">
                 {PHOTO_TIPS.map((tip) => (
-                  <li key={tip} className="flex items-start gap-2 text-sm text-black/70 leading-snug">
-                    <span className="mt-0.5 w-4 h-4 border-2 border-black rounded-sm bg-primary
+                  <li key={tip} className="flex items-start gap-2 text-sm text-[#7A6235]/80 leading-snug">
+                    <span className="mt-0.5 w-4 h-4 border border-[#C8B870]/60 rounded-sm bg-[#E8D4B0]
                                      flex items-center justify-center flex-shrink-0">
-                      <Check className="w-2.5 h-2.5" strokeWidth={3} />
+                      <Check className="w-2.5 h-2.5 text-[#8B6914]" strokeWidth={3} />
                     </span>
                     {tip}
                   </li>
@@ -368,14 +363,13 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
         {/* ── ENCODING — full-screen spinner shown immediately after photo is picked ── */}
         {phase === "encoding" && (
           <div className="flex-1 flex flex-col items-center justify-center gap-5 p-6">
-            <div className="w-28 h-28 border-4 border-black rounded-3xl bg-white
-                            flex items-center justify-center
-                            shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
-              <Loader2 className="w-12 h-12 animate-spin" strokeWidth={1.5} />
+            <div className="w-28 h-28 border border-[#C8B870]/45 rounded-3xl bg-[#faf8f2]
+                            flex items-center justify-center shadow-sm">
+              <Loader2 className="w-12 h-12 animate-spin text-[#B8894E]" strokeWidth={1.5} />
             </div>
             <div className="text-center">
-              <p className="font-display font-bold text-2xl uppercase tracking-tight">Processing…</p>
-              <p className="text-sm text-muted-foreground mt-1">Getting your photo ready.</p>
+              <p className="font-display font-bold text-2xl uppercase tracking-tight text-[#5C4A1E]">Processing…</p>
+              <p className="text-sm text-[#7A6235]/70 mt-1">Getting your photo ready.</p>
             </div>
           </div>
         )}
@@ -401,8 +395,8 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
                 className="flex-1 flex flex-col overflow-hidden rounded-2xl transition-all"
                 style={{
                   border: selected === "original"
-                    ? "4px solid black"
-                    : "4px solid rgba(0,0,0,0.2)",
+                    ? "2px solid #B8894E"
+                    : "2px solid rgba(200,184,112,0.3)",
                   background: "none",
                   padding: 0,
                 }}
@@ -417,7 +411,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
                     />
                   )}
                   {selected === "original" && (
-                    <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-black
+                    <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-[#B8894E]
                                     flex items-center justify-center">
                       <Check size={12} color="white" strokeWidth={3} />
                     </div>
@@ -435,8 +429,8 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
                 className="flex-1 flex flex-col overflow-hidden rounded-2xl transition-all"
                 style={{
                   border: selected === "cleaned" && cleanedUrl
-                    ? "4px solid black"
-                    : "4px solid rgba(0,0,0,0.2)",
+                    ? "2px solid #B8894E"
+                    : "2px solid rgba(200,184,112,0.3)",
                   background: "none",
                   padding: 0,
                 }}
@@ -458,7 +452,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
                         style={{ maxHeight: 176 }}
                       />
                       {selected === "cleaned" && (
-                        <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-black
+                        <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-[#B8894E]
                                         flex items-center justify-center">
                           <Check size={12} color="white" strokeWidth={3} />
                         </div>
@@ -487,9 +481,8 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
               <button
                 onClick={() => setPhase("pick")}
                 className="flex items-center justify-center gap-2 px-4 py-3
-                           border-2 border-black rounded-xl bg-white font-display font-bold text-sm uppercase
-                           shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
-                           active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+                           border border-[#C8B870]/45 rounded-xl bg-[#faf8f2] font-display font-bold text-sm uppercase
+                           text-[#5C4A1E] hover:bg-[#f0e8d0] active:scale-[0.98] transition-all"
               >
                 <RotateCcw className="w-4 h-4" />
                 Retake
@@ -498,15 +491,15 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
                 onClick={handleSave}
                 disabled={selected === "cleaned" && !cleanedUrl}
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-3
-                           border-2 border-black rounded-xl bg-primary font-display font-bold text-sm uppercase
-                           shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
-                           active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all
-                           disabled:opacity-50 disabled:cursor-not-allowed
-                           disabled:active:translate-x-0 disabled:active:translate-y-0
-                           disabled:active:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                           rounded-xl font-display font-bold text-sm uppercase text-[#3D2800]
+                           active:scale-[0.98] transition-all
+                           disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  background: "linear-gradient(135deg, #E8D4B0, #B8894E)",
+                }}
               >
                 <Check className="w-4 h-4" />
-                {selected === "cleaned" && !cleanedUrl ? "Processing…" : "Save to Closet"}
+                {selected === "cleaned" && !cleanedUrl ? "Processing…" : "Save to Garden"}
               </button>
             </div>
           </div>
@@ -515,14 +508,13 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
         {/* ── UPLOADING ── */}
         {phase === "uploading" && (
           <div className="flex-1 flex flex-col items-center justify-center gap-5 p-6">
-            <div className="w-28 h-28 border-4 border-black rounded-3xl bg-white
-                            flex items-center justify-center
-                            shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
-              <Loader2 className="w-12 h-12 animate-spin" strokeWidth={1.5} />
+            <div className="w-28 h-28 border border-[#C8B870]/45 rounded-3xl bg-[#faf8f2]
+                            flex items-center justify-center shadow-sm">
+              <Loader2 className="w-12 h-12 animate-spin text-[#B8894E]" strokeWidth={1.5} />
             </div>
             <div className="text-center">
-              <p className="font-display font-bold text-2xl uppercase tracking-tight">Saving…</p>
-              <p className="text-sm text-muted-foreground mt-1">Adding to your garden.</p>
+              <p className="font-display font-bold text-2xl uppercase tracking-tight text-[#5C4A1E]">Saving…</p>
+              <p className="text-sm text-[#7A6235]/70 mt-1">Adding to your garden.</p>
             </div>
           </div>
         )}
