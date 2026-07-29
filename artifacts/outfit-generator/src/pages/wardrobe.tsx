@@ -325,9 +325,10 @@ export default function WardrobePage() {
                     fontFamily: "var(--font-display)",
                     textShadow: "0 1px 3px rgba(0,0,0,0.60), 0 2px 10px rgba(0,0,0,0.35)",
                     background: "rgba(85,107,47,0.55)",
-                    padding: "3px 10px",
-                    borderRadius: 5,
+                    padding: "0 8px",
+                    borderRadius: 4,
                     display: "inline-block",
+                    lineHeight: 1,
                   }}>
                     {label}
                   </span>
