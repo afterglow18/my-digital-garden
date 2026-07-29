@@ -606,7 +606,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
           <div className="grid grid-cols-2 gap-3">
             <Field label="Purchase Price" value={form.purchasePrice}
               onChange={patch("purchasePrice") as (v: string) => void} placeholder="$49.99" />
-            <Field label="Purchase Date"  value={form.purchaseDate}
+            <Field label="Date"  value={form.purchaseDate}
               onChange={patch("purchaseDate") as (v: string) => void} type="date" />
           </div>
 
