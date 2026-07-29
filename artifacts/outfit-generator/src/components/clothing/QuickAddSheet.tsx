@@ -30,7 +30,7 @@ const CATEGORY_LABELS: Record<Category, string> = {
   plants:      "🌱 Plants",
 };
 
-type Phase = "pick" | "encoding" | "preview" | "uploading";
+type Phase = "pick" | "encoding" | "preview" | "uploading" | "success";
 
 // ── Helpers (outside component to avoid re-creation) ───────────────────────────
 
@@ -232,7 +232,9 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
         setSelected("original");
         handleFile(next);
       } else {
-        handleClose();
+        // Show success confirmation briefly before closing
+        setPhase("success");
+        setTimeout(() => handleClose(), 1500);
       }
     } catch (err) {
       setErrorMsg(`Save failed: ${err instanceof Error ? err.message : String(err)}`);
@@ -516,6 +518,20 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
             <div className="text-center">
               <p className="font-display font-bold text-2xl uppercase tracking-tight text-[#5C4A1E]">Saving…</p>
               <p className="text-sm text-[#7A6235]/70 mt-1">Adding to your garden.</p>
+            </div>
+          </div>
+        )}
+
+        {/* ── SUCCESS ── */}
+        {phase === "success" && (
+          <div className="flex-1 flex flex-col items-center justify-center gap-5 p-6">
+            <div className="w-28 h-28 border border-[#8fba8f]/60 rounded-3xl bg-[#f2faf2]
+                            flex items-center justify-center shadow-sm">
+              <Check className="w-12 h-12 text-[#4a9a4a]" strokeWidth={2} />
+            </div>
+            <div className="text-center">
+              <p className="font-display font-bold text-2xl uppercase tracking-tight text-[#3a6e3a]">Added!</p>
+              <p className="text-sm text-[#4a7a4a]/80 mt-1">Added to your garden.</p>
             </div>
           </div>
         )}

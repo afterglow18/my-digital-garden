@@ -245,6 +245,32 @@ export default function GeneratePage() {
         paddingTop: "env(safe-area-inset-top)",
       }}
     >
+      {/* ── Top heading ── */}
+      <div style={{
+        position: "absolute",
+        top: "calc(env(safe-area-inset-top, 0px) + 12px)",
+        left: 0,
+        width: "100%",
+        textAlign: "center",
+        zIndex: 50,
+        pointerEvents: "none",
+      }}>
+        <span style={{
+          fontFamily: "'Great Vibes', 'Brush Script MT', cursive",
+          fontSize: "clamp(32px, 9vw, 44px)",
+          color: "#ffffff",
+          textShadow:
+            "0 0 12px rgba(0,0,0,0.70), " +
+            "0 2px 8px rgba(0,0,0,0.60), " +
+            "0 4px 20px rgba(0,0,0,0.40)",
+          lineHeight: 1,
+          display: "inline-block",
+        }}>
+          My Digital Garden
+        </span>
+      </div>
+
+
       {/* ── Background image ── */}
       <img
         src="/garden-bg.png"
