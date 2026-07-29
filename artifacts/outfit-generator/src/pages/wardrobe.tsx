@@ -224,6 +224,32 @@ export default function WardrobePage() {
         }}
       />
 
+      {/* ── Cursive heading ── */}
+      <div style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: "100%",
+        paddingTop: "max(env(safe-area-inset-top), 14px)",
+        textAlign: "center",
+        zIndex: 30,
+        pointerEvents: "none",
+      }}>
+        <span style={{
+          fontFamily: "'Great Vibes', cursive",
+          fontSize: 38,
+          color: "#ffffff",
+          textShadow:
+            "0 1px 3px rgba(0,0,0,0.9), " +
+            "0 2px 10px rgba(0,0,0,0.7), " +
+            "0 4px 24px rgba(0,0,0,0.5)",
+          lineHeight: 1.1,
+          display: "inline-block",
+        }}>
+          My Digital Garden
+        </span>
+      </div>
+
       {ready && (
         <>
           {/* ── Item-count badge (free tier) ── */}

@@ -35,8 +35,8 @@ const LM = {
   rows: [
     { sectionTop: 0.283, shelfY: 0.403, btnCY: 0.268, labelFrac: 0.333, photoHFrac: 0.62 },  // tools       (bed 1)
     { sectionTop: 0.428, shelfY: 0.548, btnCY: 0.414, labelFrac: 0.412, photoHFrac: 0.78 },  // landscaping (bed 2)
-    { sectionTop: 0.573, shelfY: 0.693, btnCY: 0.559, labelFrac: 0.538, photoHFrac: 0.78 },  // decor       (bed 3)
-    { sectionTop: 0.718, shelfY: 0.838, btnCY: 0.705, labelFrac: 0.684, photoHFrac: 0.78 },  // plants      (bed 4)
+    { sectionTop: 0.573, shelfY: 0.693, btnCY: 0.559, labelFrac: 0.528, photoHFrac: 0.78 },  // decor       (bed 3)
+    { sectionTop: 0.718, shelfY: 0.838, btnCY: 0.705, labelFrac: 0.674, photoHFrac: 0.78 },  // plants      (bed 4)
   ],
   // Action bar: baked-in bottom bar with plant | Save | star icons
   barY:   0.873,
@@ -245,32 +245,6 @@ export default function GeneratePage() {
         paddingTop: "env(safe-area-inset-top)",
       }}
     >
-      {/* ── Top heading — fixed so overflow:hidden ancestors can't clip it ── */}
-      <div style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100%",
-        paddingTop: "max(env(safe-area-inset-top), 14px)",
-        textAlign: "center",
-        zIndex: 50,
-        pointerEvents: "none",
-      }}>
-        <span style={{
-          fontFamily: "'Great Vibes', cursive",
-          fontSize: 38,
-          color: "#ffffff",
-          textShadow:
-            "0 1px 3px rgba(0,0,0,0.9), " +
-            "0 2px 10px rgba(0,0,0,0.7), " +
-            "0 4px 24px rgba(0,0,0,0.5)",
-          lineHeight: 1.1,
-          display: "inline-block",
-        }}>
-          My Digital Garden
-        </span>
-      </div>
-
       {/* ── Background image ── */}
       <img
         src="/garden-bg.png"
@@ -287,6 +261,32 @@ export default function GeneratePage() {
           zIndex: 0,
         }}
       />
+
+      {/* ── Cursive heading ── */}
+      <div style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: "100%",
+        paddingTop: "max(env(safe-area-inset-top), 14px)",
+        textAlign: "center",
+        zIndex: 30,
+        pointerEvents: "none",
+      }}>
+        <span style={{
+          fontFamily: "'Great Vibes', cursive",
+          fontSize: 38,
+          color: "#ffffff",
+          textShadow:
+            "0 1px 3px rgba(0,0,0,0.9), " +
+            "0 2px 10px rgba(0,0,0,0.7), " +
+            "0 4px 24px rgba(0,0,0,0.5)",
+          lineHeight: 1.1,
+          display: "inline-block",
+        }}>
+          My Digital Garden
+        </span>
+      </div>
 
       {ready && (() => {
         const carLeft = pX(ir, LM.doorL);
