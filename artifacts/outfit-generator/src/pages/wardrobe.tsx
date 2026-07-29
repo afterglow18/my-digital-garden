@@ -311,11 +311,10 @@ export default function WardrobePage() {
                     transform: "translateY(-50%)",
                     zIndex: 23,
                     textAlign: "center",
-                    background: "rgba(85,107,47,0.52)",
+                    background: "none",
                     border: "none",
                     cursor: "pointer",
-                    padding: "4px 0",
-                    borderRadius: 6,
+                    padding: 0,
                   }}
                 >
                   <span style={{
@@ -325,6 +324,10 @@ export default function WardrobePage() {
                     color: "#ffffff",
                     fontFamily: "var(--font-display)",
                     textShadow: "0 1px 3px rgba(0,0,0,0.60), 0 2px 10px rgba(0,0,0,0.35)",
+                    background: "rgba(85,107,47,0.55)",
+                    padding: "3px 10px",
+                    borderRadius: 5,
+                    display: "inline-block",
                   }}>
                     {label}
                   </span>

@@ -346,9 +346,6 @@ export default function GeneratePage() {
                     zIndex: 12,
                     textAlign: "center",
                     pointerEvents: "none",
-                    background: "rgba(85,107,47,0.52)",
-                    padding: "4px 0",
-                    borderRadius: 6,
                   }}>
                     <span style={{
                       fontSize: Math.max(9, pH(ir, 0.013)),
@@ -357,6 +354,10 @@ export default function GeneratePage() {
                       color: "#ffffff",
                       fontFamily: "var(--font-display)",
                       textShadow: "0 1px 3px rgba(0,0,0,0.60), 0 2px 10px rgba(0,0,0,0.35)",
+                      background: "rgba(85,107,47,0.55)",
+                      padding: "3px 10px",
+                      borderRadius: 5,
+                      display: "inline-block",
                     }}>
                       {label}
                     </span>
