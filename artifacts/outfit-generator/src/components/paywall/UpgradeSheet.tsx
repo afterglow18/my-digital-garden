@@ -25,9 +25,9 @@ interface Props {
 // ── Copy ──────────────────────────────────────────────────────────────────────
 
 const FEATURES = [
-  "Unlimited clothing items",
-  "Unlimited saved outfits",
-  "Save your entire wardrobe",
+  "Unlimited garden items",
+  "Unlimited saved gardens",
+  "Catalogue your entire garden",
   "One-time payment options",
   "Choose monthly, yearly or lifetime!",
 ] as const;
@@ -205,7 +205,7 @@ export function UpgradeSheet({ reason, onClose }: Props) {
               Unlimited digital gardens
             </p>
             <p className="text-white/60 text-xs font-medium mt-1 leading-snug">
-              Your entire wardrobe, beautifully packed — forever.
+              Your entire garden, beautifully catalogued — forever.
             </p>
           </div>
         </div>
