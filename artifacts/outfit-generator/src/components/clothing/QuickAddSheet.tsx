@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { X, Loader2, Check, RotateCcw } from "lucide-react";
 import {
   useCreateClothingItem,
+  useUpdateClothingItem,
   getListClothingQueryKey,
   getWardrobeStatsQueryKey,
 } from "@/hooks/useLocalDB";
@@ -30,7 +31,7 @@ const CATEGORY_LABELS: Record<Category, string> = {
   plants:      "🌱 Plants",
 };
 
-type Phase = "pick" | "encoding" | "preview" | "uploading" | "success";
+type Phase = "pick" | "encoding" | "preview" | "uploading" | "naming" | "success";
 
 // ── Helpers (outside component to avoid re-creation) ───────────────────────────
 
@@ -103,6 +104,13 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
   const [bgFailed,     setBgFailed]     = useState(false);
   const [selected,     setSelected]     = useState<"original" | "cleaned">("original");
 
+  // Naming phase state
+  const [createdItemId,  setCreatedItemId]  = useState<number | null>(null);
+  const [createdItemObj, setCreatedItemObj] = useState<import("@/lib/db").ClothingItem | null>(null);
+  const [nameInput,      setNameInput]      = useState("");
+  const [nameError,      setNameError]      = useState<string | null>(null);
+  const [nameSaving,     setNameSaving]     = useState(false);
+
   // Each photo pick bumps this counter. Every async step checks it before writing state —
   // prevents a slow first photo from clobbering a fast second one.
   const bgGenRef = useRef(0);
@@ -116,6 +124,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const createItem  = useCreateClothingItem();
+  const updateItem  = useUpdateClothingItem();
   const queryClient = useQueryClient();
 
   // ── Reset ──────────────────────────────────────────────────────────────────
@@ -133,6 +142,11 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
     fileQueueRef.current = [];
     setQueuePos(0);
     setQueueTotal(0);
+    setCreatedItemId(null);
+    setCreatedItemObj(null);
+    setNameInput("");
+    setNameError(null);
+    setNameSaving(false);
     onOpenChange(false);
   }, [onOpenChange]);
 
@@ -200,14 +214,19 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
       const label    = CATEGORY_LABELS[category];
       const n        = existingCount + 1;
       const autoName = n === 1 ? label : `${label} ${n}`;
+
+      // Capture the created item so we can reference it after the promise resolves
+      let savedItem: import("@/lib/db").ClothingItem | null = null;
       await new Promise<void>((resolve, reject) => {
         createItem.mutate(
           { data: { name: autoName, category, imageObjectPath: path } },
           {
             onSuccess: (createdItem) => {
+              savedItem = createdItem;
               queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
               queryClient.invalidateQueries({ queryKey: getWardrobeStatsQueryKey() });
-              if (onCreated) onCreated(createdItem);
+              // onCreated is deferred to after the naming step so callers
+              // (e.g. WardrobePickerSheet) don't close the sheet prematurely
               resolve();
             },
             onError: reject,
@@ -232,15 +251,63 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
         setSelected("original");
         handleFile(next);
       } else {
-        // Show success confirmation briefly before closing
-        setPhase("success");
-        setTimeout(() => handleClose(), 1500);
+        // Show naming step so user can label the item before closing
+        const item = savedItem as import("@/lib/db").ClothingItem | null;
+        setCreatedItemId(item?.id ?? null);
+        setCreatedItemObj(item);
+        setNameInput(autoName);
+        setNameError(null);
+        setPhase("naming");
       }
     } catch (err) {
       setErrorMsg(`Save failed: ${err instanceof Error ? err.message : String(err)}`);
       setPhase("preview");
     }
-  }, [selected, cleanedBlob, originalBlob, handleClose, handleFile, category, existingCount, createItem, queryClient, onCreated]);
+  }, [selected, cleanedBlob, originalBlob, handleFile, category, existingCount, createItem, queryClient, onCreated]);
+
+  // ── Naming phase handlers ─────────────────────────────────────────────────
+  const handleNamingSkip = useCallback(() => {
+    // Fire onCreated with the auto-named item now that the sheet stays open
+    if (onCreated && createdItemObj) onCreated(createdItemObj);
+    setPhase("success");
+    setTimeout(() => handleClose(), 1500);
+  }, [handleClose, onCreated, createdItemObj]);
+
+  const handleNamingSave = useCallback(async () => {
+    const trimmed = nameInput.trim();
+    if (!trimmed) {
+      setNameError("Please enter a name, or tap Skip.");
+      return;
+    }
+    if (!createdItemId) {
+      handleNamingSkip();
+      return;
+    }
+    setNameSaving(true);
+    setNameError(null);
+    try {
+      await new Promise<void>((resolve, reject) => {
+        updateItem.mutate(
+          { id: createdItemId, data: { name: trimmed } },
+          {
+            onSuccess: () => {
+              queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
+              resolve();
+            },
+            onError: reject,
+          },
+        );
+      });
+      // Fire onCreated with the updated item name so consumers get the final value
+      if (onCreated && createdItemObj) onCreated({ ...createdItemObj, name: trimmed });
+      setPhase("success");
+      setTimeout(() => handleClose(), 1500);
+    } catch (err) {
+      setNameError(`Could not rename: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setNameSaving(false);
+    }
+  }, [nameInput, createdItemId, createdItemObj, updateItem, queryClient, onCreated, handleNamingSkip, handleClose]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
@@ -518,6 +585,74 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
             <div className="text-center">
               <p className="font-display font-bold text-2xl uppercase tracking-tight text-[#5C4A1E]">Saving…</p>
               <p className="text-sm text-[#7A6235]/70 mt-1">Adding to your garden.</p>
+            </div>
+          </div>
+        )}
+
+        {/* ── NAMING ── */}
+        {phase === "naming" && (
+          <div className="flex flex-col gap-5 p-5">
+            <div className="flex flex-col items-center gap-3 pt-4">
+              <div className="w-16 h-16 border border-[#C8B870]/45 rounded-2xl bg-[#faf8f2]
+                              flex items-center justify-center shadow-sm text-3xl">
+                {CATEGORY_LABELS[category].split(" ")[0]}
+              </div>
+              <div className="text-center">
+                <p className="font-display font-bold text-xl uppercase tracking-tight text-[#5C4A1E]">
+                  Name Your Item
+                </p>
+                <p className="text-sm text-[#7A6235]/70 mt-1">
+                  Give it a custom name, or skip to keep the auto-name.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <input
+                type="text"
+                value={nameInput}
+                onChange={(e) => { setNameInput(e.target.value); setNameError(null); }}
+                onKeyDown={(e) => { if (e.key === "Enter") handleNamingSave(); }}
+                maxLength={80}
+                autoFocus
+                placeholder="e.g. Favourite trowel"
+                className="w-full px-4 py-3 rounded-xl border border-[#C8B870]/50 bg-[#faf8f2]
+                           font-display text-base text-[#3D2800] placeholder:text-[#7A6235]/40
+                           focus:outline-none focus:border-[#B8894E] focus:ring-1 focus:ring-[#B8894E]/30
+                           transition-colors"
+              />
+              {nameError && (
+                <p className="text-xs text-amber-700 px-1">{nameError}</p>
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleNamingSkip}
+                disabled={nameSaving}
+                className="flex-1 flex items-center justify-center px-4 py-3
+                           border border-[#C8B870]/45 rounded-xl bg-[#faf8f2] font-display font-bold text-sm uppercase
+                           text-[#5C4A1E] hover:bg-[#f0e8d0] active:scale-[0.98] transition-all
+                           disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Skip
+              </button>
+              <button
+                onClick={handleNamingSave}
+                disabled={nameSaving || !nameInput.trim()}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3
+                           rounded-xl font-display font-bold text-sm uppercase text-[#3D2800]
+                           active:scale-[0.98] transition-all
+                           disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ background: "linear-gradient(135deg, #E8D4B0, #B8894E)" }}
+              >
+                {nameSaving ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Check className="w-4 h-4" />
+                )}
+                Save Name
+              </button>
             </div>
           </div>
         )}
