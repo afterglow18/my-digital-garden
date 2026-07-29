@@ -190,15 +190,19 @@ export function UpgradeSheet({ reason, onClose }: Props) {
         </div>
 
         {/* Features card */}
-        <div className="rounded-2xl border-[3px] border-black overflow-hidden" style={{ background: "#111" }}>
+        <div className="rounded-2xl border-[3px] border-[#1a3a1a] overflow-hidden" style={{
+          background: "#1e3a1e",
+          backgroundImage: `
+            repeating-linear-gradient(0deg,   transparent, transparent 18px, rgba(255,255,255,0.045) 18px, rgba(255,255,255,0.045) 20px),
+            repeating-linear-gradient(90deg,  transparent, transparent 18px, rgba(255,255,255,0.045) 18px, rgba(255,255,255,0.045) 20px),
+            repeating-linear-gradient(0deg,   transparent, transparent 58px, rgba(255,255,255,0.06)  58px, rgba(255,255,255,0.06)  62px),
+            repeating-linear-gradient(90deg,  transparent, transparent 58px, rgba(255,255,255,0.06)  58px, rgba(255,255,255,0.06)  62px)
+          `,
+        }}>
           <div className="px-4 py-4 flex flex-col gap-2">
             <p className="font-display font-bold uppercase text-[1.45rem] leading-[0.92] tracking-tight"
                style={{ color: "hsl(35 55% 82%)" }}>
               Unlimited digital gardens
-            </p>
-            <p className="font-display font-bold uppercase text-[1.45rem] leading-[0.92] tracking-tight"
-               style={{ color: "hsl(35 55% 82%)" }}>
-              Unlimited saved outfits
             </p>
             <p className="text-white/60 text-xs font-medium mt-1 leading-snug">
               Your entire wardrobe, beautifully packed — forever.

@@ -58,10 +58,10 @@ const LM = {
   doorR: 0.97,   // right edge of beds
 
   rows: [
-    { sectionTop: 0.295, shelfY: 0.415, btnCY: 0.280, labelFrac: null  },  // tools       (bed 1) — keep as-is
-    { sectionTop: 0.440, shelfY: 0.560, btnCY: 0.426, labelFrac: 0.427 },  // landscaping (bed 2) ↓ a little
-    { sectionTop: 0.565, shelfY: 0.685, btnCY: 0.551, labelFrac: 0.552 },  // decor       (bed 3) photo row ↑↑
-    { sectionTop: 0.710, shelfY: 0.830, btnCY: 0.697, labelFrac: 0.698 },  // plants      (bed 4) photo row ↑↑
+    { sectionTop: 0.295, shelfY: 0.415, btnCY: 0.280, labelFrac: null,  photoHFrac: 0.78 },  // tools       (bed 1)
+    { sectionTop: 0.440, shelfY: 0.560, btnCY: 0.426, labelFrac: 0.427, photoHFrac: 0.70 },  // landscaping (bed 2) — shorter
+    { sectionTop: 0.565, shelfY: 0.685, btnCY: 0.551, labelFrac: 0.552, photoHFrac: 0.78 },  // decor       (bed 3)
+    { sectionTop: 0.710, shelfY: 0.830, btnCY: 0.697, labelFrac: 0.698, photoHFrac: 0.78 },  // plants      (bed 4)
   ],
 
   saveAreaY: 0.873,
@@ -348,7 +348,7 @@ export default function WardrobePage() {
                       items={items}
                       onCenteredItem={setCentredHandlers[key]}
                       onItemTap={handleItemTap}
-                      maxPhotoH={uniformPhotoH}
+                      maxPhotoH={Math.max(0, sectionHeights[rowIdx] * lm.photoHFrac - 4)}
                     />
                   </div>
                 )}
