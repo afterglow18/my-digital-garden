@@ -8,7 +8,7 @@
  */
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Download, Upload, RefreshCw, Loader2, Check, AlertTriangle, ShieldCheck } from "lucide-react";
+import { Download, Upload, RefreshCw, Loader2, Check, AlertTriangle } from "lucide-react";
 import { exportBackup, importBackup, pickBackupFile } from "@/lib/backup";
 import { useSubscription } from "@/lib/revenuecat";
 import { useQueryClient } from "@tanstack/react-query";
@@ -18,8 +18,6 @@ import {
   getListOutfitsQueryKey,
   getWardrobeStatsQueryKey,
 } from "@/hooks/useLocalDB";
-import { Capacitor } from "@capacitor/core";
-import { useBiometricLock } from "@/context/BiometricLockContext";
 
 // ─── Card shell ───────────────────────────────────────────────────────────────
 
@@ -88,18 +86,6 @@ export default function AccountPage() {
   } = useSubscription();
 
   const [showUpgrade, setShowUpgrade] = useState(false);
-
-  const { isLockEnabled, setLockEnabled } = useBiometricLock();
-  const [lockPending, setLockPending] = useState(false);
-  // Show the toggle on any native platform — no biometry check on mount.
-  // The actual Face ID / Touch ID dialog only fires when the user taps the toggle.
-  const showBiometricToggle = Capacitor.isNativePlatform();
-
-  const handleLockToggle = async () => {
-    setLockPending(true);
-    await setLockEnabled(!isLockEnabled);
-    setLockPending(false);
-  };
 
   const [exportPending, setExportPending] = useState(false);
   const [importPending, setImportPending] = useState(false);
@@ -226,49 +212,7 @@ export default function AccountPage() {
           </button>
         </Card>
 
-        {/* ── 2. PRIVACY & SECURITY ───────────────────────────────────────── */}
-        {showBiometricToggle && (
-          <Card emoji="🔒" title="Privacy & Security">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3 min-w-0">
-                <ShieldCheck className="w-5 h-5 shrink-0 text-black/60" />
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-black leading-tight">
-                    Lock with Face ID / Touch ID
-                  </p>
-                  <p className="text-xs text-black/45 leading-snug mt-0.5">
-                    Require biometrics when opening the app or returning from background.
-                  </p>
-                </div>
-              </div>
-
-              {/* Toggle */}
-              <button
-                role="switch"
-                aria-checked={isLockEnabled}
-                onClick={handleLockToggle}
-                disabled={lockPending}
-                className="shrink-0 relative w-12 h-7 rounded-full border-[2.5px] border-black
-                           transition-all disabled:opacity-50"
-                style={{
-                  background: isLockEnabled ? "#1a0800" : "#D9CFC3",
-                  boxShadow: "2px 2px 0px 0px rgba(0,0,0,1)",
-                }}
-              >
-                <span
-                  className="absolute top-0.5 w-5 h-5 rounded-full border-[2px] border-black
-                               transition-all duration-200"
-                  style={{
-                    background: "#F5F0E8",
-                    left: isLockEnabled ? "calc(100% - 1.375rem)" : "0.125rem",
-                  }}
-                />
-              </button>
-            </div>
-          </Card>
-        )}
-
-        {/* ── 3. BACKUP & RESTORE ─────────────────────────────────────────── */}
+        {/* ── 2. BACKUP & RESTORE ─────────────────────────────────────────── */}
         <Card emoji="💾" title="Backup & Restore">
           <p className="text-sm text-black/60 leading-snug">
             Export your garden to a file. Save it to iCloud Drive or Files to

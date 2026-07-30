@@ -10,7 +10,6 @@ import AccountPage from './pages/account';
 import WelcomePage from './pages/welcome';
 import { SubscriptionProvider, initializeRevenueCat } from '@/lib/revenuecat';
 import { queryClient } from '@/lib/queryClient';
-import { BiometricLockProvider } from '@/context/BiometricLockContext';
 import { migrateCategories } from '@/lib/localDB';
 
 // ── Initialise RevenueCat once at startup ────────────────────────────────────
@@ -84,9 +83,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <SubscriptionProvider>
-        <BiometricLockProvider>
-          <AppShell />
-        </BiometricLockProvider>
+        <AppShell />
       </SubscriptionProvider>
     </QueryClientProvider>
   );
