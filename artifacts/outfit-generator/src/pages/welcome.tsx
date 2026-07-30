@@ -1,19 +1,22 @@
 /**
- * WelcomePage — A wood picket fence door (double gate).
- * Each half-panel is built from individual picket boards with pointed tops,
- * two horizontal rails, and brass hinge hardware. Tapping "Enter Garden"
- * swings both panels open on their outer hinges, revealing the hero garden
- * behind, then fades to the wardrobe page.
+ * WelcomePage — Three-phase splash sequence.
  *
- * Phases: IDLE → SWINGING → OPEN → FADING → onEnter()
+ * Phase 1 "hero"    — full-screen hero image + branding, auto-advances after 2.5 s.
+ * Phase 2 "idle"    — fence doors fade in; same branding + "Enter Garden" button.
+ * Phase 3 enter     — fence swings open → fades to dark → onEnter().
+ *
+ * Sequence: hero → idle → swinging → open → fading → onEnter()
+ *
+ * Session behaviour: shown once per cold launch; App.tsx uses sessionStorage so
+ * returning from the background skips straight to the main interface.
  */
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 
 interface Props { onEnter: () => void; }
 
-type Phase = "idle" | "swinging" | "open" | "fading";
+type Phase = "hero" | "idle" | "swinging" | "open" | "fading";
 
 const PICKETS_PER_PANEL = 11;
 const RAIL_FRACS = [0.21, 0.64]; // 0–1 fraction of panel height for each rail
@@ -147,8 +150,17 @@ function FenceDoorPanel({ side }: { side: "left" | "right" }) {
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function WelcomePage({ onEnter }: Props) {
-  const [phase, setPhase] = useState<Phase>("idle");
-  const calledRef = useRef(false);
+  // Start in "hero" — auto-advances to "idle" after 2.5 s
+  const [phase, setPhase] = useState<Phase>("hero");
+  const calledRef    = useRef(false);
+  const heroTimer    = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    heroTimer.current = setTimeout(() => {
+      setPhase((p) => (p === "hero" ? "idle" : p));
+    }, 2500);
+    return () => { if (heroTimer.current) clearTimeout(heroTimer.current); };
+  }, []);
 
   const finish = useCallback(() => {
     if (calledRef.current) return;
@@ -156,6 +168,7 @@ export default function WelcomePage({ onEnter }: Props) {
     onEnter();
   }, [onEnter]);
 
+  // Phase 3 — tap "Enter Garden": swing → open → fade → onEnter()
   const handleEnter = () => {
     if (phase !== "idle") return;
     setPhase("swinging");
@@ -168,12 +181,14 @@ export default function WelcomePage({ onEnter }: Props) {
     }, 920);
   };
 
-  const isOpen = phase !== "idle";
+  const isOpen  = phase === "swinging" || phase === "open" || phase === "fading";
+  const showUI  = phase === "hero" || phase === "idle";   // title + "Welcome to" visible
+  const showBtn = phase === "idle";                        // button only after fence appears
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 200, overflow: "hidden" }}>
 
-      {/* ── Layer 1: Hero garden, revealed as the doors swing open ── */}
+      {/* ── Layer 1: Hero garden image — always behind everything ── */}
       <img
         src="/garden-welcome-bg.png"
         alt=""
@@ -186,13 +201,29 @@ export default function WelcomePage({ onEnter }: Props) {
         }}
       />
 
-      {/* ── Layer 2: Fence-door panels — 3D hinge swing ── */}
+      {/* ── Layer 1b: Permanent dark gradient over lower portion ──
+           Ensures text is readable in both hero and fence phases.       */}
       <div style={{
-        position: "absolute", inset: 0,
-        perspective: "950px",
-        perspectiveOrigin: "50% 46%",
-      }}>
+        position: "absolute",
+        bottom: 0, left: 0, right: 0,
+        height: "58%",
+        background:
+          "linear-gradient(to bottom, transparent, rgba(6,14,4,0.62) 42%, rgba(4,10,3,0.96) 100%)",
+        pointerEvents: "none",
+        zIndex: 1,
+      }} />
 
+      {/* ── Layer 2: Fence-door panels — hidden in hero phase, fade in at idle ── */}
+      <motion.div
+        animate={{ opacity: phase === "hero" ? 0 : 1 }}
+        transition={{ duration: 0.65, ease: "easeInOut" }}
+        style={{
+          position: "absolute", inset: 0,
+          perspective: "950px",
+          perspectiveOrigin: "50% 46%",
+          zIndex: 2,
+        }}
+      >
         {/* Left panel — hinged on its left (outer) edge */}
         <motion.div
           animate={{ rotateY: isOpen ? -110 : 0 }}
@@ -206,7 +237,6 @@ export default function WelcomePage({ onEnter }: Props) {
             willChange: "transform",
           }}
         >
-          {/* Front face */}
           <div style={{ position: "absolute", inset: 0 }}>
             <FenceDoorPanel side="left" />
           </div>
@@ -232,11 +262,9 @@ export default function WelcomePage({ onEnter }: Props) {
             willChange: "transform",
           }}
         >
-          {/* Front face */}
           <div style={{ position: "absolute", inset: 0 }}>
             <FenceDoorPanel side="right" />
           </div>
-          {/* Back face */}
           <div style={{
             position: "absolute", inset: 0,
             background: "#1A2C0A",
@@ -244,12 +272,13 @@ export default function WelcomePage({ onEnter }: Props) {
             WebkitBackfaceVisibility: "hidden",
           }} />
         </motion.div>
-      </div>
+      </motion.div>
 
-      {/* ── Layer 3: Title + button (painted on the door, fades on tap) ── */}
+      {/* ── Layer 3: "Welcome to" + title + button ──
+           Visible in both hero and idle; button fades in only at idle.  */}
       <motion.div
-        animate={{ opacity: phase === "idle" ? 1 : 0, y: phase === "idle" ? 0 : 10 }}
-        transition={{ duration: 0.24 }}
+        animate={{ opacity: showUI ? 1 : 0, y: showUI ? 0 : 10 }}
+        transition={{ duration: 0.28 }}
         style={{
           position: "absolute",
           bottom: 0, left: 0, right: 0,
@@ -257,11 +286,26 @@ export default function WelcomePage({ onEnter }: Props) {
           flexDirection: "column",
           alignItems: "center",
           padding: "0 24px calc(env(safe-area-inset-bottom) + 96px)",
-          gap: 10,
-          pointerEvents: phase === "idle" ? "auto" : "none",
+          gap: 6,
+          pointerEvents: showUI ? "auto" : "none",
           zIndex: 10,
         }}
       >
+        {/* "Welcome to" */}
+        <div style={{
+          fontFamily: "var(--font-display, sans-serif)",
+          fontSize: 12,
+          fontWeight: 600,
+          letterSpacing: "0.26em",
+          textTransform: "uppercase" as const,
+          color: "rgba(240,235,216,0.68)",
+          textShadow: "0 1px 6px rgba(0,0,0,0.70)",
+          marginBottom: 2,
+        }}>
+          Welcome to
+        </div>
+
+        {/* App name */}
         <div style={{
           fontFamily: "var(--font-display, serif)",
           fontWeight: 800,
@@ -280,34 +324,40 @@ export default function WelcomePage({ onEnter }: Props) {
           fontWeight: 500,
           letterSpacing: "0.28em",
           textTransform: "uppercase" as const,
-          color: "rgba(240,235,216,0.48)",
+          color: "rgba(240,235,216,0.42)",
           textShadow: "0 1px 6px rgba(0,0,0,0.65)",
         }}>
           your digital garden
         </div>
 
-        <motion.button
-          onClick={handleEnter}
-          whileTap={{ scale: 0.95 }}
-          style={{
-            marginTop: 14,
-            fontFamily: "var(--font-display, sans-serif)",
-            fontWeight: 800,
-            fontSize: 15,
-            letterSpacing: "0.04em",
-            color: "#FAF3E0",
-            background: "linear-gradient(to bottom, #A89050, #6B5A28)",
-            border: "1.5px solid #8B7335",
-            borderRadius: 100,
-            padding: "14px 44px",
-            cursor: "pointer",
-            boxShadow:
-              "0 4px 20px rgba(40,90,20,0.45), 2px 2px 0 rgba(0,0,0,0.55)",
-            whiteSpace: "nowrap" as const,
-          }}
+        {/* Enter button — fades in once the fence appears */}
+        <motion.div
+          animate={{ opacity: showBtn ? 1 : 0, y: showBtn ? 0 : 8 }}
+          transition={{ duration: 0.45, ease: "easeOut" }}
+          style={{ pointerEvents: showBtn ? "auto" : "none" }}
         >
-          Enter Garden 🌿
-        </motion.button>
+          <motion.button
+            onClick={handleEnter}
+            whileTap={{ scale: 0.95 }}
+            style={{
+              marginTop: 14,
+              fontFamily: "var(--font-display, sans-serif)",
+              fontWeight: 800,
+              fontSize: 15,
+              letterSpacing: "0.04em",
+              color: "#FAF3E0",
+              background: "linear-gradient(to bottom, #A89050, #6B5A28)",
+              border: "1.5px solid #8B7335",
+              borderRadius: 100,
+              padding: "14px 44px",
+              cursor: "pointer",
+              boxShadow: "0 4px 20px rgba(40,90,20,0.45), 2px 2px 0 rgba(0,0,0,0.55)",
+              whiteSpace: "nowrap" as const,
+            }}
+          >
+            Enter Garden 🌿
+          </motion.button>
+        </motion.div>
       </motion.div>
 
       {/* ── Layer 4: Final fade-to-dark transition ── */}
@@ -322,7 +372,7 @@ export default function WelcomePage({ onEnter }: Props) {
         }}
       />
 
-      {/* ── Footer links ── */}
+      {/* ── Footer links — appear with the button at idle ── */}
       <div style={{
         position: "fixed",
         bottom: "calc(env(safe-area-inset-bottom) + 10px)",
@@ -333,7 +383,7 @@ export default function WelcomePage({ onEnter }: Props) {
         gap: 4,
         zIndex: 30,
         opacity: phase === "idle" ? 1 : 0,
-        transition: "opacity 0.3s",
+        transition: "opacity 0.45s",
         pointerEvents: phase === "idle" ? "auto" : "none",
       }}>
         <a
