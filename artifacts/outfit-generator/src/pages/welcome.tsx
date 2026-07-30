@@ -188,11 +188,13 @@ export default function WelcomePage({ onEnter }: Props) {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 200, overflow: "hidden" }}>
 
-      {/* ── Layer 1: Hero garden image — always behind everything ── */}
-      <img
+      {/* ── Layer 1: Hero garden image — fades out the moment enter starts ── */}
+      <motion.img
         src="/garden-welcome-bg.png"
         alt=""
         draggable={false}
+        animate={{ opacity: isOpen ? 0 : 1 }}
+        transition={{ duration: 0.25 }}
         style={{
           position: "absolute", inset: 0,
           width: "100%", height: "100%",
