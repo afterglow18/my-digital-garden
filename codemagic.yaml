@@ -1,166 +1,60 @@
-# ─────────────────────────────────────────────────────────────────────────────
-# Codemagic CI/CD — My Digital Garden iOS build
-# ─────────────────────────────────────────────────────────────────────────────
-#
-# REQUIRED — Codemagic → your app → Environment variables (no groups needed):
-#   APP_STORE_CONNECT_PRIVATE_KEY      Full .p8 file contents (mark Secure)
-#   VITE_API_BASE_URL                  Your deployed API URL
-
 workflows:
-  ios-app-store:
-    name: iOS App Store Release
+  ios-release:
+    name: My Digital Garden — iOS Release
     max_build_duration: 60
-    instance_type: mac_mini_m2
-
     environment:
-      groups:
-        - ios_signing
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.mydigitalgarden.app
-      xcode: latest
-      node: 22
       vars:
-        XCODE_SCHEME: App
-        XCODE_PROJECT: artifacts/outfit-generator/ios/App/App.xcodeproj
-        XCODE_WORKSPACE: artifacts/outfit-generator/ios/App/App.xcodeproj/project.xcworkspace
-        COREPACK_ENABLE_STRICT: "0"
-        BUNDLE_ID: com.mydigitalgarden.app
-        TEAM_ID: 2A78MFVCJS
-        PROFILE_NAME: My Digital Garden
-        APP_STORE_CONNECT_KEY_IDENTIFIER: 7Y3UR8F5LN
-        APP_STORE_CONNECT_ISSUER_ID: 66d4ce13-148d-4d6b-bab8-f1d0d8441a1e
-
+        XCODE_PROJECT: "ios/App/App.xcodeproj"
+        XCODE_SCHEME: "App"
+      node: 20.17.0
     scripts:
-      - name: Install pnpm and dependencies
+      - name: Install pnpm
+        script: npm install -g pnpm
+
+      - name: Install dependencies
         script: |
-          corepack disable || true
-          npm install -g pnpm@9 --force
-          pnpm install --no-frozen-lockfile
+          cd artifacts/outfit-generator
+          pnpm install
 
       - name: Build web assets
         script: |
           cd artifacts/outfit-generator
-          VITE_API_BASE_URL=$VITE_API_BASE_URL \
-          VITE_REVENUECAT_IOS_KEY=$VITE_REVENUECAT_IOS_KEY \
-          pnpm vite build --config vite.capacitor.config.ts
+          pnpm run build:ios
 
-      - name: Capacitor add iOS and sync
+      - name: Capacitor sync
         script: |
           cd artifacts/outfit-generator
-          rm -rf ios
-          npx cap add ios
           npx cap sync ios
 
-      - name: Inject app icon
+      - name: Patch Info.plist privacy keys
         script: |
-          ICONSET="artifacts/outfit-generator/ios/App/App/Assets.xcassets/AppIcon.appiconset"
-          mkdir -p "$ICONSET"
-          sips -z 1024 1024 app-store/AppIcon-1024.png --out "$ICONSET/AppIcon-1024.png"
-          cat > "$ICONSET/Contents.json" << 'EOF'
-          {
-            "images": [
-              {
-                "filename": "AppIcon-1024.png",
-                "idiom": "universal",
-                "platform": "ios",
-                "size": "1024x1024"
-              }
-            ],
-            "info": {
-              "author": "xcode",
-              "version": 1
-            }
-          }
-          EOF
+          cd artifacts/outfit-generator
+          node scripts/patch-info-plist.mjs
 
-      - name: Share App scheme
+      - name: Set build number
         script: |
-          SCHEMES_DIR="$XCODE_PROJECT/xcshareddata/xcschemes"
-          mkdir -p "$SCHEMES_DIR"
-          # If Capacitor created a shared scheme already, leave it; otherwise copy from userdata
-          if [ ! -f "$SCHEMES_DIR/App.xcscheme" ]; then
-            USER_SCHEME=$(find "$XCODE_PROJECT/xcuserdata" -name "App.xcscheme" 2>/dev/null | head -1)
-            if [ -n "$USER_SCHEME" ]; then
-              cp "$USER_SCHEME" "$SCHEMES_DIR/App.xcscheme"
-            fi
-          fi
-          echo "Shared schemes:"
-          ls -la "$SCHEMES_DIR"
-          echo "Available targets/schemes:"
-          xcodebuild -list -project "$XCODE_PROJECT"
+          cd artifacts/outfit-generator
+          agvtool new-version -all $(($(app-store-connect get-latest-build-number \
+            --app-id 6792341908 --platform IOS 2>/dev/null || echo 0) + 1))
+        ignore_failure: true
 
-      - name: Set build number and encryption declaration
+      - name: Build and archive
         script: |
-          cd artifacts/outfit-generator/ios/App
-          agvtool new-version -all $BUILD_NUMBER
-          # Declare no non-exempt encryption so TestFlight never asks
-          /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" App/Info.plist 2>/dev/null || \
-          /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" App/Info.plist
-          # Required for Face ID usage
-          /usr/libexec/PlistBuddy -c "Add :NSFaceIDUsageDescription string 'My Suitcase uses Face ID to protect your wardrobe.'" App/Info.plist 2>/dev/null || \
-          /usr/libexec/PlistBuddy -c "Set :NSFaceIDUsageDescription 'My Suitcase uses Face ID to protect your wardrobe.'" App/Info.plist
-
-      - name: Re-apply provisioning profiles after cap sync
-        script: |
-          echo "=== Provisioning profiles on machine ==="
-          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ 2>/dev/null || echo "No profiles directory found"
-          echo "=== Certificates in keychain ==="
-          security find-identity -v -p codesigning 2>/dev/null || echo "No signing identities found"
-          echo "=== Running xcode-project use-profiles ==="
-          xcode-project use-profiles \
-            --project artifacts/outfit-generator/ios/App/App.xcodeproj \
-            --verbose 2>&1 || true
-          echo "=== Profiles after use-profiles ==="
-          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ 2>/dev/null || echo "Still no profiles"
-
-      - name: Resolve Swift Package dependencies
-        script: |
-          cd artifacts/outfit-generator/ios/App
-          xcodebuild \
-            -resolvePackageDependencies \
-            -workspace App.xcodeproj/project.xcworkspace \
-            -scheme App
-
-      - name: Xcode archive
-        script: |
-          cd artifacts/outfit-generator/ios/App
-          xcodebuild \
-            -workspace App.xcodeproj/project.xcworkspace \
-            -scheme App \
-            -sdk iphoneos \
-            -configuration Release \
-            ONLY_ACTIVE_ARCH=NO \
-            ARCHS=arm64 \
-            DEVELOPMENT_TEAM=2A78MFVCJS \
-            -archivePath "$CM_BUILD_DIR/build/App.xcarchive" \
-            archive
-
-      - name: Export IPA
-        script: |
-          echo "=== Profiles on disk before export ==="
-          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ 2>/dev/null || echo "EMPTY — no profiles directory"
-          ls -la ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles/ 2>/dev/null || echo "EMPTY — no Xcode profiles directory"
-          echo "=== Export options plist ==="
-          cat /Users/builder/export_options.plist 2>/dev/null || echo "export_options.plist not found, falling back to app-store/ExportOptions.plist"
-          PLIST=/Users/builder/export_options.plist
-          [ -f "$PLIST" ] || PLIST=app-store/ExportOptions.plist
-          echo "=== Using plist: $PLIST ==="
-          xcodebuild \
-            -exportArchive \
-            -archivePath "$CM_BUILD_DIR/build/App.xcarchive" \
-            -exportOptionsPlist "$PLIST" \
-            -exportPath "$CM_BUILD_DIR/build/ipa"
-
-      - name: Upload to TestFlight
-        script: |
-          app-store-connect publish \
-            --path "$CM_BUILD_DIR/build/ipa/App.ipa" \
-            --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
-            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
-            --private-key "@env:APP_STORE_CONNECT_PRIVATE_KEY" \
-            --testflight
+          cd artifacts/outfit-generator
+          xcode-project build-ipa \
+            --project "$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME"
 
     artifacts:
-      - $CM_BUILD_DIR/build/ipa/*.ipa
+      - artifacts/outfit-generator/build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        submit_to_testflight: true
