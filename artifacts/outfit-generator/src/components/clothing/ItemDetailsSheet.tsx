@@ -576,18 +576,20 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
           {replacePhase === "idle" && (
             <>
               {hasPhoto && shownImageSrc ? (
-                <div
-                  className="relative w-full h-52"
-                  style={{
-                    backgroundImage: "repeating-conic-gradient(#e5e7eb 0% 25%, white 0% 50%)",
-                    backgroundSize: "16px 16px",
-                  }}
-                >
-                  <img src={shownImageSrc} alt={item.name} className="w-full h-full object-contain" />
+                <div className="flex flex-col">
+                  <div
+                    className="relative w-full h-52"
+                    style={{
+                      backgroundImage: "repeating-conic-gradient(#e5e7eb 0% 25%, white 0% 50%)",
+                      backgroundSize: "16px 16px",
+                    }}
+                  >
+                    <img src={shownImageSrc} alt={item.name} className="w-full h-full object-contain" />
+                  </div>
 
-                  {/* Bottom-right action pill */}
-                  <div className="absolute bottom-2 right-2 flex gap-1.5">
-                    {/* Clean Up Photo — hidden once photo is already a PNG (already cleaned) */}
+                  {/* Action row — below the photo */}
+                  <div className="flex gap-1.5 flex-wrap px-3 py-2.5 border-t border-[#C8B870]/20">
+                    {/* Clean Up Photo — hidden once already a PNG */}
                     {!alreadyCleaned && (
                       <button
                         onClick={handleStartCleanUp}
