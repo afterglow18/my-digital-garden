@@ -26,10 +26,23 @@ workflows:
           cd artifacts/outfit-generator
           npx cap sync ios
 
-      - name: Patch Info.plist privacy keys
+      - name: Inject Info.plist privacy keys via PlistBuddy
         script: |
-          cd artifacts/outfit-generator
-          node scripts/patch-info-plist.mjs
+          PLIST="artifacts/outfit-generator/ios/App/App/Info.plist"
+          add_or_set() {
+            /usr/libexec/PlistBuddy -c "Add :$1 string '$2'" "$PLIST" 2>/dev/null || \
+            /usr/libexec/PlistBuddy -c "Set :$1 '$2'" "$PLIST"
+          }
+          add_or_set NSCameraUsageDescription \
+            "My Garden uses the camera so you can photograph items to add to your garden."
+          add_or_set NSPhotoLibraryUsageDescription \
+            "My Garden reads your photo library so you can pick existing photos to add to your garden."
+          add_or_set NSPhotoLibraryAddUsageDescription \
+            "My Garden saves captured photos to your photo library."
+          add_or_set NSFaceIDUsageDescription \
+            "My Garden uses Face ID to keep your garden private."
+          add_or_set ITSAppUsesNonExemptEncryption "false"
+          echo "✅ Info.plist keys injected"
 
       - name: Set build number
         script: |
