@@ -250,6 +250,12 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
         setBgProcessing(false);
         setSelected("original");
         handleFile(next);
+      } else if (category === "plants") {
+        // Plants: skip naming, go straight to success
+        const item = savedItem as import("@/lib/db").ClothingItem | null;
+        if (onCreated && item) onCreated(item);
+        setPhase("success");
+        setTimeout(() => handleClose(), 1500);
       } else {
         // Show naming step so user can label the item before closing
         const item = savedItem as import("@/lib/db").ClothingItem | null;
