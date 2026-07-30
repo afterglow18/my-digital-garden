@@ -1,0 +1,35 @@
+> @workspace/outfit-generator@0.0.0 build:ios /Users/builder/clone/artifacts/outfit-generator
+> vite build --config vite.capacitor.config.ts && npx cap sync ios
+
+vite v7.3.5 building client environment for production...
+transforming...
+✓ 2193 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/public/index.html                                             1.83 kB │ gzip:     0.63 kB
+dist/public/assets/ort.bundle.min-OfoG_cy9.mjs                   399.90 kB
+dist/public/assets/ort.webgpu.bundle.min-CEayb2S6.mjs            399.92 kB
+dist/public/assets/ort-wasm-simd-threaded.jsep-D5Jk56-t.wasm  23,914.39 kB │ gzip: 5,662.56 kB
+dist/public/assets/index-DIUdTUDA.css                            112.97 kB │ gzip:    18.37 kB
+dist/public/assets/index-CjO0M_4j.js                               0.33 kB │ gzip:     0.24 kB
+dist/public/assets/index-zJKsB8Ug.js                               0.33 kB │ gzip:     0.24 kB
+dist/public/assets/web-BTKVQij1.js                                 0.36 kB │ gzip:     0.25 kB
+dist/public/assets/web-0rF0uyMG.js                                 0.84 kB │ gzip:     0.40 kB
+dist/public/assets/index-CLnt12A3.js                               7.20 kB │ gzip:     2.73 kB
+dist/public/assets/web-BHcCG3yL.js                                 8.67 kB │ gzip:     2.95 kB
+dist/public/assets/web-C6rN82ot.js                                10.04 kB │ gzip:     2.06 kB
+dist/public/assets/index-B5dIplkh.js                              81.08 kB │ gzip:    21.96 kB
+dist/public/assets/ort.bundle.min-DAXuwjBG.js                    395.51 kB │ gzip:   108.23 kB
+dist/public/assets/ort.webgpu.bundle.min-CElWvg4j.js             395.53 kB │ gzip:   108.23 kB
+dist/public/assets/index-B8U0HgiK.js                             572.77 kB │ gzip:   177.12 kB
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 2.89s
+[error] ios platform has not been added yet.
+        See the docs for adding the ios platform: https://capacitorjs.com/docs/ios#adding-the-ios-platform
+ ELIFECYCLE  Command failed with exit code 1.
+
+Build failed :|
+Step 5 script `Build web assets` exited with status code 1
