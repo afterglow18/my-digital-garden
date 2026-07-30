@@ -856,7 +856,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
                   onClick={() => { cleanUserChosen.current = true; setCleanSelected("original"); }}
                   className="flex-1 flex flex-col overflow-hidden rounded-2xl transition-all"
                   style={{ padding: 0, background: "none",
-                    outline: cleanSelected === "original" ? "4px solid rgb(236,72,153)" : "4px solid rgba(0,0,0,0.15)",
+                    outline: cleanSelected === "original" ? "4px solid #4a7c35" : "4px solid rgba(0,0,0,0.15)",
                     outlineOffset: "-4px" }}
                 >
                   <div
@@ -882,7 +882,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
                   disabled={!cleanedUrl}
                   className="flex-1 flex flex-col overflow-hidden rounded-2xl transition-all"
                   style={{ padding: 0, background: "none",
-                    outline: cleanSelected === "cleaned" && cleanedUrl ? "4px solid rgb(236,72,153)" : "4px solid rgba(0,0,0,0.15)",
+                    outline: cleanSelected === "cleaned" && cleanedUrl ? "4px solid #4a7c35" : "4px solid rgba(0,0,0,0.15)",
                     outlineOffset: "-4px" }}
                 >
                   <div
