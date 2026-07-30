@@ -10,7 +10,7 @@ workflows:
         XCODE_PROJECT: "ios/App/App.xcodeproj"
         XCODE_SCHEME: "App"
         COREPACK_ENABLE_STRICT: "0"
-      node: 20.17.0
+      node: 22.12.0
     scripts:
       - name: Set up pnpm
         script: |
