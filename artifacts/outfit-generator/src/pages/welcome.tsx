@@ -186,7 +186,11 @@ export default function WelcomePage({ onEnter }: Props) {
   const showBtn = phase === "idle";                        // button only after fence appears
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 200, overflow: "hidden" }}>
+    <motion.div
+      animate={{ opacity: phase === "fading" ? 0 : 1 }}
+      transition={{ duration: 0.45 }}
+      style={{ position: "fixed", inset: 0, zIndex: 200, overflow: "hidden" }}
+    >
 
       {/* ── Layer 1: Hero garden image — fades out the moment enter starts ── */}
       <motion.img
@@ -362,18 +366,6 @@ export default function WelcomePage({ onEnter }: Props) {
         </motion.div>
       </motion.div>
 
-      {/* ── Layer 4: Final fade-to-dark transition ── */}
-      <motion.div
-        animate={{ opacity: phase === "fading" ? 1 : 0 }}
-        transition={{ duration: 0.64 }}
-        style={{
-          position: "absolute", inset: 0,
-          background: "#060E04",
-          pointerEvents: "none",
-          zIndex: 20,
-        }}
-      />
-
       {/* ── Footer links — appear with the button at idle ── */}
       <div style={{
         position: "fixed",
@@ -399,6 +391,6 @@ export default function WelcomePage({ onEnter }: Props) {
           style={{ fontSize: 11, fontWeight: 500, color: "rgba(255,255,255,0.24)", textDecoration: "none", letterSpacing: "0.02em" }}
         >Support</a>
       </div>
-    </div>
+    </motion.div>
   );
 }
