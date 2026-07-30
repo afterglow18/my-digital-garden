@@ -594,8 +594,8 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
                       <button
                         onClick={handleStartCleanUp}
                         className="flex items-center gap-1.5 px-3 py-1.5
-                                   bg-pink-500 border border-pink-400 rounded-xl text-white text-xs font-bold uppercase
-                                   shadow-[1px_1px_0px_0px_rgba(190,24,93,0.5)]
+                                   bg-[#C8A96E] border border-[#A8894E] rounded-xl text-[#3A2210] text-xs font-bold uppercase
+                                   shadow-[1px_1px_0px_0px_rgba(0,0,0,0.25)]
                                    active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
                       >
                         <Sparkles className="w-3 h-3" /> Clean Up
