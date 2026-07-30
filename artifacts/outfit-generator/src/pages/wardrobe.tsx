@@ -39,10 +39,10 @@ type RowKey   = "tools" | "landscaping" | "decor" | "plants";
 type Category = "tools" | "landscaping" | "decor" | "plants";
 
 const ROWS: { key: RowKey; label: string; btnLabel: string }[] = [
-  { key: "tools",       label: "🧤 Tools & Supplies", btnLabel: "Add Tools & Supplies"  },
-  { key: "landscaping", label: "🪨 Landscaping",      btnLabel: "Add Landscaping items" },
-  { key: "decor",       label: "🌿 Garden Décor",     btnLabel: "Add Garden Décor"      },
-  { key: "plants",      label: "🌱 Plants",            btnLabel: "Add Plants"            },
+  { key: "tools",       label: "+ Add Tools & Supplies", btnLabel: "Add Tools & Supplies"  },
+  { key: "landscaping", label: "+ Add Landscaping",      btnLabel: "Add Landscaping items" },
+  { key: "decor",       label: "+ Add Garden Décor",     btnLabel: "Add Garden Décor"      },
+  { key: "plants",      label: "+ Add Plants",           btnLabel: "Add Plants"            },
 ];
 
 // ── Image constants ───────────────────────────────────────────────────────────

@@ -7,6 +7,7 @@
 import React, { useRef, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { X, Loader2, Check, RotateCcw } from "lucide-react";
+import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import {
   useCreateClothingItem,
   useUpdateClothingItem,
@@ -120,7 +121,6 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
   const [queuePos,   setQueuePos]   = useState(0); // 1-based position of current photo
   const [queueTotal, setQueueTotal] = useState(0);
 
-  const cameraInputRef  = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const createItem  = useCreateClothingItem();
@@ -203,6 +203,29 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
       if (bgGenRef.current === myGen) setBgProcessing(false);
     }
   }, []);
+
+  // ── Take photo via Capacitor Camera API (avoids WebView crash on iOS) ───────
+  const handleCameraCapture = useCallback(async () => {
+    try {
+      const photo = await Camera.getPhoto({
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Camera,
+        quality: 90,
+      });
+      if (!photo.dataUrl) return;
+      const res  = await fetch(photo.dataUrl);
+      const blob = await res.blob();
+      fileQueueRef.current = [];
+      setQueuePos(1);
+      setQueueTotal(1);
+      handleFile(blob);
+    } catch (err) {
+      // User cancelled — ignore silently
+      const msg = err instanceof Error ? err.message : String(err);
+      if (/cancel|dismiss/i.test(msg)) return;
+      setErrorMsg(`Camera error: ${msg}`);
+    }
+  }, [handleFile]);
 
   // ── Save whichever version the user chose ─────────────────────────────────
   const handleSave = useCallback(async () => {
@@ -379,7 +402,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
             <div className="flex gap-3">
               {/* Take Photo */}
               <button
-                onClick={() => cameraInputRef.current?.click()}
+                onClick={handleCameraCapture}
                 className="flex-1 flex flex-col items-center justify-center gap-3 py-8
                            border border-[#C8B870]/45 rounded-2xl bg-[#faf8f2]
                            shadow-sm hover:bg-[#f4eedf] active:scale-[0.98]
@@ -680,15 +703,6 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
       </div>
 
       {/* Hidden file inputs */}
-      {/* Camera — opens native camera on mobile */}
-      <input
-        ref={cameraInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        className="hidden"
-        onChange={handleInputChange}
-      />
       {/* Gallery — opens photo library / file picker (multiple selection allowed) */}
       <input
         ref={galleryInputRef}
