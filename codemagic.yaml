@@ -24,11 +24,12 @@ workflows:
       - name: Build web assets
         script: |
           cd artifacts/outfit-generator
-          pnpm run build:ios
+          pnpm exec vite build --config vite.capacitor.config.ts
 
-      - name: Capacitor sync
+      - name: Add and sync iOS platform
         script: |
           cd artifacts/outfit-generator
+          npx cap add ios || true
           npx cap sync ios
 
       - name: Inject Info.plist privacy keys via PlistBuddy
