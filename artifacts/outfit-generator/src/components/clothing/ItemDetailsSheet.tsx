@@ -229,6 +229,13 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
   }, [repSelected, repCleanBlob, repOrigBlob]);
 
   // ── "Clean Up Photo" — bg-remove the existing stored image ───────────────
+  // Watering tracking (plants only)
+  const [timesWatered,    setTimesWatered]    = useState(item?.timesWorn ?? 0);
+  const [lastWateredDate, setLastWateredDate] = useState<string | null>(
+    (item as ClothingItem & { lastWateredDate?: string | null })?.lastWateredDate ?? null,
+  );
+  const [prevWateredDate, setPrevWateredDate] = useState<string | null>(null);
+
   const [cleanUpOpen,    setCleanUpOpen]    = useState(false);
   const [cleanedUrl,     setCleanedUrl]     = useState<string | null>(null);
   const [cleanProcessing,setCleanProcessing]= useState(false);
@@ -304,7 +311,14 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
 
   // Reset everything when the item changes
   useEffect(() => {
-    if (item) setForm(toForm(item));
+    if (item) {
+      setForm(toForm(item));
+      setTimesWatered(item.timesWorn ?? 0);
+      setLastWateredDate(
+        (item as ClothingItem & { lastWateredDate?: string | null }).lastWateredDate ?? null,
+      );
+    }
+    setPrevWateredDate(null);
     setShowDeleteConfirm(false);
     setDisplayImagePath(null);
     resetReplaceState();
@@ -334,6 +348,44 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
     : (item.imageObjectPath ? getImageUrl(item.imageObjectPath) : null);
 
   const hasPhoto = !!(displayImagePath || item.imageObjectPath);
+
+  // ── Watering helpers (plants only) ───────────────────────────────────────
+  // todayStr computed fresh each render — no timer needed; auto-resets at midnight
+  const todayStr = (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  })();
+  const isPlants   = form.category === "plants";
+  const loggedToday = isPlants && lastWateredDate === todayStr;
+
+  // "M/D/YY" for display
+  const lastWateredDisplay = lastWateredDate
+    ? (() => {
+        const [y, m, d] = lastWateredDate.split("-").map(Number);
+        return `${m}/${d}/${String(y).slice(2)}`;
+      })()
+    : null;
+
+  const handleWaterToday = () => {
+    const newCount = timesWatered + 1;
+    setPrevWateredDate(lastWateredDate);
+    setTimesWatered(newCount);
+    setLastWateredDate(todayStr);
+    updateItem.mutate(
+      { id: item.id, data: { timesWorn: newCount, lastWateredDate: todayStr } },
+      { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() }) },
+    );
+  };
+
+  const handleWaterUndo = () => {
+    const newCount = Math.max(0, timesWatered - 1);
+    setTimesWatered(newCount);
+    setLastWateredDate(prevWateredDate);
+    updateItem.mutate(
+      { id: item.id, data: { timesWorn: newCount, lastWateredDate: prevWateredDate } },
+      { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() }) },
+    );
+  };
 
   const handleSave = () => {
     updateItem.mutate(
@@ -547,6 +599,30 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
                         <Sparkles className="w-3 h-3" /> Clean Up
                       </button>
                     )}
+                    {/* Watered Today — plants only */}
+                    {isPlants && (
+                      loggedToday ? (
+                        <button
+                          onClick={handleWaterUndo}
+                          className="flex items-center gap-1 px-2.5 py-1.5
+                                     bg-[#2d5a1b] border border-[#1e3f12] rounded-xl text-white text-xs font-bold uppercase
+                                     shadow-[1px_1px_0px_0px_rgba(0,0,0,0.35)]
+                                     active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+                        >
+                          Logged ✓ · Undo
+                        </button>
+                      ) : (
+                        <button
+                          onClick={handleWaterToday}
+                          className="flex items-center gap-1 px-2.5 py-1.5
+                                     bg-[#4a7c35] border border-[#3a6228] rounded-xl text-white text-xs font-bold uppercase
+                                     shadow-[1px_1px_0px_0px_rgba(0,0,0,0.35)]
+                                     active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+                        >
+                          💧 Watered Today
+                        </button>
+                      )
+                    )}
                     {/* Replace (pick new file) */}
                     <button
                       onClick={() => photoInputRef.current?.click()}
@@ -559,15 +635,43 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
                   </div>
                 </div>
               ) : (
-                <button
-                  onClick={() => photoInputRef.current?.click()}
-                  className="w-full h-36 flex flex-col items-center justify-center gap-2
-                             bg-black/5 border-dashed border-2 border-black/20
-                             active:bg-black/10 transition-colors"
-                >
-                  <ImagePlus className="w-8 h-8 opacity-30" />
-                  <span className="text-xs font-bold uppercase opacity-30">Add Photo</span>
-                </button>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => photoInputRef.current?.click()}
+                    className="w-full h-28 flex flex-col items-center justify-center gap-2
+                               bg-black/5 border-dashed border-2 border-black/20
+                               active:bg-black/10 transition-colors"
+                  >
+                    <ImagePlus className="w-8 h-8 opacity-30" />
+                    <span className="text-xs font-bold uppercase opacity-30">Add Photo</span>
+                  </button>
+                  {/* Watered Today below Add Photo for plants with no image */}
+                  {isPlants && (
+                    <div className="flex justify-end px-2 pb-2">
+                      {loggedToday ? (
+                        <button
+                          onClick={handleWaterUndo}
+                          className="flex items-center gap-1 px-3 py-1.5
+                                     bg-[#2d5a1b] border border-[#1e3f12] rounded-xl text-white text-xs font-bold uppercase
+                                     shadow-[1px_1px_0px_0px_rgba(0,0,0,0.35)]
+                                     active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+                        >
+                          Logged ✓ · Undo
+                        </button>
+                      ) : (
+                        <button
+                          onClick={handleWaterToday}
+                          className="flex items-center gap-1 px-3 py-1.5
+                                     bg-[#4a7c35] border border-[#3a6228] rounded-xl text-white text-xs font-bold uppercase
+                                     shadow-[1px_1px_0px_0px_rgba(0,0,0,0.35)]
+                                     active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+                        >
+                          💧 Watered Today
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
             </>
           )}
@@ -624,12 +728,33 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
           <div className="grid grid-cols-2 gap-3">
             <SelectField label="Category" value={form.category}
               onChange={patch("category") as (v: string) => void} options={CATEGORY_OPTIONS} />
-            <div className="flex flex-col gap-1 opacity-50 pointer-events-none">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-black/40">Times Worn</span>
-              <div className="border border-[#C8B870]/30 rounded-lg px-3 py-2 text-sm font-medium bg-[#faf8f2]/50">
-                {item.timesWorn ?? 0}
+            {isPlants ? (
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-[#8A6A3A]/65">Times Watered</label>
+                <input
+                  type="number" min={0} value={timesWatered}
+                  onChange={(e) => { const n = parseInt(e.target.value, 10); if (!isNaN(n) && n >= 0) setTimesWatered(n); }}
+                  onBlur={() => updateItem.mutate(
+                    { id: item.id, data: { timesWorn: timesWatered } },
+                    { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() }) },
+                  )}
+                  className="w-full border border-[#C8B870]/45 rounded-lg px-3 py-2 text-sm font-medium
+                             bg-[#faf8f2] focus:outline-none focus:ring-2 focus:ring-[#C8B870]/20"
+                />
+                {lastWateredDisplay && (
+                  <span className="text-[10px] text-[#4a7c35] font-semibold mt-0.5">
+                    Last watered {lastWateredDisplay}
+                  </span>
+                )}
               </div>
-            </div>
+            ) : (
+              <div className="flex flex-col gap-1 opacity-50 pointer-events-none">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-black/40">Times Worn</span>
+                <div className="border border-[#C8B870]/30 rounded-lg px-3 py-2 text-sm font-medium bg-[#faf8f2]/50">
+                  {item.timesWorn ?? 0}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

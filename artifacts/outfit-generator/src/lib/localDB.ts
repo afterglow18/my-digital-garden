@@ -66,12 +66,13 @@ export async function createClothingItem(data: {
   const now = new Date().toISOString();
 
   const record: StoredClothingItem = {
-    name:           data.name,
-    category:       data.category,
+    name:            data.name,
+    category:        data.category,
     imageObjectPath: data.imageObjectPath ?? null,
-    isFavorite:     false,
-    timesWorn:      0,
-    color:          data.color ?? null,
+    isFavorite:      false,
+    timesWorn:       0,
+    lastWateredDate: null,
+    color:           data.color ?? null,
     brand:          data.brand ?? null,
     size:           data.size  ?? null,
     season:         data.season ?? null,

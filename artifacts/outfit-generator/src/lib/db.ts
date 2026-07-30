@@ -20,22 +20,23 @@ export const DB_VERSION = 1;
 // ── Stored types (IndexedDB records) ─────────────────────────────────────────
 
 export interface StoredClothingItem {
-  id?:            number;        // auto-incremented
-  name:           string;
-  category:       string;        // "tools" | "landscaping" | "decor" | "plants"
-  imageObjectPath: string | null; // JPEG data URL  (e.g. "data:image/jpeg;base64,...")
-  isFavorite:     boolean;
-  timesWorn:      number;
-  color?:         string | null;
-  brand?:         string | null;
-  size?:          string | null;
-  season?:        string | null;
-  occasion?:      string | null;
-  purchasePrice?: string | null;
-  purchaseDate?:  string | null;
-  notes?:         string | null;
-  createdAt:      string;
-  updatedAt:      string;
+  id?:               number;        // auto-incremented
+  name:              string;
+  category:          string;        // "tools" | "landscaping" | "decor" | "plants"
+  imageObjectPath:   string | null; // JPEG data URL  (e.g. "data:image/jpeg;base64,...")
+  isFavorite:        boolean;
+  timesWorn:         number;
+  lastWateredDate?:  string | null;  // "YYYY-MM-DD" local date, plants only
+  color?:            string | null;
+  brand?:            string | null;
+  size?:             string | null;
+  season?:           string | null;
+  occasion?:         string | null;
+  purchasePrice?:    string | null;
+  purchaseDate?:     string | null;
+  notes?:            string | null;
+  createdAt:         string;
+  updatedAt:         string;
 }
 
 export interface StoredOutfit {
