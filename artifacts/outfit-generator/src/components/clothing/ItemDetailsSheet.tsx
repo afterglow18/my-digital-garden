@@ -827,7 +827,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
               style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "0.75rem" }}
             >
               <h2 className="font-display font-bold text-xl uppercase tracking-tight flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-pink-500" /> Clean Up Photo
+                <Sparkles className="w-5 h-5 text-[#4a7c35]" /> Clean Up Photo
               </h2>
               <button
                 onClick={handleCancelCleanUp}
@@ -868,7 +868,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
                         className="w-full object-contain block" style={{ maxHeight: 220 }} />
                     )}
                     {cleanSelected === "original" && (
-                      <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-pink-500 flex items-center justify-center">
+                      <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#4a7c35] flex items-center justify-center">
                         <Check size={14} color="white" strokeWidth={3} />
                       </div>
                     )}
@@ -897,7 +897,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
                         <img src={cleanedUrl} alt="Cleaned"
                           className="w-full object-contain block" style={{ maxHeight: 220 }} />
                         {cleanSelected === "cleaned" && (
-                          <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-pink-500 flex items-center justify-center">
+                          <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#4a7c35] flex items-center justify-center">
                             <Check size={14} color="white" strokeWidth={3} />
                           </div>
                         )}
@@ -924,7 +924,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
                 onClick={handleConfirmCleanUp}
                 disabled={cleanSelected === "cleaned" && !cleanedUrl}
                 className="w-full py-3 rounded-xl flex items-center justify-center gap-2 text-sm font-bold uppercase
-                           border border-pink-400 bg-pink-500 text-white
+                           border border-[#3a6228] bg-[#4a7c35] text-white
                            active:opacity-80 transition-all
                            disabled:opacity-40 disabled:cursor-not-allowed"
               >
