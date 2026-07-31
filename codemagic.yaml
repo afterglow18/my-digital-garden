@@ -21,7 +21,7 @@ workflows:
       - name: Install JS dependencies
         script: |
           cd artifacts/outfit-generator
-          pnpm install --no-frozen-lockfile
+          pnpm install --frozen-lockfile
 
       - name: Build web assets
         script: |
@@ -44,7 +44,7 @@ workflows:
       - name: Generate iOS app icons from resources/icon.png
         script: |
           cd artifacts/outfit-generator
-          npx @capacitor/assets generate --ios
+          npx --yes @capacitor/assets@latest generate --ios
           echo "✅ App icons generated"
 
       - name: Inject Info.plist privacy keys via PlistBuddy

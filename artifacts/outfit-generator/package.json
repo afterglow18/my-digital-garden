@@ -80,9 +80,6 @@
     "wouter": "^3.3.5",
     "zod": "catalog:"
   },
-  "devDependencies": {
-    "@capacitor/assets": "^3.0.5"
-  },
   "dependencies": {
     "@capacitor/app": "^8.1.0",
     "@capacitor/camera": "^8.2.1",
