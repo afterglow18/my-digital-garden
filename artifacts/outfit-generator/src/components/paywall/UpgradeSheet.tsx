@@ -159,56 +159,69 @@ export function UpgradeSheet({ reason, onClose }: Props) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: "100%" }}
       transition={{ type: "spring", damping: 28, stiffness: 240 }}
-      className="fixed inset-0 md:left-[220px] z-[80] flex flex-col max-w-md mx-auto"
+      className="fixed inset-0 md:left-[220px] z-[80] flex flex-col max-w-md mx-auto overflow-hidden"
       style={{ background: "#F8F4ED" }}
     >
-      {/* Close button */}
-      <div className="flex justify-end px-4 pb-0 flex-shrink-0"
-        style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
-        <button
-          onClick={onClose}
-          aria-label="Close"
-          className="w-9 h-9 rounded-full border-2 border-black flex items-center justify-center
-                     bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
-                     active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* Content — fills remaining height, no scroll */}
-      <div className="flex-1 min-h-0 flex flex-col justify-between px-5 pt-3 pb-2">
-
-        {/* Headline */}
-        <div>
-          <h1 className="font-display font-bold text-[2.1rem] uppercase tracking-tight leading-[0.88]">
-            {HEADLINES[reason]}
-          </h1>
-          <p className="text-xs font-semibold text-black/45 mt-1.5" style={{ whiteSpace: "pre-line" }}>
-            {SUBTITLES[reason]}
-          </p>
-        </div>
-
-        {/* Features card */}
-        <div className="rounded-2xl border-[3px] border-[#1a3a1a] overflow-hidden" style={{
+      {/* ── Green plaid hero — headline + features ── */}
+      <div
+        className="flex-shrink-0 flex flex-col px-5 pb-6"
+        style={{
+          paddingTop: "max(1rem, env(safe-area-inset-top))",
           background: "#1e3a1e",
           backgroundImage: `
-            repeating-linear-gradient(0deg,   transparent, transparent 18px, rgba(255,255,255,0.045) 18px, rgba(255,255,255,0.045) 20px),
-            repeating-linear-gradient(90deg,  transparent, transparent 18px, rgba(255,255,255,0.045) 18px, rgba(255,255,255,0.045) 20px),
-            repeating-linear-gradient(0deg,   transparent, transparent 58px, rgba(255,255,255,0.06)  58px, rgba(255,255,255,0.06)  62px),
-            repeating-linear-gradient(90deg,  transparent, transparent 58px, rgba(255,255,255,0.06)  58px, rgba(255,255,255,0.06)  62px)
+            repeating-linear-gradient(0deg,   transparent, transparent 18px, rgba(255,255,255,0.04) 18px, rgba(255,255,255,0.04) 20px),
+            repeating-linear-gradient(90deg,  transparent, transparent 18px, rgba(255,255,255,0.04) 18px, rgba(255,255,255,0.04) 20px),
+            repeating-linear-gradient(0deg,   transparent, transparent 58px, rgba(255,255,255,0.055) 58px, rgba(255,255,255,0.055) 62px),
+            repeating-linear-gradient(90deg,  transparent, transparent 58px, rgba(255,255,255,0.055) 58px, rgba(255,255,255,0.055) 62px)
           `,
-        }}>
-          <div className="px-4 py-4 flex flex-col gap-2">
-            <p className="font-display font-bold uppercase text-[1.45rem] leading-[0.92] tracking-tight"
-               style={{ color: "hsl(35 55% 82%)" }}>
-              Unlimited digital gardens
-            </p>
-            <p className="text-white/60 text-xs font-medium mt-1 leading-snug">
-              Your entire garden, beautifully catalogued — forever.
-            </p>
-          </div>
+        }}
+      >
+        {/* Close button */}
+        <div className="flex justify-end mb-3">
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all
+                       active:translate-y-0.5 active:translate-x-0.5 active:shadow-none"
+            style={{
+              borderColor: "rgba(255,255,255,0.35)",
+              background: "rgba(255,255,255,0.12)",
+              boxShadow: "2px 2px 0px 0px rgba(0,0,0,0.4)",
+            }}
+          >
+            <X className="w-4 h-4 text-white/80" />
+          </button>
         </div>
+
+        {/* Headline */}
+        <h1
+          className="font-display font-bold text-[2.1rem] uppercase tracking-tight leading-[0.88]"
+          style={{ color: "hsl(35 55% 82%)" }}
+        >
+          {HEADLINES[reason]}
+        </h1>
+        <p className="text-white/50 text-xs font-medium mt-2 leading-snug" style={{ whiteSpace: "pre-line" }}>
+          {SUBTITLES[reason]}
+        </p>
+
+        {/* Features list */}
+        <ul className="flex flex-col gap-2 mt-5">
+          {FEATURES.map((f) => (
+            <li key={f} className="flex items-center gap-2.5">
+              <span
+                className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
+                style={{ background: "rgba(255,255,255,0.12)", border: "1.5px solid rgba(255,255,255,0.25)" }}
+              >
+                <Check className="w-3 h-3 text-white/80" strokeWidth={3} />
+              </span>
+              <span className="text-xs font-semibold text-white/70 leading-tight">{f}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* ── Cream bottom — plan picker + CTA ── */}
+      <div className="flex-1 min-h-0 flex flex-col justify-between px-5 pt-4 pb-2">
 
         {/* Plan selector */}
         <div>
