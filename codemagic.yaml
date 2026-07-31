@@ -66,14 +66,10 @@ workflows:
       - name: Set build number
         script: |
           cd artifacts/outfit-generator/ios/App
-          LATEST=$(app-store-connect get-latest-build-number \
-            --app-id 6792341908 \
-            --platform IOS \
-            --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
-            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
-            --private-key @env:APP_STORE_CONNECT_PUBLISHER_PRIVATE_KEY 2>/dev/null || echo 21)
-          NEW_BUILD=$((LATEST + 1))
-          echo "📦 Latest build on App Store Connect: $LATEST → setting to $NEW_BUILD"
+          # Use Codemagic's own BUILD_NUMBER (unique, auto-incremented per build)
+          # with an offset of 100 so we always stay above any previously uploaded build.
+          NEW_BUILD=$((BUILD_NUMBER + 100))
+          echo "📦 Codemagic BUILD_NUMBER=$BUILD_NUMBER → CFBundleVersion=$NEW_BUILD"
           agvtool new-version -all "$NEW_BUILD"
           agvtool what-version
 
