@@ -7,7 +7,7 @@ workflows:
         distribution_type: app_store
         bundle_identifier: com.mydigitalgarden.app
       groups:
-        - apple_credentials
+        - signing
       vars:
         XCODE_WORKSPACE: "artifacts/outfit-generator/ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
