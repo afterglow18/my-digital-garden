@@ -60,9 +60,8 @@ workflows:
       - name: Set build number
         script: |
           cd artifacts/outfit-generator/ios/App
-          agvtool new-version -all $(($(app-store-connect get-latest-build-number \
-            --app-id 6792341908 --platform IOS 2>/dev/null || echo 0) + 1))
-        ignore_failure: true
+          agvtool new-version -all 21
+          agvtool what-version
 
       - name: Apply code signing profiles
         script: |
