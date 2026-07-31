@@ -7,7 +7,7 @@ workflows:
         distribution_type: app_store
         bundle_identifier: com.mydigitalgarden.app
       vars:
-        XCODE_PROJECT: "ios/App/App.xcodeproj"
+        XCODE_WORKSPACE: "artifacts/outfit-generator/ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
         COREPACK_ENABLE_STRICT: "0"
       node: 22.12.0
@@ -16,7 +16,7 @@ workflows:
         script: |
           npm install -g pnpm --force
 
-      - name: Install dependencies
+      - name: Install JS dependencies
         script: |
           cd artifacts/outfit-generator
           pnpm install
@@ -29,8 +29,13 @@ workflows:
       - name: Add and sync iOS platform
         script: |
           cd artifacts/outfit-generator
-          npx cap add ios || true
+          npx cap add ios 2>/dev/null || true
           npx cap sync ios
+
+      - name: Install CocoaPods dependencies
+        script: |
+          cd artifacts/outfit-generator/ios/App
+          pod install --repo-update
 
       - name: Inject Info.plist privacy keys via PlistBuddy
         script: |
@@ -45,27 +50,28 @@ workflows:
             "My Garden reads your photo library so you can pick existing photos to add to your garden."
           add_or_set NSPhotoLibraryAddUsageDescription \
             "My Garden saves captured photos to your photo library."
-          add_or_set NSFaceIDUsageDescription \
-            "My Garden uses Face ID to keep your garden private."
           add_or_set ITSAppUsesNonExemptEncryption "false"
           echo "✅ Info.plist keys injected"
 
       - name: Set build number
         script: |
-          cd artifacts/outfit-generator
+          cd artifacts/outfit-generator/ios/App
           agvtool new-version -all $(($(app-store-connect get-latest-build-number \
             --app-id 6792341908 --platform IOS 2>/dev/null || echo 0) + 1))
         ignore_failure: true
 
+      - name: Apply code signing profiles
+        script: |
+          xcode-project use-profiles
+
       - name: Build and archive
         script: |
-          cd artifacts/outfit-generator
           xcode-project build-ipa \
-            --project "$XCODE_PROJECT" \
+            --workspace "$XCODE_WORKSPACE" \
             --scheme "$XCODE_SCHEME"
 
     artifacts:
-      - artifacts/outfit-generator/build/ios/ipa/*.ipa
+      - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
 
     publishing:
