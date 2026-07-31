@@ -9,6 +9,8 @@ const config: CapacitorConfig = {
   // iOS-specific configuration
   // -------------------------------------------------------------------------
   ios: {
+    // Use CocoaPods — required for plugins that don't ship Package.swift
+    packageManager: 'CocoaPods',
     // Allow the WKWebView to scroll; the app manages its own scroll areas
     scrollEnabled: true,
     // Prevents white flash on launch
