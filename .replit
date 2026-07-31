@@ -39,5 +39,5 @@ timeoutMs = 20000
 [userenv]
 
 [userenv.shared]
-VITE_REVENUECAT_IOS_KEY = "appl_HTDsqIvbJDetiTofAyBoDwXOSuu"
+VITE_REVENUECAT_IOS_KEY = "appl_ixOYqqKGUOTaUHWpJSstypPywsX"
 VITE_REVENUECAT_TEST_KEY = "test_EBhomWNbVwcCblrgTAkzVhrPeZC"
