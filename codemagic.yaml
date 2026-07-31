@@ -14,15 +14,6 @@ workflows:
         COREPACK_ENABLE_STRICT: "0"
       node: 22.12.0
     scripts:
-      - name: Map App Store Connect key variable
-        script: |
-          # Codemagic's publishing CLI reads APP_STORE_CONNECT_PUBLISHER_PRIVATE_KEY.
-          # The key lives in the ios_signing group as APP_STORE_CONNECT_PRIVATE_KEY.
-          # Write the alias into $CM_ENV so it persists across all subsequent steps.
-          echo "APP_STORE_CONNECT_PUBLISHER_PRIVATE_KEY<<__EOF__" >> $CM_ENV
-          echo "$APP_STORE_CONNECT_PRIVATE_KEY"                   >> $CM_ENV
-          echo "__EOF__"                                          >> $CM_ENV
-
       - name: Set up pnpm
         script: |
           npm install -g pnpm --force
