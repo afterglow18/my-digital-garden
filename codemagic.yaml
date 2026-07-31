@@ -6,10 +6,14 @@ workflows:
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.mydigitalgarden.app
+      groups:
+        - ios_signing
       vars:
         XCODE_WORKSPACE: "artifacts/outfit-generator/ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
         COREPACK_ENABLE_STRICT: "0"
+        # Codemagic's publishing CLI looks for this exact name
+        APP_STORE_CONNECT_PUBLISHER_PRIVATE_KEY: $APP_STORE_CONNECT_PRIVATE_KEY
       node: 22.12.0
     scripts:
       - name: Set up pnpm
