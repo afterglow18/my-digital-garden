@@ -122,9 +122,10 @@ function TierCard({
 // ── Sheet ─────────────────────────────────────────────────────────────────────
 
 export function UpgradeSheet({ reason, onClose }: Props) {
-  const { offerings, purchase } = useSubscription();
-  const [selected, setSelected] = useState<TierId>("lifetime");
-  const [status,   setStatus]   = useState<"idle" | "pending">("idle");
+  const { offerings, purchase, isLoading } = useSubscription();
+  const [selected,  setSelected]  = useState<TierId>("lifetime");
+  const [status,    setStatus]    = useState<"idle" | "pending">("idle");
+  const [errorMsg,  setErrorMsg]  = useState<string | null>(null);
 
   const prices: Record<TierId, string> = {
     monthly:  getLivePrice(offerings, "$rc_monthly",  "$1.99"),
@@ -132,26 +133,37 @@ export function UpgradeSheet({ reason, onClose }: Props) {
     lifetime: getLivePrice(offerings, "$rc_lifetime", "$9.99"),
   };
 
+  const offersReady = offerings !== null;
+
   const ctaLabel =
     status === "pending"        ? "Opening…"
+    : isLoading                 ? "Loading plans…"
     : selected === "lifetime"   ? `UNLOCK FOREVER – ${prices.lifetime} ›`
     : selected === "yearly"     ? `SUBSCRIBE – ${prices.yearly}/YR ›`
     :                             `SUBSCRIBE – ${prices.monthly}/MO ›`;
 
   const handlePurchase = useCallback(async () => {
-    if (status === "pending") return;
+    if (status === "pending" || isLoading) return;
+    setErrorMsg(null);
     setStatus("pending");
     const pkg = getRcPackage(offerings, TIER_DEFAULTS[selected].pkgId);
-    if (!pkg) { setStatus("idle"); return; }
+    if (!pkg) {
+      setStatus("idle");
+      setErrorMsg("Could not load this plan. Please check your connection and try again.");
+      return;
+    }
     try {
       await purchase(pkg);
       onClose();
     } catch (err: unknown) {
       setStatus("idle");
       const msg = err instanceof Error ? err.message.toLowerCase() : "";
-      if (!msg.includes("cancel") && !msg.includes("dismiss")) console.error("Purchase error:", err);
+      if (!msg.includes("cancel") && !msg.includes("dismiss")) {
+        setErrorMsg("Purchase failed. Please try again.");
+        console.error("Purchase error:", err);
+      }
     }
-  }, [status, offerings, selected, purchase, onClose]);
+  }, [status, isLoading, offerings, selected, purchase, onClose]);
 
   return (
     <motion.div
@@ -257,17 +269,24 @@ export function UpgradeSheet({ reason, onClose }: Props) {
       >
         <button
           onClick={handlePurchase}
-          disabled={status === "pending"}
+          disabled={status === "pending" || isLoading || !offersReady}
           className="w-full py-3.5 rounded-2xl font-display font-bold text-lg uppercase
                      tracking-tight border-[3px] border-black text-black
                      active:translate-x-0.5 active:translate-y-0.5 transition-all
                      disabled:opacity-60 disabled:cursor-not-allowed bg-primary"
           style={{
-            boxShadow: status === "pending" ? "none" : "4px 4px 0px 0px rgba(0,0,0,1)",
+            boxShadow: (status === "pending" || isLoading) ? "none" : "4px 4px 0px 0px rgba(0,0,0,1)",
           }}
         >
           {ctaLabel}
         </button>
+
+        {errorMsg && (
+          <p className="text-center text-xs font-semibold text-red-600 px-2">
+            {errorMsg}
+          </p>
+        )}
+
         <button
           onClick={onClose}
           className="text-sm font-semibold text-black/35 text-center hover:text-black/55 transition-colors"
