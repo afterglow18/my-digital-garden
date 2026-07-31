@@ -22,7 +22,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-export const REVENUECAT_ENTITLEMENT_IDENTIFIER = "premium";
+export const REVENUECAT_ENTITLEMENT_IDENTIFIER = "My Digital Garden Pro";
 
 const RC_TEST_KEY = import.meta.env.VITE_REVENUECAT_TEST_KEY as string | undefined;
 const RC_IOS_KEY  = import.meta.env.VITE_REVENUECAT_IOS_KEY  as string | undefined;
