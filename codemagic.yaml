@@ -41,6 +41,12 @@ workflows:
           cd ios/App
           pod install --repo-update
 
+      - name: Generate iOS app icons from resources/icon.png
+        script: |
+          cd artifacts/outfit-generator
+          npx @capacitor/assets generate --ios
+          echo "✅ App icons generated"
+
       - name: Inject Info.plist privacy keys via PlistBuddy
         script: |
           PLIST="artifacts/outfit-generator/ios/App/App/Info.plist"
