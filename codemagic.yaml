@@ -26,13 +26,11 @@ workflows:
           cd artifacts/outfit-generator
           pnpm exec vite build --config vite.capacitor.config.ts
 
-      - name: Add iOS platform, sync, and install pods
+      - name: Add and sync iOS platform
         script: |
           cd artifacts/outfit-generator
           npx cap add ios || true
           npx cap sync ios
-          cd ios/App
-          pod install --repo-update
 
       - name: Inject Info.plist privacy keys via PlistBuddy
         script: |
