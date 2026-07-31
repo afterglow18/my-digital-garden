@@ -21,7 +21,7 @@ workflows:
       - name: Install JS dependencies
         script: |
           cd artifacts/outfit-generator
-          pnpm install
+          pnpm install --no-frozen-lockfile
 
       - name: Build web assets
         script: |
