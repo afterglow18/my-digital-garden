@@ -51,6 +51,17 @@ async function getPurchases(): Promise<PurchasesType | null> {
   }
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`timed out after ${ms}ms`)), ms)
+    ),
+  ]);
+}
+
 // ── Initialization ────────────────────────────────────────────────────────────
 
 export async function initializeRevenueCat(): Promise<void> {
@@ -64,7 +75,17 @@ export async function initializeRevenueCat(): Promise<void> {
     await Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG });
   } catch { /* non-fatal */ }
 
-  await Purchases.configure({ apiKey });
+  // RC Capacitor v13 returns CustomerInfo from configure() — a network call.
+  // Awaiting it without a timeout blocks indefinitely if RC servers are slow.
+  // A timeout here means "SDK is initialised; CustomerInfo will arrive via the
+  // normal query/listener flow once the network responds."
+  try {
+    await withTimeout(Purchases.configure({ apiKey }), 5000);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (!msg.includes("timed out")) throw e;
+    console.warn("[RevenueCat] configure() timed out — SDK ready, CustomerInfo will load async");
+  }
   console.log("[RevenueCat] Configured");
 }
 

@@ -31,6 +31,15 @@ workflows:
       - name: Add and sync iOS platform (CocoaPods)
         script: |
           cd artifacts/outfit-generator
+          # Resolve pnpm symlinks for native plugins so Xcode can compile Swift code.
+          # Without this, symlinked packages are invisible to the iOS build system.
+          RC_PATH="node_modules/@revenuecat/purchases-capacitor"
+          if [ -L "$RC_PATH" ]; then
+            echo "🔗 Resolving pnpm symlink for $RC_PATH"
+            cp -rL "$RC_PATH" "${RC_PATH}-real"
+            rm "$RC_PATH"
+            mv "${RC_PATH}-real" "$RC_PATH"
+          fi
           rm -rf ios
           npx cap add ios --packagemanager CocoaPods
           npx cap sync ios
