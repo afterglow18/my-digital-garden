@@ -2,12 +2,11 @@
  * Entitlement tier definitions — single source of truth for limits and capabilities.
  *
  * Tiers:
- *   "free"    — default; up to FREE_ITEM_LIMIT items, FREE_OUTFIT_LIMIT saved outfits.
- *   "unlock"  — $4.99 one-time; unlimited items + outfits, no 3D mannequin.
- *   "premium" — optional upgrade; everything in unlock + 3D mannequin.
+ *   "free"   — default; up to FREE_ITEM_LIMIT items, FREE_OUTFIT_LIMIT saved outfits.
+ *   "unlock" — My Digital Garden Pro (RC entitlement); unlimited items + outfits.
  */
 
-export type Tier = "free" | "unlock" | "premium";
+export type Tier = "free" | "unlock";
 
 /** Adjust these constants to run promotions or A/B tests without touching logic. */
 export const FREE_ITEM_LIMIT   = 20;
@@ -23,15 +22,13 @@ export interface TierCapabilities {
 }
 
 export const TIER_CAPS: Record<Tier, TierCapabilities> = {
-  free:    { maxItems: FREE_ITEM_LIMIT,  maxOutfits: FREE_OUTFIT_LIMIT, mannequin: false },
-  unlock:  { maxItems: null,             maxOutfits: null,              mannequin: false },
-  premium: { maxItems: null,             maxOutfits: null,              mannequin: true  },
+  free:   { maxItems: FREE_ITEM_LIMIT, maxOutfits: FREE_OUTFIT_LIMIT, mannequin: false },
+  unlock: { maxItems: null,            maxOutfits: null,              mannequin: true  },
 };
 
-/** Products available for purchase. */
-export type PurchaseProduct = "unlock" | "premium";
+/** Products available for purchase (all map to the "My Digital Garden Pro" RC entitlement). */
+export type PurchaseProduct = "unlock";
 
 export const PRODUCT_PRICES: Record<PurchaseProduct, string> = {
-  unlock:  "$4.99",
-  premium: "$9.99",
+  unlock: "$9.99",
 };

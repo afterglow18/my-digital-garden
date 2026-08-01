@@ -8,18 +8,11 @@ import SavedPage from './pages/saved';
 import FavoritesPage from './pages/favorites';
 import AccountPage from './pages/account';
 import WelcomePage from './pages/welcome';
-import { SubscriptionProvider, initializeRevenueCat } from '@/lib/revenuecat';
+import { SubscriptionProvider } from '@/lib/revenuecat';
 import { queryClient } from '@/lib/queryClient';
 import { migrateCategories } from '@/lib/localDB';
 
-// ── Initialise RevenueCat once at startup ────────────────────────────────────
-try {
-  initializeRevenueCat().catch((err) =>
-    console.warn("[RevenueCat] Init error (non-fatal):", err)
-  );
-} catch (err) {
-  console.warn("[RevenueCat] Init error (non-fatal):", err);
-}
+// RevenueCat is initialised in main.tsx before React mounts — no duplicate call here.
 
 // ── Migrate legacy category keys (outfits→tools, beauty→landscaping, etc.) ───
 migrateCategories().catch((err) =>

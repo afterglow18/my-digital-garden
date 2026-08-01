@@ -408,7 +408,7 @@ export default function WardrobePage() {
           {/* ── Star icon tap zone (right) → premium upgrade ── */}
           <button
             onClick={() => setUpgradeReason("items")}
-            aria-label="Upgrade to premium"
+            aria-label="Upgrade to Pro"
             style={{
               position: "absolute",
               top:    pY(ir, 0.878),
