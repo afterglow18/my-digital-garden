@@ -186,13 +186,7 @@ export default function AccountPage() {
             </span>
           </div>
 
-          {isSubscribed ? (
-            <div className="flex items-center gap-2 text-sm font-semibold text-green-700
-                            bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-              <Check className="w-4 h-4 shrink-0" />
-              Pro Stylist active — unlimited everything
-            </div>
-          ) : (
+          {!isSubscribed && (
             <YellowButton
               onClick={() => setShowUpgrade(true)}
               icon={() => null}
