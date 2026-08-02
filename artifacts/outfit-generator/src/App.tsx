@@ -72,17 +72,10 @@ function AppShell() {
   );
 }
 
-// ── Background photo indexer + toast ─────────────────────────────────────────
+// ── Background photo indexer (silent) ────────────────────────────────────────
 function VisionIndexer() {
-  const { isIndexing } = useVisionIndexer();
-  if (!isIndexing) return null;
-  return (
-    <div className="fixed bottom-24 inset-x-0 flex justify-center z-[90] pointer-events-none">
-      <div className="px-4 py-2 bg-black/75 text-white text-xs font-bold rounded-full backdrop-blur-sm shadow-lg">
-        Preparing photo search…
-      </div>
-    </div>
-  );
+  useVisionIndexer();
+  return null;
 }
 
 // ── Root ──────────────────────────────────────────────────────────────────────
