@@ -35,6 +35,9 @@ export interface StoredClothingItem {
   purchasePrice?:    string | null;
   purchaseDate?:     string | null;
   notes?:            string | null;
+  visionLabels?:     string[];
+  visionText?:       string[];
+  visionVersion?:    number;
   createdAt:         string;
   updatedAt:         string;
 }
@@ -59,8 +62,14 @@ export interface StoredSetting {
 
 // ── Public types (consumed by hooks and pages) ────────────────────────────────
 
-export interface ClothingItem extends Required<StoredClothingItem> {
+// Vision fields stay optional so legacy DB records (pre-feature) are safely
+// handled with `item.visionLabels ?? []` without TypeScript complaints.
+export interface ClothingItem
+  extends Omit<Required<StoredClothingItem>, "visionLabels" | "visionText" | "visionVersion"> {
   id: number;
+  visionLabels?:  string[];
+  visionText?:    string[];
+  visionVersion?: number;
 }
 
 export interface SavedOutfit {

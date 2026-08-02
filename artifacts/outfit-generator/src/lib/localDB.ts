@@ -80,6 +80,9 @@ export async function createClothingItem(data: {
     purchasePrice:  data.purchasePrice ?? null,
     purchaseDate:   data.purchaseDate  ?? null,
     notes:          data.notes ?? null,
+    visionLabels:  [],
+    visionText:    [],
+    visionVersion: 0,
     createdAt:      now,
     updatedAt:      now,
   };

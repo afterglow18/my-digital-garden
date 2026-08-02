@@ -1,6 +1,7 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import {
   useListOutfits,
+  useListClothing,
   useDeleteOutfit,
   useRenameOutfit,
   useAddItemToOutfit,
@@ -8,7 +9,7 @@ import {
   getListOutfitsQueryKey,
   type ClothingItem,
 } from "@/hooks/useLocalDB";
-import { Trash2, Bookmark, Plus, Pencil, Check, X } from "lucide-react";
+import { Trash2, Bookmark, Plus, Pencil, Check, X, Search, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getImageUrl } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
@@ -17,6 +18,7 @@ import { UpgradeSheet } from "@/components/paywall/UpgradeSheet";
 import { FREE_OUTFIT_LIMIT } from "@/lib/entitlements";
 import { WardrobePickerSheet } from "@/components/clothing/WardrobePickerSheet";
 import { ItemDetailsSheet } from "@/components/clothing/ItemDetailsSheet";
+import { searchItems, type SearchResultItem, type SearchResultGroup } from "@/lib/searchItems";
 
 const SLOT_ORDER = ["tools", "landscaping", "decor", "plants"] as const;
 type SlotKey = (typeof SLOT_ORDER)[number];
@@ -63,24 +65,66 @@ function ItemPhoto({
   );
 }
 
+// ── Small thumbnail for search results ───────────────────────────────────────
+function Thumb({ item, size = 48 }: { item?: ClothingItem; size?: number }) {
+  return (
+    <div
+      className="border-2 border-black overflow-hidden rounded flex-shrink-0"
+      style={{ width: size, height: size, background: "#F5EDD8" }}
+    >
+      {item?.imageObjectPath ? (
+        <img
+          src={getImageUrl(item.imageObjectPath)!}
+          alt={item.name}
+          className="w-full h-full object-contain"
+        />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center">
+          <span className="text-[8px] font-bold text-black/25">—</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function SavedPage() {
   const { data: outfits, isLoading } = useListOutfits();
-  const deleteOutfit = useDeleteOutfit();
-  const renameOutfit = useRenameOutfit();
-  const removeItemFromOutfit = useRemoveItemFromOutfit();
-  const addItemToOutfit = useAddItemToOutfit();
-  const queryClient = useQueryClient();
-  const { tier } = useEntitlements();
-  const [showUpgrade, setShowUpgrade] = useState(false);
+  const { data: allItems = [] }      = useListClothing({});
+  const deleteOutfit                 = useDeleteOutfit();
+  const renameOutfit                 = useRenameOutfit();
+  const removeItemFromOutfit         = useRemoveItemFromOutfit();
+  const addItemToOutfit              = useAddItemToOutfit();
+  const queryClient                  = useQueryClient();
+  const { tier }                     = useEntitlements();
+
+  const [showUpgrade,   setShowUpgrade]   = useState(false);
   const [replacingSlot, setReplacingSlot] = useState<{ outfitId: number; category: SlotKey } | null>(null);
-  const [addingExtra, setAddingExtra]     = useState<number | null>(null);
-  const [detailsItem, setDetailsItem] = useState<ClothingItem | null>(null);
-  const [renamingId, setRenamingId] = useState<number | null>(null);
-  const [renameValue, setRenameValue] = useState("");
+  const [addingExtra,   setAddingExtra]   = useState<number | null>(null);
+  const [detailsItem,   setDetailsItem]   = useState<ClothingItem | null>(null);
+  const [detailsFromSearch, setDetailsFromSearch] = useState(false);
+  const [renamingId,    setRenamingId]    = useState<number | null>(null);
+  const [renameValue,   setRenameValue]   = useState("");
   const renameInputRef = useRef<HTMLInputElement>(null);
   const [editingNotesId, setEditingNotesId] = useState<number | null>(null);
-  const [notesValue, setNotesValue] = useState("");
+  const [notesValue,    setNotesValue]    = useState("");
   const notesInputRef = useRef<HTMLTextAreaElement>(null);
+
+  // ── Search state ────────────────────────────────────────────────────────────
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const isSearching = searchQuery.trim().length > 0;
+
+  const allSearchResults = useMemo(
+    () => searchItems(searchQuery, allItems, outfits ?? []),
+    [searchQuery, allItems, outfits],
+  );
+  const itemResults  = allSearchResults.filter((r): r is SearchResultItem  => r.kind === "item");
+  const groupResults = allSearchResults.filter((r): r is SearchResultGroup => r.kind === "group");
+
+  // Scroll to top the instant searching starts
+  useEffect(() => {
+    if (isSearching) window.scrollTo({ top: 0 });
+  }, [isSearching]);
 
   useEffect(() => {
     if (renamingId !== null) renameInputRef.current?.focus();
@@ -89,6 +133,14 @@ export default function SavedPage() {
   useEffect(() => {
     if (editingNotesId !== null) notesInputRef.current?.focus();
   }, [editingNotesId]);
+
+  // Jump to an outfit card after clearing the search
+  const jumpToOutfit = useCallback((id: number) => {
+    setSearchQuery("");
+    setTimeout(() => {
+      document.getElementById(`outfit-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 120);
+  }, []);
 
   const startRename = (id: number, currentName: string) => {
     setRenamingId(id);
@@ -123,9 +175,9 @@ export default function SavedPage() {
     setEditingNotesId(null);
   };
 
-  const isFree = tier === "free";
-  const outfitCount = outfits?.length ?? 0;
-  const atLimit = isFree && outfitCount >= FREE_OUTFIT_LIMIT;
+  const isFree       = tier === "free";
+  const outfitCount  = outfits?.length ?? 0;
+  const atLimit      = isFree && outfitCount >= FREE_OUTFIT_LIMIT;
 
   const handleDelete = (id: number) => {
     deleteOutfit.mutate(
@@ -161,7 +213,7 @@ export default function SavedPage() {
 
   return (
     <div className="min-h-full flex flex-col pt-8 px-4 pb-8 bg-secondary/10 relative">
-      <header className="mb-6">
+      <header className="mb-4">
         <h1 className="text-4xl font-display font-bold uppercase tracking-tighter mb-1">Lookbook</h1>
         <div className="flex items-center justify-between">
           <p className="font-medium text-muted-foreground text-sm">Hall of fame.</p>
@@ -182,9 +234,33 @@ export default function SavedPage() {
             </button>
           )}
         </div>
+
+        {/* Search bar */}
+        <div className="mt-3 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black/35 pointer-events-none" />
+          <input
+            ref={searchInputRef}
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by name, category, or notes..."
+            className="w-full pl-9 pr-9 py-2.5 rounded-2xl border-2 border-black/15 bg-white
+                       text-sm font-medium placeholder:text-black/30 placeholder:font-normal
+                       focus:outline-none focus:border-black/40 transition-colors"
+          />
+          {isSearching && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center
+                         rounded-full bg-black/10 hover:bg-black/20 transition-colors"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          )}
+        </div>
       </header>
 
-      {atLimit && !isLoading && (
+      {atLimit && !isLoading && !isSearching && (
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -210,16 +286,85 @@ export default function SavedPage() {
         </motion.div>
       )}
 
-      {isLoading ? (
+      {/* ── Search results ────────────────────────────────────────────────── */}
+      {isSearching ? (
+        <div className="flex flex-col gap-4">
+          {allSearchResults.length === 0 ? (
+            <div className="flex flex-col items-center justify-center text-center p-8
+                            bg-white border-2 border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              <Search className="w-8 h-8 text-black/20 mb-3" />
+              <p className="text-sm font-bold text-black/40">No results for "{searchQuery}"</p>
+            </div>
+          ) : (
+            <>
+              {/* Individual items */}
+              {itemResults.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-black/40 mb-2">Items</p>
+                  <div className="flex flex-col gap-2">
+                    {itemResults.map((r) => (
+                      <button
+                        key={r.item.id}
+                        onClick={() => { setDetailsItem(r.item); setDetailsFromSearch(true); }}
+                        className="flex items-center gap-3 p-3 bg-white border-2 border-black rounded-xl
+                                   shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                                   active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all text-left"
+                      >
+                        <Thumb item={r.item} size={48} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold truncate">{r.item.name}</p>
+                          <p className="text-[11px] text-black/45 font-medium uppercase tracking-wide mt-0.5">
+                            {r.item.category}
+                          </p>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-black/25 flex-shrink-0" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Groups */}
+              {groupResults.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-black/40 mb-2">
+                    Lookbook Groups
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    {groupResults.map((r) => (
+                      <button
+                        key={r.outfit.id}
+                        onClick={() => jumpToOutfit(r.outfit.id)}
+                        className="flex items-center gap-3 p-3 bg-white border-2 border-black rounded-xl
+                                   shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                                   active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all text-left"
+                      >
+                        <div className="flex gap-1 flex-shrink-0">
+                          {Array.from({ length: 3 }).map((_, i) => (
+                            <Thumb key={i} item={r.outfit.items?.[i]} size={44} />
+                          ))}
+                        </div>
+                        <p className="flex-1 text-sm font-bold truncate min-w-0">{r.outfit.name}</p>
+                        <ChevronRight className="w-4 h-4 text-black/25 flex-shrink-0" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      ) : isLoading ? (
+        /* ── Loading skeleton ─────────────────────────────────────────────── */
         <div className="flex flex-col gap-4">
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-52 bg-muted animate-pulse border-2 border-black rounded-xl" />
           ))}
         </div>
       ) : outfits && outfits.length > 0 ? (
+        /* ── Normal outfit list ───────────────────────────────────────────── */
         <div className="flex flex-col gap-6">
           {outfits.map((outfit) => {
-            // Group items by category — first match per slot wins
             const bySlot = (outfit.items ?? []).reduce<Partial<Record<SlotKey, ClothingItem>>>(
               (acc, item) => {
                 const key = item.category as SlotKey;
@@ -228,14 +373,13 @@ export default function SavedPage() {
               },
               {}
             );
-
-            // Any items whose category isn't a known slot (e.g. legacy data)
             const knownIds = new Set(Object.values(bySlot).map((i) => i?.id));
-            const extras = (outfit.items ?? []).filter((i) => !knownIds.has(i.id));
+            const extras   = (outfit.items ?? []).filter((i) => !knownIds.has(i.id));
 
             return (
               <motion.div
                 key={outfit.id}
+                id={`outfit-${outfit.id}`}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -314,7 +458,7 @@ export default function SavedPage() {
                   )}
                 </div>
 
-                {/* 4-slot grid: outfits / beauty / toiletries / essentials */}
+                {/* 4-slot grid */}
                 <div className="p-3">
                   <div className="grid grid-cols-4 gap-2">
                     {SLOT_ORDER.map((slot) => {
@@ -323,7 +467,7 @@ export default function SavedPage() {
                         <div key={slot} className="flex flex-col gap-0.5">
                           {item ? (
                             <>
-                              <ItemPhoto item={item} size="lg" onClick={() => setDetailsItem(item)} />
+                              <ItemPhoto item={item} size="lg" onClick={() => { setDetailsItem(item); setDetailsFromSearch(false); }} />
                               <div className="flex items-center justify-between px-0.5">
                                 <span className="text-[8px] font-bold uppercase text-muted-foreground truncate">
                                   {SLOT_LABELS[slot]}
@@ -354,7 +498,7 @@ export default function SavedPage() {
                     })}
                   </div>
 
-                  {/* 5 fixed extra slots */}
+                  {/* Extras */}
                   <div className="mt-3 pt-3 border-t border-black/10">
                     <p className="text-[8px] font-bold uppercase tracking-widest text-black/30 mb-2">Extras</p>
                     <div className="grid grid-cols-5 gap-1.5">
@@ -363,7 +507,7 @@ export default function SavedPage() {
                         return item ? (
                           <div key={item.id} className="relative flex flex-col gap-0.5">
                             <button
-                              onClick={() => setDetailsItem(item)}
+                              onClick={() => { setDetailsItem(item); setDetailsFromSearch(false); }}
                               className="w-full aspect-square border-2 border-black overflow-hidden rounded"
                               style={{ background: "#F5EDD8" }}
                             >
@@ -399,7 +543,7 @@ export default function SavedPage() {
                   </div>
                 </div>
 
-                {/* Footer: item count */}
+                {/* Footer */}
                 <div className="px-3 pb-3">
                   <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wide">
                     {outfit.items?.length ?? 0} product{(outfit.items?.length ?? 0) !== 1 ? "s" : ""}
@@ -466,6 +610,7 @@ export default function SavedPage() {
             key={detailsItem.id}
             item={detailsItem}
             onClose={() => setDetailsItem(null)}
+            showAddToLookbook={detailsFromSearch}
           />
         )}
       </AnimatePresence>

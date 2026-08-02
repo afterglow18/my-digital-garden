@@ -50,6 +50,28 @@ workflows:
           cd ios/App
           pod install --repo-update
 
+      - name: Add Vision plugin to Xcode project
+        script: |
+          cd artifacts/outfit-generator
+          # Copy native plugin files into the App target directory
+          cp ios-plugin/VisionPlugin.swift ios/App/App/
+          cp ios-plugin/VisionPlugin.m    ios/App/App/
+          # Add both files to the Xcode project via the xcodeproj Ruby gem
+          # (pre-installed on Codemagic macOS VMs)
+          ruby << 'RUBY'
+          require 'xcodeproj'
+          proj   = Xcodeproj::Project.open('ios/App/App.xcodeproj')
+          target = proj.targets.find { |t| t.name == 'App' }
+          group  = proj.main_group.find_subpath('App', false)
+          %w[VisionPlugin.swift VisionPlugin.m].each do |f|
+            next if group.children.any? { |c| c.path == f }
+            ref = group.new_file(f)
+            target.add_file_references([ref])
+          end
+          proj.save
+          puts "✅ VisionPlugin added to Xcode project"
+          RUBY
+
       - name: Generate iOS app icons from resources/icon.png
         script: |
           cd artifacts/outfit-generator

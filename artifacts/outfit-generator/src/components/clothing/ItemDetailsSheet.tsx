@@ -13,13 +13,16 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Heart, Trash2, Save, ChevronDown,
-  ImagePlus, Loader2, Check, RotateCcw, Sparkles,
+  ImagePlus, Loader2, Check, RotateCcw, Sparkles, BookmarkPlus,
 } from "lucide-react";
 import {
   type ClothingItem,
   type ClothingItemUpdateCategory,
   useUpdateClothingItem,
   useDeleteClothingItem,
+  useListOutfits,
+  useAddItemToOutfit,
+  useRemoveItemFromOutfit,
   getListClothingQueryKey,
   getListOutfitsQueryKey,
   getWardrobeStatsQueryKey,
@@ -110,6 +113,12 @@ interface ItemDetailsSheetProps {
   item: ClothingItem | null;
   onClose: () => void;
   onDeleted?: () => void;
+  /**
+   * When true (search results, favorites): replaces "Clean Up Photo" with
+   * an "Add to Lookbook" button that lets the user toggle group membership.
+   * Defaults to false (main wardrobe view).
+   */
+  showAddToLookbook?: boolean;
 }
 
 interface FormState {
@@ -153,7 +162,7 @@ function isDirty(form: FormState, item: ClothingItem, hasNewFile: boolean): bool
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetProps) {
+export function ItemDetailsSheet({ item, onClose, onDeleted, showAddToLookbook = false }: ItemDetailsSheetProps) {
   const [form, setForm]             = useState<FormState | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -305,9 +314,29 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
   }, []);
 
   // ── DB hooks ─────────────────────────────────────────────────────────────
-  const updateItem  = useUpdateClothingItem();
-  const deleteItem  = useDeleteClothingItem();
-  const queryClient = useQueryClient();
+  const updateItem         = useUpdateClothingItem();
+  const deleteItem         = useDeleteClothingItem();
+  const queryClient        = useQueryClient();
+
+  // ── Lookbook picker (showAddToLookbook mode) ──────────────────────────────
+  const [lookbookPickerOpen, setLookbookPickerOpen] = useState(false);
+  const { data: allOutfits }   = useListOutfits();
+  const addToOutfit            = useAddItemToOutfit();
+  const removeFromOutfit       = useRemoveItemFromOutfit();
+
+  const handleToggleOutfitMembership = (outfitId: number, currentlyIn: boolean) => {
+    if (currentlyIn) {
+      removeFromOutfit.mutate(
+        { id: outfitId, itemId: item!.id },
+        { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() }) },
+      );
+    } else {
+      addToOutfit.mutate(
+        { id: outfitId, data: { itemId: item!.id } },
+        { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() }) },
+      );
+    }
+  };
 
   // Reset everything when the item changes
   useEffect(() => {
@@ -589,8 +618,18 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
 
                   {/* Action row — below the photo */}
                   <div className="flex gap-1.5 flex-wrap px-3 py-2.5 border-t border-[#C8B870]/20">
-                    {/* Clean Up Photo — hidden once already a PNG */}
-                    {!alreadyCleaned && (
+                    {/* Clean Up Photo OR Add to Lookbook — mutually exclusive */}
+                    {showAddToLookbook ? (
+                      <button
+                        onClick={() => setLookbookPickerOpen(true)}
+                        className="flex items-center gap-1.5 px-3 py-1.5
+                                   bg-[#243B24] border border-[#1a2b1a] rounded-xl text-white text-xs font-bold uppercase
+                                   shadow-[1px_1px_0px_0px_rgba(0,0,0,0.25)]
+                                   active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+                      >
+                        <BookmarkPlus className="w-3 h-3" /> Add to Lookbook
+                      </button>
+                    ) : !alreadyCleaned ? (
                       <button
                         onClick={handleStartCleanUp}
                         className="flex items-center gap-1.5 px-3 py-1.5
@@ -600,7 +639,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
                       >
                         <Sparkles className="w-3 h-3" /> Clean Up
                       </button>
-                    )}
+                    ) : null}
                     {/* Watered Today — plants only */}
                     {isPlants && (
                       loggedToday ? (
@@ -942,6 +981,107 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
                            active:bg-[#f0e8d8] transition-all"
               >
                 Cancel
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Lookbook Picker overlay ── */}
+      <AnimatePresence>
+        {lookbookPickerOpen && (
+          <motion.div
+            key="lookbook-picker"
+            initial={{ opacity: 0, y: "100%" }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: "100%" }}
+            transition={{ type: "spring", damping: 28, stiffness: 240 }}
+            className="fixed inset-0 md:left-[220px] z-[75] flex flex-col max-w-md mx-auto bg-[#f9f4ee]"
+          >
+            {/* Header */}
+            <div
+              className="flex items-center justify-between px-4 bg-[#243B24] flex-shrink-0"
+              style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))", paddingBottom: "0.75rem" }}
+            >
+              <h2 className="font-display font-bold text-xl uppercase tracking-tight text-white flex items-center gap-2">
+                <BookmarkPlus className="w-5 h-5" /> Add to Lookbook
+              </h2>
+              <button
+                onClick={() => setLookbookPickerOpen(false)}
+                className="w-9 h-9 border-2 border-white/30 rounded-full flex items-center justify-center
+                           bg-white/10 active:bg-white/20 transition-all"
+              >
+                <X className="w-4 h-4 text-white" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
+              {!allOutfits || allOutfits.length === 0 ? (
+                <div className="flex flex-col items-center justify-center flex-1 text-center py-16">
+                  <p className="text-sm font-bold text-black/40">No lookbook groups yet.</p>
+                  <p className="text-xs text-black/30 mt-1">Save some outfits first.</p>
+                </div>
+              ) : (
+                allOutfits.map((outfit) => {
+                  const isIn = (outfit.items ?? []).some((i) => i.id === item!.id);
+                  const thumbs = (outfit.items ?? []).slice(0, 3);
+                  return (
+                    <button
+                      key={outfit.id}
+                      onClick={() => handleToggleOutfitMembership(outfit.id, isIn)}
+                      className="flex items-center gap-3 p-3 bg-white border-2 border-black rounded-xl
+                                 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                                 active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all"
+                    >
+                      {/* 3-thumbnail row */}
+                      <div className="flex gap-1 flex-shrink-0">
+                        {Array.from({ length: 3 }).map((_, i) => {
+                          const t = thumbs[i];
+                          return (
+                            <div
+                              key={i}
+                              className="w-12 h-12 border-2 border-black rounded overflow-hidden flex-shrink-0"
+                              style={{ background: "#F5EDD8" }}
+                            >
+                              {t?.imageObjectPath ? (
+                                <img
+                                  src={getImageUrl(t.imageObjectPath)!}
+                                  alt=""
+                                  className="w-full h-full object-contain"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <span className="text-[8px] font-bold text-black/25">—</span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {/* Name */}
+                      <p className="flex-1 text-sm font-bold text-left truncate">{outfit.name}</p>
+                      {/* Checkmark if already in this group */}
+                      <div
+                        className={`w-6 h-6 rounded-full flex items-center justify-center border-2 flex-shrink-0 transition-colors
+                                    ${isIn ? "bg-[#243B24] border-[#243B24]" : "bg-white border-black/20"}`}
+                      >
+                        {isIn && <Check className="w-3.5 h-3.5 text-white" />}
+                      </div>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex-shrink-0 px-4 py-4 border-t border-[#C8B870]/30 bg-[#f9f4ee]">
+              <button
+                onClick={() => setLookbookPickerOpen(false)}
+                className="w-full py-3 rounded-xl text-sm font-bold uppercase border-2 border-black
+                           bg-[#243B24] text-white active:opacity-80 transition-all"
+              >
+                Done
               </button>
             </div>
           </motion.div>
