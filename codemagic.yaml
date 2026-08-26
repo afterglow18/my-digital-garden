@@ -68,6 +68,10 @@ workflows:
             ref = group.new_file(f)
             target.add_file_references([ref])
           end
+          # Restrict the App Store target to iPhone (device family 1).
+          target.build_configurations.each do |config|
+            config.build_settings['TARGETED_DEVICE_FAMILY'] = '1'
+          end
           proj.save
           puts "✅ VisionPlugin added to Xcode project"
           RUBY

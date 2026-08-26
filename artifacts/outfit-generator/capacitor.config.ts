@@ -27,6 +27,9 @@ const config: CapacitorConfig = {
       // Required when a camera capture is saved back to the photo library
       NSPhotoLibraryAddUsageDescription:
         'My Garden saves photos you capture to your photo library.',
+      // Ship the App Store build for iPhone only; iPad is not a supported
+      // form factor for this portrait-first app.
+      UIDeviceFamily: [1],
     },
   },
 
